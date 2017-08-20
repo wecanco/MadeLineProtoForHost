@@ -1,0 +1,21 @@
+{
+    "name": "danog/primemodule",
+    "description": "Prime module capable of doing prime factorization of huge numbers very quickly.\"",
+    "type": "library",
+    "license": "AGLPV3",
+    "authors": [
+        {
+            "name": "Daniil Gentili",
+            "email": "daniil@daniil.it"
+        }
+    ],
+    "require": {},
+    "suggest": {
+        "ext-primemodule": "Install the native C++ extension for extremely fast factorization (https://github.com/danog/PrimeModule-ext)"
+    },
+    "autoload": {
+        "psr-0": {
+            "danog\\": "lib/"
+        }
+    }
+}
