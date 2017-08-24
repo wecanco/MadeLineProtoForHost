@@ -45,13 +45,17 @@ class Lua
             $this->Lua->registerCallback($method, [$this->MadelineProto->API, $method]);
         }
         $methods = [];
-        foreach ($this->MadelineProto->get_methods_namespaced() as $method => $namespace) {
+        foreach ($this->MadelineProto->get_methods_namespaced() as $pair) {
+            $namespace = key($pair);
+            $method = $pair[$namespace];
             if ($namespace === 'upload') {
                 continue;
             }
             $methods[$namespace][$method] = [$this->MadelineProto->{$namespace}, $method];
         }
-        foreach ($this->MadelineProto->get_method_namespaces() as $namespace) {
+        foreach ($this->MadelineProto->get_methods_namespaced() as $pair) {
+            $namespace = key($pair);
+            $method = $pair[$namespace];
             if ($namespace === 'upload') {
                 continue;
             }
@@ -59,6 +63,7 @@ class Lua
         }
         $this->MadelineProto->lua = true;
         foreach ($this->MadelineProto->get_methods_namespaced() as $method => $namespace) {
+            $namespace = key($pair);
             $this->MadelineProto->{$namespace}->lua = true;
         }
     }

@@ -16,15 +16,15 @@ trait Methods
 {
     public function mk_methods()
     {
-        foreach (glob($this->settings['output_dir'].'methods/'.$this->any) as $unlink) {
-            unlink($this->settings['output_dir'].$unlink);
+        foreach (glob('methods/'.$this->any) as $unlink) {
+            unlink($unlink);
         }
 
-        if (file_exists($this->settings['output_dir'].'methods')) {
-            rmdir($this->settings['output_dir'].'methods');
+        if (file_exists('methods')) {
+            rmdir('methods');
         }
 
-        mkdir($this->settings['output_dir'].'methods');
+        mkdir('methods');
 
         $this->docs_methods = [];
 
@@ -74,13 +74,13 @@ trait Methods
             $table = empty($data['params']) ? '' : '### Parameters:
 
 | Name     |    Type       | Required |
-|----------|:-------------:|---------:|
+|----------|---------------|----------|
 ';
             if (isset($this->td_descriptions['methods'][$data['method']])) {
                 $table = '### Params:
 
 | Name     |    Type       | Required | Description |
-|----------|:-------------:|:--------:|------------:|
+|----------|---------------|----------|-------------|
 ';
             }
 
@@ -117,7 +117,7 @@ trait Methods
                 $params .= "'".$param['name']."' => ";
                 $params .= (isset($param['subtype']) ? '['.$pptype.']' : $pptype).', ';
                 $json_params .= '"'.$param['name'].'": '.(isset($param['subtype']) ? '['.$ppptype.']' : $ppptype).', ';
-                $pwr_params .= $param['name'].' - Json encoded '.(isset($param['subtype']) ? ' array of '.$ptype : $ptype)."\n";
+                $pwr_params .= $param['name'].' - Json encoded '.(isset($param['subtype']) ? ' array of '.$ptype : $ptype)."\n\n";
                 $lua_params .= $param['name'].'=';
                 $lua_params .= (isset($param['subtype']) ? '{'.$pptype.'}' : $pptype).', ';
                 if ($param['name'] === 'reply_markup') {
