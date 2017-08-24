@@ -3,6 +3,8 @@
 	require_once '__madeline_config.php'; // فایل کانفیگ
 	require_once $libPath.'vendor/autoload.php'; // فراخوانی لودر کتابخانه میدلاین
 	
+	mkdir($sessionsDir);
+	
 	$phone = str_replace(array(" ","(",")"),"",$_GET['phone']); // شماره موبایلی که با آن لاگین میشوید
 	$sessionFile = $sessionsDir."/session_".str_replace(array("+","-","(",")"),"",$phone).""; // مسیر سشن
 	
@@ -12,12 +14,12 @@
 	
 	$MadelineProto = false;
 	echo "درحال آماده سازی...<br>";
-	sleep(1);
+	
 	if(file_exists($sessionFile)){
 		try {
 			echo 'درحال خواندن سشن: ('.$sessionFile.')...'.PHP_EOL."<br>";
 			$MadelineProto = \danog\MadelineProto\Serialization::deserialize($sessionFile);
-			} catch (\danog\MadelineProto\Exception $e) {
+		} catch (\danog\MadelineProto\Exception $e) {
 			echo 'خطا: '.PHP_EOL."<br>";
 			var_dump($e->getMessage());
 			exit();
@@ -27,6 +29,7 @@
 	echo 'سشن خوانده شد.'.PHP_EOL."<br>";
 	
 	if ($MadelineProto === false) {
+		sleep(1);
 		echo 'درحال اتصال به سرور تلگرام...'.PHP_EOL;
 		$MadelineProto = new \danog\MadelineProto\API($settings);
 		
@@ -53,7 +56,7 @@
 		}
 		
 		
-		}else if(isset($_GET['code'])){
+	}else if(isset($_GET['code'])){
 		$code = $_GET['code'];
 		echo 'درحال تایید کد...'.PHP_EOL."<br>";
 		$authorization = $MadelineProto->complete_phone_login($code);
