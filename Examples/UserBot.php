@@ -7,9 +7,14 @@
 		file_put_contents('SentMSGs',"");
 	}
 	
-	mkdir('temp');
+	try{
+		mkdir('temp');
+	} catch (Exception $e) { 
+		//$text = "❌ ".$e->getMessage(); 
+	}
 	
 	$SentMSGs=explode("\n",file_get_contents('SentMSGs'));
+	
 	while(true){
 		if(file_exists('_stop_bot')){
 			echo "ربات متوقف شد.<br>";
@@ -63,6 +68,27 @@
 								$text='<a href="mention:'.$from_id.'">تماس با من</a>';
 								break;
 								
+								case "/time":
+									$txt="⏰ Iran/Tehran: <b>".date("Y-m-d H:i:s ")."</b> Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
+									$m = $MadelineProto->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $txt, 'parse_mode' => 'HTML' ]);
+									//file_put_contents('m',json_encode($m));
+									$mid = $m['id'];
+									sleep(3);
+									for($i=0; $i<2; $i++){
+										if($i%2==0){
+											$powT = " Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
+											$powT = " 😶";
+										}else{
+											$powT = " Created By <a href='tg://user?id=282120410'>WeCanCo</a>";
+											$powT = " 😛";
+										}
+										$txt="⏰ Iran/Tehran: <b>".date("Y-m-d H:i:s ")."</b>".$powT;
+										$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+										sleep(1);
+									}
+								break;
+										
+										
 								default:
 								if(strpos($message,"/mymention ") !== false){
 									$text='<a href="mention:'.$from_id.'">'.str_replace("/mymention ","",$message).'</a>';
@@ -143,6 +169,7 @@
 										break;
 										
 										
+										
 										default:
 										
 										$text= '💥 با استفاده از این دستور شما میتوانید متدهای میدلاین را تست کنید!
@@ -191,6 +218,7 @@
 				$SentMSGs[]=$uniq;
 				$m = $MadelineProto->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $text, 'parse_mode' => 'HTML' ]);							
 				$sent=1;
+				//$MadelineProto->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => json_encode($m), 'parse_mode' => 'HTML' ]);
 			}
 			
 			if($sent==1){
