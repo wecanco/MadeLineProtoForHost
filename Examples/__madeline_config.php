@@ -17,6 +17,7 @@
 	
 	$libPath ='../'; // مسیر روت کتابخانه میدلاین
 	$sessionsDir = 'sessions/'; // پوشه ذخیره سشن ها
+	$MadelineURL ='http://tlbots.cf/_MadelineTest/Examples/'; // آدرس پوشه ای که فایل StartUserBot.php در آن است.
 	
 	// تنظیمات ای پی آی میدلان جهت اتصال به سرور تلگرام
 	$settings = json_decode('{"logger":{"logger":0},"app_info":{"api_id":6,"api_hash":"eb06d4abfb49dc3eeb1aeb98ae0f581e"}}', true) ?: [];

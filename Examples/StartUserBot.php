@@ -12,7 +12,7 @@
     file_put_contents("_stop_bot","1");
     sleep(1);
     unlink("_stop_bot");
-    $comm = "wget --timeout=6000 -qO- ".$MadelineURL."Examples/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
+    $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
     exec($comm);
 
 
