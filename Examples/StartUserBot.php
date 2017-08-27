@@ -12,6 +12,8 @@
     file_put_contents("_stop_bot","1");
     sleep(1);
     unlink("_stop_bot");
+	include('__madeline_config.php');
+	
     $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
     exec($comm);
 

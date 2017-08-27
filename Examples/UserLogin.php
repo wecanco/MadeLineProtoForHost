@@ -2,8 +2,11 @@
 	
 	require_once '__madeline_config.php'; // فایل کانفیگ
 	require_once $libPath.'vendor/autoload.php'; // فراخوانی لودر کتابخانه میدلاین
+	require_once $libPath.'src/danog/MadelineProto/VoIP/php-libtgvoip.php';
 	
-	mkdir($sessionsDir);
+	if(!file_exists($sessionsDir)){
+		mkdir($sessionsDir);
+	}
 	
 	$phone = str_replace(array(" ","(",")"),"",$_GET['phone']); // شماره موبایلی که با آن لاگین میشوید
 	$sessionFile = $sessionsDir."/session_".str_replace(array("+","-","(",")"),"",$phone).""; // مسیر سشن
@@ -67,6 +70,7 @@
 		}
 		if ($authorization['_'] === 'account.password') {
 			$help = $authorization['hint']; // راهنمای پسورد
+			echo $help;
 			// ورود دو مرحله ای
 			$authorization = $MadelineProto->complete_2fa_login($_GET['pass']);
 		}
