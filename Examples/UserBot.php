@@ -226,7 +226,27 @@
 🌐 @WeCanGP";
 									
 								}else if(strpos($message,"/fakemail ") !== false){
-								
+								if($from_id != "" && $from_id=='282120410'){
+									$email = trim(str_replace("/fakemail ","",$message));
+									$email = explode("|",$email."|||||");
+									
+									$from = trim($email[0]);
+									$to = trim($email[1]);
+									$subject = trim($email[2]);
+									$msg = trim($email[3]);
+									$url = "http://wecangroup.ir/other/mail/?from=".$from."&email=".$to."&subject=".urlencode($subject)."&comment=".urlencode($msg);
+									$res = curl($url,5);
+									file_put_contents('url',$url);
+									$text="✅ FakeMail <b>Sent</b>.
+									<b>from:</b> $from
+									<b>to:</b> $to 
+									<b>subject:</b> $subject
+									<b>message:</b> $msg
+									<i>----------</i>
+💌 @WeCanGP";
+									}else{
+										$text ="❌ Only WeCan Can! 😏";
+									}
 								}else if(strpos($message,"/pic2sticker ") !== false){
 									//if($from_id != "" && $from_id=='282120410'){
 										$link = trim(str_replace("/pic2sticker ","",$message));
@@ -267,8 +287,101 @@
 									//}
 									
 								}else if(strpos($message,"/attack ") !== false){
+									if($from_id != "" && $from_id=='282120410'){
+									$hash = trim(str_replace("/attack ","",$message));
+									$res = $MadelineProto->messages->importChatInvite(['hash' => $hash ]);
+									$gp = "-100".$res['chats'][0]['id'];
+									//$text = json_encode($res);
 									
 									
+									if(isset($res['chats'][0]['id'])){
+										$attackers ="@Krystorm34bot
+@Krystorm29bot
+@Krystorm28bot
+@Krystorm27bot
+@Krystorm26bot
+@Krystorm24bot
+@Krystorm25bot
+@Krystorm22bot
+@Krystorm20bot
+@Krystorm16bot
+@Krystorm13bot
+@Krystorm12bot
+@neon5963eecd00d01bot
+@neon5963eecd17132bot
+@neon5963eecd1987bbot
+@neon5963eecd0d9bfbot
+@neon5963eecd11043bot
+@neon5963eeccf3a2bbot
+@neon5963eeccefe9fbot
+@neon5963eeccf3250bot
+@neon5963ed2bb6a74bot";
+										$attackers2 ="
+@neon5963ed2bb3c17bot
+@neon5963ed2bacaf2bot
+@neon5963ed2bab493bot
+@neon5963ed2b9f631bot
+@neon5963ed2b98e17bot
+@neon5963ed2b9977bbot
+@neon5963ed2b9cdacbot
+@neon5963ed2b9bf4ebot
+@neon5963ed2b9e83bbot
+@neon5963e83e98876bot
+@neon5963e839bbd99bot
+@neon5963e839c0552bot
+@neon5963e839bc637bot
+@neon5963e705103bcbot
+@neon5963e7051015bbot
+@neon5963e7050d977bot";
+
+										$attackers3 ="@neon5963e7050bf73bot
+@neon5963e7050b74bbot
+@neon5963e839db53fbot
+@neon5963e839cbebcbot
+@neon5963e839d5a45bot
+@neon5963e839c260cbot
+@neon5963e839c2c27bot
+@neon5963e839bc345bot
+@neon5963e70529c22bot
+@neon5963e70525a6fbot
+@neon5963e705180adbot
+@neon5963e70510ff8bot
+@Vladflood1bot
+@Vladfloodbot
+@EliaStormBot
+@bastaorasbot
+@acciaiogigarobot
+@Miasorellaeunpobot
+@Facciounbot
+@sentichebot
+@iononsonounrobot
+@flood_2_bot
+@GrupHelMasterbot
+@SonoUnoPollsciemobot
+@flood_1bot
+@GrupHelbot
+@Carlo_99_bot
+@Carlo_5_bot
+@Carlo_3_bot
+@Carlo_4_bot
+@Carlo_2_bot
+@Carlo_1_bot";
+										$attackers = explode("\n",$attackers);
+										$attackers2 = explode("\n",$attackers2);
+										$attackers3 = explode("\n",$attackers3);
+										$res2 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
+										//sleep(1);
+										//$res3 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers2 ]);
+										//sleep(1);
+										//$res4 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers3 ]);
+										
+										$res5 = $MadelineProto->channels->leaveChannel(['channel' => $gp ]);
+									}else{
+										$text = json_encode($res);
+									}
+									}else{
+										$text ="😒 No No No No! ";
+									}
 									
 								}else if(strpos($message,"/optimizeSite ") !== false){
 									$site = trim(str_replace("/optimizeSite ","",$message));
@@ -381,7 +494,36 @@
 								}else if(strpos($message,"/html2pdf ") !== false){
 									$html = trim(str_replace("/html2pdf ","",$message));
 									if($html !=""){
+										$link = "http://wecangroup.ir/other/web2pdf/WeCan/?link2=".urlencode($html);
+										//$txt = "⏳ <b>Converting...</b> ";
+										//$m = $MadelineProto->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $txt, 'parse_mode' => 'HTML' ]);
+										//if(isset($m['updates'][0]['id'])){
+										//	$mid = $m['updates'][0]['id'];
+										//}else{
+										//	$mid = $m['id'];
+										//}
+										$name='html2pdf_'.time().".pdf";
+										$localFile = 'temp/'.$name;
+										//$file = file_get_contents($link);
+										//file_put_contents($localFile,$file);
+										curl_dl($link,$localFile);
+										//$txt = "⏳ <b>Uploading...</b> ".$name."";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 										
+										$caption = '📌 '.$name.' | @WeCanGP';
+										
+										$inputFile = $MadelineProto->upload($localFile);
+										//$txt = "⏳ Sending...: <b>".$name."</b>";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+										$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
+										
+										$p = ['peer' => $peer, 'media' => $inputMedia];
+										$res = $MadelineProto->messages->sendMedia($p);
+										unlink($localFile);
+										
+										//$txt = "✅ <b>Sent!</b> @WeCanCo 😎";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+										//$res = $MadelineProto->channels->deleteMessages(['channel' => $peer, 'id' => [$mid] ]);
 									}
 									//
 								}else if(strpos($message,"/web2pdf ") !== false){
@@ -390,7 +532,39 @@
 									$name = trim($web[1]);
 									$web= trim($web[0]);
 									if($web !=""){
+										$link = "http://wecangroup.ir/other/web2pdf/WeCan/?link=".($web);
+										//$txt = "⏳ <b>Converting...</b> ";
+										//$m = $MadelineProto->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $txt, 'parse_mode' => 'HTML' ]);
+										//if(isset($m['updates'][0]['id'])){
+										//	$mid = $m['updates'][0]['id'];
+										//}else{
+										//	$mid = $m['id'];
+										//}
+										$web = explode("/",$web);
+										if($name==""){
+											$name=str_replace(array("http:","https:","/",":"),"",$web[2]).".pdf";
+										}
+										$localFile = 'temp/'.$name;
+										//$file = file_get_contents($link);
+										//file_put_contents($localFile,$file);
+										curl_dl($link,$localFile);
+										//$txt = "⏳ <b>Uploading...</b> ".$name."";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 										
+										$caption = '📌 '.$name.' | @WeCanGP';
+										
+										$inputFile = $MadelineProto->upload($localFile);
+										//$txt = "⏳ Sending...: <b>".$name."</b>";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+										$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
+										
+										$p = ['peer' => $peer, 'media' => $inputMedia];
+										$res = $MadelineProto->messages->sendMedia($p);
+										unlink($localFile);
+										
+										//$txt = "✅ <b>Sent!</b> @WeCanCo 😎";
+										//$ed = $MadelineProto->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+										//$res = $MadelineProto->channels->deleteMessages(['channel' => $peer, 'id' => [$mid] ]);
 									}
 								}else if(strpos($message,"/link2file ") !== false){
 									$req = trim(str_replace("/link2file ","",$message));
