@@ -25,7 +25,7 @@ trait AuthKeyHandler
     public function request_call($user)
     {
         if (!class_exists('\danog\MadelineProto\VoIP')) {
-            throw new \danog\MadelineProto\Exception('The php-libtgvoip extension is required to accept and manage calls. See daniil.it/MadelineProto for more info.');
+            //throw new \danog\MadelineProto\Exception('The php-libtgvoip extension is required to accept and manage calls. See daniil.it/MadelineProto for more info.');
         }
         array_walk($this->calls, function ($controller, $id) {
             if ($controller->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
@@ -46,7 +46,7 @@ trait AuthKeyHandler
         $g_a = $dh_config['g']->powMod($a, $dh_config['p']);
         $this->check_G($g_a, $dh_config['p']);
         $res = $this->method_call('phone.requestCall', ['user_id' => $user, 'g_a_hash' => hash('sha256', $g_a->toBytes(), true), 'protocol' => ['_' => 'phoneCallProtocol', 'udp_p2p' => true, 'udp_reflector' => true, 'min_layer' => 65, 'max_layer' => 65]], ['datacenter' => $this->datacenter->curdc]);
-        $this->calls[$res['phone_call']['id']] = $controller = new \danog\MadelineProto\VoIP(true, $user['user_id'], ['_' => 'inputPhoneCall', 'id' => $res['phone_call']['id'], 'access_hash' => $res['phone_call']['access_hash']], $this, \danog\MadelineProto\VoIP::CALL_STATE_REQUESTED, $res['phone_call']['protocol']);
+        //$this->calls[$res['phone_call']['id']] = $controller = new \danog\MadelineProto\VoIP(true, $user['user_id'], ['_' => 'inputPhoneCall', 'id' => $res['phone_call']['id'], 'access_hash' => $res['phone_call']['access_hash']], $this, \danog\MadelineProto\VoIP::CALL_STATE_REQUESTED, $res['phone_call']['protocol']);
         $controller->storage = ['a' => $a, 'g_a' => str_pad($g_a->toBytes(), 256, chr(0), \STR_PAD_LEFT)];
 
         $this->handle_pending_updates();
