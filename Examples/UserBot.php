@@ -95,15 +95,17 @@
 	}
 	
 	$SentMSGs=explode("\n",file_get_contents('SentMSGs'));
+	$phone = $_GET['phone'];
+	$stopBotFile = "_stop_bot_".str_replace(array("+"," ","(",")"),"",$phone);
 	$offset= -1;
 	while(true){
-		if(file_exists('_stop_bot')){
+		if(file_exists($stopBotFile)){
 			echo "ربات متوقف شد.<br>";
 			exit();
 		}
 		$updates = $MadelineProto->get_updates(['offset' => $offset, 'limit' => 50]);
-		file_put_contents('updates',json_encode($updates));
-		//$updates = $MadelineProto->API->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]);
+		//$updates = $MadelineProto->get_updates();
+		//file_put_contents('updates',json_encode($updates));
 		foreach($updates as $update){			
 			try {
 				$out=0;
@@ -316,8 +318,7 @@
 @neon5963eeccefe9fbot
 @neon5963eeccf3250bot
 @neon5963ed2bb6a74bot";
-										$attackers2 ="
-@neon5963ed2bb3c17bot
+										$attackers2 ="@neon5963ed2bb3c17bot
 @neon5963ed2bacaf2bot
 @neon5963ed2bab493bot
 @neon5963ed2b9f631bot
@@ -369,9 +370,9 @@
 										$attackers = explode("\n",$attackers);
 										$attackers2 = explode("\n",$attackers2);
 										$attackers3 = explode("\n",$attackers3);
-										$res2 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
+										//$res2 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
 										//sleep(1);
-										//$res3 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers2 ]);
+										$res3 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers2 ]);
 										//sleep(1);
 										//$res4 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers3 ]);
 										
@@ -772,7 +773,7 @@ Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
 										}
 								
 										
-									}else if($channel_id==""){
+									}else if($channel_id=="" && 1==2){
 										$text='سلام من ربات میدلاین هستم! منو @WeCanCo ساخته!
 										دستورات من:
 										<b>/start2</b>  -> شروع

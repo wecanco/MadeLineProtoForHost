@@ -9,9 +9,10 @@
 	//?phone=+989905586201
 	
 	$phone = $_GET['phone'];
-    file_put_contents("_stop_bot","1");
+	$stopBotFile = "_stop_bot_".str_replace(array("+"," ","(",")"),"",$phone);
+    file_put_contents($stopBotFile,"1");
     sleep(1);
-    unlink("_stop_bot");
+    unlink($stopBotFile);
 	include('__madeline_config.php');
 	
     $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
