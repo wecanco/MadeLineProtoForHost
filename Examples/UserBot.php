@@ -160,9 +160,11 @@
 										$trans .= $sentence['trans']."\n";
 										$orig .= $sentence['orig']."\n";
 									}
-									$text = "<b>$src:</b> <i>$orig</i>
+									$text = "<b>$src:</b>
+<i>$orig</i>
 
-<b>$lang:</b> $trans								
+<b>$lang:</b>
+$trans
 🌐 @WeCanGP";
 									
 								}else if(strpos($message,"/fakemail ") !== false){
