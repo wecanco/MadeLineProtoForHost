@@ -24,6 +24,12 @@
 	if($RunInTerminal){
 		if(isset($argv[1])){
 			$_GET['phone'] = $argv[1];
+			if(isset($argv[2])){
+				$_GET['code'] = $argv[2];
+			}
+			if(isset($argv[3])){
+				$_GET['pass'] = $argv[3];
+			}
 		}else{
 			$_GET['phone'] = readline('Shomare Hamrahe Khod Ra Vared Namaed: ');
 		}
@@ -140,9 +146,9 @@
 			echo 'خطا در ارسال کد.'. PHP_EOL .$BreakLine;
 			exit();
 		}
-
-
-	}else if(isset($_GET['code'])){
+	}
+	
+	if($MadelineProto != false && isset($_GET['code'])){
 		$code = $_GET['code'];
 		echo 'درحال تایید کد...'. PHP_EOL .$BreakLine;
 		$authorization = $MadelineProto->complete_phone_login($code);

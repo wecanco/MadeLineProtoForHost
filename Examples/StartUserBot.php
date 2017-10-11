@@ -21,7 +21,7 @@
 
 	// نمونه کرون جاب:
 	//  */5 	* 	* 	* 	* 	wget -qO- http://tlbots.cf/_MadelineTest/Examples/StartUserBot.php?phone=+989357973301 &> /dev/null
-	//  */5 	* 	* 	* 	* 	/bin/php -f /home/USER/domains/tlbots.cf/public_html/_MadelineTest/Examples/UserBot.php +989357973301 &> /dev/null
+	//  */5 	* 	* 	* 	* 	/bin/php -f /home2/tlbotscf/public_html/MadeLineProtoForHost/Examples/UserBot.php +989357973301 &> /dev/null
 	
 		
 	// @WeCanGP | WeCan-Co.ir

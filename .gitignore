@@ -1,5 +1,5 @@
-Examples/sessions/session_*
-Examples/SentMSGs*
+Examples/sessions/session*
+Examples/SentMSGs
 Examples/UserBot2.php
 Examples/SocksProxy.php
 Examples/API.php

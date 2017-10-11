@@ -3,6 +3,7 @@
 	// ربات پاسخگو
 	//?phone=+989357973301
 	require_once('UserLogin.php'); // خواندن سشن
+	require_once('inc/GTranslator.php'); // کلاس ترجمه گوگل
 
 	if(!file_exists('SentMSGs')){
 		file_put_contents('SentMSGs',"");
