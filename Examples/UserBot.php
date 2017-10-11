@@ -715,7 +715,7 @@ Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
 										}
 								
 										
-									}else if($channel_id=="" && 1==2){
+									}else if($channel_id==""){
 										$text='سلام من ربات میدلاین هستم! منو @WeCanCo ساخته!
 دستورات من:
 <b>/start2</b>  -> شروع
