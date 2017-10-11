@@ -154,6 +154,8 @@
 									$translation 	= GoogleTranslate::translate($source, $lang, $content);
 									$translation = json_decode($translation,true);
 									$src = $translation['src'];
+									$trans="";
+									$orig="";
 									foreach($translation['sentences'] as $sentence){
 										$trans .= $sentence['trans']."\n";
 										$orig .= $sentence['orig']."\n";
