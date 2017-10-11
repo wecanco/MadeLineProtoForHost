@@ -62,12 +62,6 @@ class FrameTest extends BaseRollbarTest
         $this->assertEquals(array(1, "hi"), $this->frame->getArgs());
     }
 
-    public function testKwargs()
-    {
-        $this->frame->setKwargs(array("hi" => "bye"));
-        $this->assertEquals(array("hi" => "bye"), $this->frame->getKwargs());
-    }
-
     public function testEncode()
     {
         $context = m::mock("Rollbar\Payload\Context, \JsonSerializable")
@@ -84,8 +78,7 @@ class FrameTest extends BaseRollbarTest
             ->setMethod("testEncode()")
             ->setCode('$frame->setFilename("rollbar.php")')
             ->setContext($context)
-            ->setArgs(array("hello", "world"))
-            ->setKwargs(array("whatever" => "Faked"));
+            ->setArgs(array("hello", "world"));
 
         $actual = json_encode($this->frame->jsonSerialize());
         $expected = '{' .
@@ -94,8 +87,7 @@ class FrameTest extends BaseRollbarTest
                 '"method":"testEncode()",' .
                 '"code":"$frame->setFilename(\"rollbar.php\")",' .
                 '"context":"{CONTEXT}",' .
-                '"args":["hello","world"],' .
-                '"kwargs":{"whatever":"Faked"}' .
+                '"args":["hello","world"]' .
             '}';
 
         $this->assertEquals($expected, $actual);

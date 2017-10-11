@@ -232,7 +232,27 @@ class ConfigTest extends BaseRollbarTest
             $config->getSender()->getEndpoint()
         );
     }
-    
+
+    public function testCustom()
+    {
+        $config = new Config(array(
+            "access_token" => $this->getTestAccessToken(),
+            "environment" => $this->env,
+            "custom" => array(
+                "foo" => "bar",
+                "fuzz" => "buzz"
+            )
+        ));
+
+        $data = new Data("test", new Body(new Message("body")));
+        $data->setCustom(array("foo" => "baz"));
+        $payload = new Payload($data, $this->getTestAccessToken());
+        $result = $config->transform($payload, "level", "toLog", "context");
+        $custom = $result->getData()->getCustom();
+        $this->assertEquals("baz", $custom["foo"]);
+        $this->assertEquals("buzz", $custom["fuzz"]);
+    }
+
     public function testEndpointDefault()
     {
         $config = new Config(array(
@@ -397,24 +417,14 @@ class ConfigTest extends BaseRollbarTest
             "use_error_reporting" => $use_error_reporting
         ));
         
-        $levelFactory = $config->getLevelFactory();
-        
-        $data = new Data($this->env, new Body(new Message("test")));
-        $data->setLevel($levelFactory->fromName(Level::ERROR));
-        
         if ($error_reporting !== null) {
             $errorReportingTemp = error_reporting();
             error_reporting($error_reporting);
         }
         
-        $result = $config->checkIgnored(
-            new Payload(
-                $data,
-                $config->getAccessToken()
-            ),
-            $this->getTestAccessToken(),
-            $this->error,
-            false
+        $result = $config->internalCheckIgnored(
+            Level::ERROR,
+            $this->error
         );
         
         $this->assertEquals($expected, $result);

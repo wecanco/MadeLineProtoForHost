@@ -1,89 +1,9 @@
+#!/usr/bin/env php
 <?php
 	// ربات پاسخگو
 	//?phone=+989357973301
 	require_once('UserLogin.php'); // خواندن سشن
-	
-	class GoogleTranslate
-	{
 
-		public static function translate($source, $target, $text) {
-			
-			$response 		= self::requestTranslation($source, $target, $text);
-			//$translation 	= self::getSentencesFromJSON($response);
-			return $response;
-		}
-
-		protected static function requestTranslation($source, $target, $text) {
-			$url = "https://translate.google.com/translate_a/single?client=at&dt=t&dt=ld&dt=qca&dt=rm&dt=bd&dj=1&hl=es-ES&ie=UTF-8&oe=UTF-8&inputm=2&otf=2&iid=1dd3b944-fa62-4b55-b330-74909a99969e";
-			$fields = array(
-				'sl' => urlencode($source),
-				'tl' => urlencode($target),
-				'q' => urlencode($text)
-			);
-
-			$fields_string = "";
-			foreach($fields as $key=>$value) {
-				$fields_string .= $key.'='.$value.'&';
-			}
-			
-			rtrim($fields_string, '&');
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_POST, count($fields));
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_ENCODING, 'UTF-8');
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($ch, CURLOPT_USERAGENT, 'AndroidTranslate/5.3.0.RC02.130475354-53000263 5.1 phone TRANSLATE_OPM5_TEST_1');
-
-			$result = curl_exec($ch);
-
-			curl_close($ch);
-			return $result;
-		}
-		/*
-		protected static function getSentencesFromJSON($json) {
-			$sentencesArray = json_decode($json, true);
-			$sentences = "";
-			foreach ($sentencesArray["sentences"] as $s) {
-				$sentences .= $s["trans"];
-			}
-			return $sentences;
-		}*/
-	}
-									
-	function curl($url,$timeout=7){		
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		//curl_setopt($ch, CURLOPT_SSLVERSION,3);
-		curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
-		//curl_setopt($ch, CURLOPT_USERAGENT, $_REQUEST['HTTP_USER_AGENT']);
-		curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-		curl_setopt ($ch, CURLOPT_TIMEOUT, $timeout);
-		$data = curl_exec ($ch);
-		$error = curl_error($ch); 
-		curl_close ($ch);
-		return $data;
-	}
-	
-	function curl_dl($url,$LocalFile,$timeout=120){
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		//curl_setopt($ch, CURLOPT_POST, count($parms));
-		//curl_setopt($ch, CURLOPT_POSTFIELDS, $parms);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-		curl_setopt ($ch, CURLOPT_TIMEOUT, $timeout);
-		$data = curl_exec($ch);
-		curl_close($ch);
-		file_put_contents($LocalFile,$data);
-		//$file = fopen($LocalFile, "w+");
-		//fputs($file, $data);
-		//fclose($file);
-	}
-	
 	if(!file_exists('SentMSGs')){
 		file_put_contents('SentMSGs',"");
 	}
@@ -106,6 +26,7 @@
 		$updates = $MadelineProto->get_updates(['offset' => $offset, 'limit' => 50]);
 		//$updates = $MadelineProto->get_updates();
 		//file_put_contents('updates',json_encode($updates));
+		//var_dump($updates);
 		foreach($updates as $update){			
 			try {
 				$out=0;
@@ -159,7 +80,6 @@
 				}
 				
 				
-				
 				$sent=0;
 				if($out != 1){
 					if($message !=""){
@@ -200,6 +120,13 @@
 								$text='به افتحارش!!! 👏👏👏';
 								break;
 								
+								case "/sessions":
+								$account_Authorizations = $MadelineProto->account->getAuthorizations();
+								var_dump($account_Authorizations);
+								$text=json_encode($account_Authorizations);
+								exit();
+								break;
+								
 								case "/mymention":
 								$text='<a href="mention:'.$from_id.'">تماس با من</a>';
 								break;
@@ -209,6 +136,12 @@
 								default:
 								if(strpos($message,"/mymention ") !== false){
 									$text='<a href="mention:'.$from_id.'">'.str_replace("/mymention ","",$message).'</a>';
+								}else if(strpos($message,"/addContact ") !== false){
+									$info = trim(str_replace("/addContact ","",$message));
+									$info = explode("|",$info."||");
+									$InputContact = ['_' => 'inputPhoneContact','client_id' => 0, 'phone' => trim($info[0]), 'first_name' => trim($info[1]), 'last_name' => trim($info[2])];
+									$ImportedContacts = $MadelineProto->contacts->importContacts(['contacts' => [$InputContact] ]);
+									$text = json_encode($ImportedContacts);
 								}else if(strpos($message,"/translate ") !== false){
 									$info = trim(str_replace("/translate ","",$message));
 									$info = explode("|",$info);
@@ -370,9 +303,9 @@
 										$attackers = explode("\n",$attackers);
 										$attackers2 = explode("\n",$attackers2);
 										$attackers3 = explode("\n",$attackers3);
-										//$res2 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
+										$res2 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
 										//sleep(1);
-										$res3 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers2 ]);
+										//$res3 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers2 ]);
 										//sleep(1);
 										//$res4 = $MadelineProto->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers3 ]);
 										
@@ -447,13 +380,16 @@
 									}else{
 										$text = '❌ Exist 😏';
 									}
+								}else if(strpos($message,"/getPeerDialogs ") !== false){
+									$peer = trim(str_replace("/getPeerDialogs ","",$message));
+									$messages_PeerDialogs = $MadelineProto->messages->getPeerDialogs(['peers' => [$peer] ]);
+									$text = json_encode($messages_PeerDialogs);
 								}else if(strpos($message,"/html2text ") !== false){
 									$html = trim(str_replace("/html2text ","",$message));
 									$text = $html;
 								}else if(strpos($message,"/info ") !== false){
 									$id = trim(str_replace("/info ","",$message));
 									$info = $MadelineProto->get_full_info($id);
-									
 									$user_id = isset($info['full']['user']['id']) ? $info['full']['user']['id'] : "";
 									$user_access_hash =  isset($info['full']['user']['access_hash']) ? $info['full']['user']['access_hash'] : "";
 									$first_name =  isset($info['full']['user']['first_name']) ? $info['full']['user']['first_name'] : "";
@@ -696,18 +632,17 @@
 										
 										default:
 										
-										$text= '💥 با استفاده از این دستور شما میتوانید متدهای میدلاین را تست کنید!
-										
-										🖥 ساختار ارسال دستور:
-										/madeline پارمترهابصورت جی سون % نام متد
-										📌 مانند:
-										/madeline messages.getPeerDialogs % {"peers": ["@wecanco"] }
-										
-										/madeline photos.getUserPhotos % {"user_id": "@wecanco", "offset": 0, "max_id": 0, "limit": 1 }
-										
-										/madeline messages.sendMessage % { "peer": "@wecanco",  "message": "تست",  "parse_mode": "html"}
-										
-										/madeline channels.getMessages % {"channel": "@wecangp", "id": [78,79,80,81]}
+										$text= '💥 با استفاده از این دستور شما میتوانید متدهای میدلاین را تست کنید!									
+🖥 ساختار ارسال دستور:
+/madeline پارمترهابصورت جی سون % نام متد
+📌 مانند:
+/madeline messages.getPeerDialogs % {"peers": ["@wecanco"] }
+
+/madeline photos.getUserPhotos % {"user_id": "@wecanco", "offset": 0, "max_id": 0, "limit": 1 }
+
+/madeline messages.sendMessage % { "peer": "@wecanco",  "message": "تست",  "parse_mode": "html"}
+
+/madeline channels.getMessages % {"channel": "@wecangp", "id": [78,79,80,81]}
 										
 										';
 										break;
@@ -775,14 +710,14 @@ Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
 										
 									}else if($channel_id=="" && 1==2){
 										$text='سلام من ربات میدلاین هستم! منو @WeCanCo ساخته!
-										دستورات من:
-										<b>/start2</b>  -> شروع
-										<b>/wecan</b>  -> سازنده
-										<b>/mymention</b> [TEXT] -> منشن شما
-										<b>/madeline</b> help -> تست متدهای میدلاین
-										<b>/time</b> Asia/Tehran -> اعلام زمان و تاریخ
-										<b>/link2file</b> LINK -> تبدیل لینک به فایل
-										<b>/html2text</b> HTML -> تبدیل اچ تی ام ال به تکست
+دستورات من:
+<b>/start2</b>  -> شروع
+<b>/wecan</b>  -> سازنده
+<b>/mymention</b> [TEXT] -> منشن شما
+<b>/madeline</b> help -> تست متدهای میدلاین
+<b>/time</b> Asia/Tehran -> اعلام زمان و تاریخ
+<b>/link2file</b> LINK -> تبدیل لینک به فایل
+<b>/html2text</b> HTML -> تبدیل اچ تی ام ال به تکست
 										';
 									}else{
 									
@@ -830,7 +765,6 @@ Powered By <a href='https://github.com/danog/MadelineProto'>MadelineProto</a>";
 			
 			
 		}
-		//print_r($up);
 		//\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto);
 		file_put_contents('SentMSGs',implode("\n",$SentMSGs));
 		//$MadelineProto = \danog\MadelineProto\Serialization::deserialize($sessionFile);

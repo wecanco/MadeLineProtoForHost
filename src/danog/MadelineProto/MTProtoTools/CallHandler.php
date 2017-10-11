@@ -19,10 +19,10 @@ trait CallHandler
 {
     public function method_call($method, $args = [], $aargs = ['message_id' => null, 'heavy' => false])
     {
-        if (!$this->is_array($args)) {
+        if (!is_array($args)) {
             throw new \danog\MadelineProto\Exception("Arguments aren't an array.");
         }
-        if (!$this->is_array($aargs)) {
+        if (!is_array($aargs)) {
             throw new \danog\MadelineProto\Exception("Additonal arguments aren't an array.");
         }
         if (!isset($aargs['datacenter'])) {
@@ -31,7 +31,7 @@ trait CallHandler
         if (isset($args['id']['_']) && isset($args['id']['dc_id']) && $args['id']['_'] === 'inputBotInlineMessageID') {
             $aargs['datacenter'] = $args['id']['dc_id'];
         }
-        if (basename(debug_backtrace(0)[0]['file']) === 'APIFactory.php' && isset(self::DISALLOWED_METHODS[$method])) {
+        if (basename(debug_backtrace(0)[0]['file']) === 'APIFactory.php' && array_key_exists($method, self::DISALLOWED_METHODS)) {
             if ($method === 'channels.getParticipants' && isset($args['filter']) && $args['filter'] === ['_' => 'channelParticipantsRecent']) {
                 \danog\MadelineProto\Logger::log([self::DISALLOWED_METHODS[$method]], \danog\MadelineProto\Logger::FATAL_ERROR);
             } else {
@@ -74,12 +74,16 @@ trait CallHandler
         if (isset($queue)) {
             $serialized = $this->serialize_method('invokeAfterMsgs', ['msg_ids' => $this->datacenter->sockets[$aargs['datacenter']]->call_queue[$queue], 'query' => $serialized]);
         }
-
-        $last_recv = $this->last_recv;
-        if ($canunset = !$this->updates_state['sync_loading'] && !$this->threads && !$this->run_workers) {
-            $this->updates_state['sync_loading'] = true;
+        if ($this->settings['requests']['gzip_encode_if_gt'] !== -1 && ($l = strlen($serialized)) > $this->settings['requests']['gzip_encode_if_gt'] && ($g = strlen($gzipped = gzencode($serialized))) < $l) {
+            $serialized = $this->serialize_object(['type' => 'gzip_packed'], ['packed_data' => $gzipped], 'gzipped data');
+            \danog\MadelineProto\Logger::log(['Using GZIP compression for '.$method.', saved '.($l - $g).' bytes of data, reduced call size by '.($g * 100 / $l).'%'], \danog\MadelineProto\Logger::VERBOSE);
         }
+        $last_recv = $this->last_recv;
         for ($count = 1; $count <= $this->settings['max_tries']['query']; $count++) {
+            if ($canunset = !$this->updates_state['sync_loading'] && !$this->threads && !$this->run_workers) {
+                $this->updates_state['sync_loading'] = true;
+            }
+
             try {
                 \danog\MadelineProto\Logger::log(['Calling method (try number '.$count.' for '.$method.')...'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
 
@@ -90,7 +94,7 @@ trait CallHandler
                         reset($this->datacenter->sockets[$aargs['datacenter']]->call_queue[$queue]);
                         $key = key($this->datacenter->sockets[$aargs['datacenter']]->call_queue[$queue]);
                         if ($key[0] === "\0") {
-                            $key = 'a'.$key;
+                            $key = $key;
                         }
                         unset($this->datacenter->sockets[$aargs['datacenter']]->call_queue[$queue][$key]);
                     }
@@ -206,22 +210,20 @@ trait CallHandler
             } catch (\danog\MadelineProto\Exception $e) {
                 $last_error = $e->getMessage().' in '.basename($e->getFile(), '.php').' on line '.$e->getLine();
                 \danog\MadelineProto\Logger::log(['An error occurred while calling method '.$method.': '.$last_error.'. Recreating connection and retrying to call method...'], \danog\MadelineProto\Logger::WARNING);
-                if ($this->in_array($this->datacenter->sockets[$aargs['datacenter']]->protocol, ['http', 'https']) && $method !== 'http_wait') {
-                    //$this->method_call('http_wait', ['max_wait' => $this->datacenter->sockets[$aargs['datacenter']]->timeout, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $aargs['datacenter']]);
-                } else {
-                    $this->datacenter->sockets[$aargs['datacenter']]->close_and_reopen();
-                }
-                //sleep(1); // To avoid flooding
+                //if (in_array($this->datacenter->sockets[$aargs['datacenter']]->protocol, ['http', 'https']) && $method !== 'http_wait') {
+                //$this->method_call('http_wait', ['max_wait' => $this->datacenter->sockets[$aargs['datacenter']]->timeout, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $aargs['datacenter']]);
+                //} else {
+                $this->datacenter->sockets[$aargs['datacenter']]->close_and_reopen();
+                //}
                 continue;
             } catch (\RuntimeException $e) {
                 $last_error = $e->getMessage().' in '.basename($e->getFile(), '.php').' on line '.$e->getLine();
                 \danog\MadelineProto\Logger::log(['An error occurred while calling method '.$method.': '.$last_error.'. Recreating connection and retrying to call method...'], \danog\MadelineProto\Logger::WARNING);
-                if ($this->in_array($this->datacenter->sockets[$aargs['datacenter']]->protocol, ['http', 'https']) && $method !== 'http_wait') {
-                    //$this->method_call('http_wait', ['max_wait' => $this->datacenter->sockets[$aargs['datacenter']]->timeout, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $aargs['datacenter']]);
-                } else {
-                    $this->datacenter->sockets[$aargs['datacenter']]->close_and_reopen();
-                }
-                //sleep(1); // To avoid flooding
+                //if (in_array($this->datacenter->sockets[$aargs['datacenter']]->protocol, ['http', 'https']) && $method !== 'http_wait') {
+                //$this->method_call('http_wait', ['max_wait' => $this->datacenter->sockets[$aargs['datacenter']]->timeout, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $aargs['datacenter']]);
+                //} else {
+                $this->datacenter->sockets[$aargs['datacenter']]->close_and_reopen();
+                //}
                 continue;
             } finally {
                 if (isset($aargs['heavy']) && $aargs['heavy'] && isset($message_id)) {
@@ -271,18 +273,20 @@ trait CallHandler
 
     public function object_call($object, $args = [], $aargs = ['message_id' => null, 'heavy' => false])
     {
-        if (!$this->is_array($args)) {
+        if (!is_array($args)) {
             throw new \danog\MadelineProto\Exception("Arguments aren't an array.");
         }
         if (!isset($aargs['datacenter'])) {
             throw new \danog\MadelineProto\Exception('No datacenter provided');
         }
+        $serialized = $this->serialize_object(['type' => $object], $args, $object);
+
         for ($count = 1; $count <= $this->settings['max_tries']['query']; $count++) {
             try {
                 if ($object !== 'msgs_ack') {
                     \danog\MadelineProto\Logger::log(['Sending object (try number '.$count.' for '.$object.')...'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
                 }
-                $message_id = $this->send_message($this->serialize_object(['type' => $object], $args, $object), $this->content_related($object), $aargs);
+                $message_id = $this->send_message($serialized, $this->content_related($object), $aargs);
                 if ($object !== 'msgs_ack') {
                     $this->datacenter->sockets[$aargs['datacenter']]->outgoing_messages[$message_id]['content'] = ['method' => $object, 'args' => $args];
                 }

@@ -15,4 +15,5 @@ return array(
     'ee8b9dc0d1b22a255490d056f08b1a94' => $baseDir . '/src/Thread.php',
     '8071b591748c33081e1801a04d20062f' => $baseDir . '/src/Worker.php',
     '3f836cae0440334cb5210fceace41b10' => $baseDir . '/src/Pool.php',
+    'efa3b80c61fb35e374f529ec349af098' => $baseDir . '/src/BigIntegor.php',
 );

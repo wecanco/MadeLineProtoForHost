@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 namespace ParagonIE\ConstantTime;
 
 /**
@@ -38,7 +37,7 @@ abstract class Hex implements EncoderInterface
      * @param string $bin_string (raw binary)
      * @return string
      */
-    public static function encode(string $bin_string): string
+    public static function encode($bin_string)
     {
         $hex = '';
         $len = Binary::safeStrlen($bin_string);
@@ -62,7 +61,7 @@ abstract class Hex implements EncoderInterface
      * @param string $bin_string (raw binary)
      * @return string
      */
-    public static function encodeUpper(string $bin_string): string
+    public static function encodeUpper($bin_string)
     {
         $hex = '';
         $len = Binary::safeStrlen($bin_string);
@@ -84,29 +83,23 @@ abstract class Hex implements EncoderInterface
      * leaks
      *
      * @param string $hex_string
-     * @param bool $strictPadding
      * @return string (raw binary)
      * @throws \RangeException
      */
-    public static function decode(string $hexString, bool $strictPadding = false): string
+    public static function decode($hex_string)
     {
         $hex_pos = 0;
         $bin = '';
         $c_acc = 0;
-        $hex_len = Binary::safeStrlen($hexString);
+        $hex_len = Binary::safeStrlen($hex_string);
         $state = 0;
         if (($hex_len & 1) !== 0) {
-            if ($strictPadding) {
-                throw new \RangeException(
-                    'Expected an even number of hexadecimal characters'
-                );
-            } else {
-                $hexString = '0' . $hexString;
-                ++$hex_len;
-            }
+            throw new \RangeException(
+                'Expected an even number of hexadecimal characters'
+            );
         }
 
-        $chunk = \unpack('C*', $hexString);
+        $chunk = \unpack('C*', $hex_string);
         while ($hex_pos < $hex_len) {
             ++$hex_pos;
             $c = $chunk[$hex_pos];

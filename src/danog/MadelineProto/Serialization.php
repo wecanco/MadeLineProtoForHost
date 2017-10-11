@@ -9,9 +9,7 @@ See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with MadelineProto.
 If not, see <http://www.gnu.org/licenses/>.
 */
-
 namespace danog\MadelineProto;
-
 /**
  * Manages serialization of the MadelineProto instance.
  */
@@ -28,20 +26,22 @@ class Serialization
      */
     public static function serialize($filename, $instance, $force = false)
     {
+        if (isset($instance->API->setdem) && $instance->API->setdem) {
+            $instance->API->setdem = false;
+            $instance->API->__construct($instance->API->settings);
+        }
         if (!file_exists($lock = $filename.'.lock')) {
             touch($lock);
             clearstatcache();
         }
-        $lock = fopen($lock, 'r');
+        $lock = fopen($lock, 'w');
         flock($lock, LOCK_EX);
-        $wrote = file_put_contents($filename.'.temp.session', \danog\Serialization::serialize($instance, true));
+        $wrote = file_put_contents($filename.'.temp.session', serialize($instance));
         rename($filename.'.temp.session', $filename);
         flock($lock, LOCK_UN);
         fclose($lock);
-
         return $wrote;
     }
-
     /**
      * Deserialize API class.
      *
@@ -64,30 +64,35 @@ class Serialization
             $unserialized = file_get_contents($filename);
             flock($lock, LOCK_UN);
             fclose($lock);
-            $unserialized = str_replace('O:26:"danog\MadelineProto\Button":', 'O:35:"danog\MadelineProto\TL\Types\Button":', $unserialized);
+            $tounserialize = str_replace('O:26:"danog\MadelineProto\Button":', 'O:35:"danog\MadelineProto\TL\Types\Button":', $unserialized);
             foreach (['RSA', 'TL\TLMethod', 'TL\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\Types\Button', 'TL\Types\Bytes', 'APIFactory'] as $class) {
                 class_exists('\danog\MadelineProto\\'.$class);
             }
             class_exists('\Volatile');
             \danog\MadelineProto\Logger::class_exists();
-
             try {
-                $unserialized = \danog\Serialization::unserialize($unserialized);
-            } catch (Bug74586Exception $e) {
-                $unserialized = \danog\Serialization::unserialize($unserialized);
-                /*} catch (Exception $e) {
-                    $unserialized = \danog\Serialization::unserialize($unserialized);
-                */
-            } catch (\Error $e) {
-                $unserialized = \danog\Serialization::unserialize($unserialized);
+//                $unserialized = \danog\Serialization::unserialize($tounserialize);
+                $unserialized = unserialize($tounserialize);
+            } catch (\danog\MadelineProto\Bug74586Exception $e) {
+                $unserialized = \danog\Serialization::unserialize($tounserialize);
+            } catch (\danog\MadelineProto\Exception $e) {
+                if (Logger::$constructed) {
+                    Logger::log([(string) $e], Logger::ERROR);
+                }
+                if ($e->getMessage() === "Erroneous data format for unserializing 'phpseclib\Math\BigInteger'") {
+                    $tounserialize = str_replace('phpseclib\Math\BigInteger', 'phpseclib\Math\BigIntegor', $unserialized);
+                }
+                $unserialized = \danog\Serialization::unserialize($tounserialize);
+            }
+            if ($unserialized instanceof \danog\PlaceHolder) {
+                $unserialized = \danog\Serialization::unserialize($tounserialize);
             }
         } else {
-            throw new Exception('File does not exist');
+            throw new Exception(\danog\MadelineProto\Lang::$current_lang['file_not_exist']);
         }
         if ($unserialized === false) {
-            throw new Exception('An error occurred on deserialization');
+            throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialization_error']);
         }
-
         return $unserialized;
     }
 }

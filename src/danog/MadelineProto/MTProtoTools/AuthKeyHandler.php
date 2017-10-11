@@ -24,7 +24,7 @@ trait AuthKeyHandler
     {
         for ($retry_id_total = 1; $retry_id_total <= $this->settings['max_tries']['authorization']; $retry_id_total++) {
             try {
-                \danog\MadelineProto\Logger::log(['Requesting pq'], \danog\MadelineProto\Logger::VERBOSE);
+                \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['req_pq']], \danog\MadelineProto\Logger::VERBOSE);
 
                 /**
                  * ***********************************************************************
@@ -65,7 +65,7 @@ trait AuthKeyHandler
                 */
 
                 foreach ($this->rsa_keys as $curkey) {
-                    if ($this->in_array($curkey->fp, $ResPQ['server_public_key_fingerprints'])) {
+                    if (in_array($curkey->fp, $ResPQ['server_public_key_fingerprints'])) {
                         $key = $curkey;
                     }
                 }
@@ -501,8 +501,12 @@ trait AuthKeyHandler
     public function get_dh_config()
     {
         $this->updates_state['sync_loading'] = true;
-        $dh_config = $this->method_call('messages.getDhConfig', ['version' => $this->dh_config['version'], 'random_length' => 0], ['datacenter' => $this->datacenter->curdc]);
-        $this->updates_state['sync_loading'] = false;
+
+        try {
+            $dh_config = $this->method_call('messages.getDhConfig', ['version' => $this->dh_config['version'], 'random_length' => 0], ['datacenter' => $this->datacenter->curdc]);
+        } finally {
+            $this->updates_state['sync_loading'] = false;
+        }
         if ($dh_config['_'] === 'messages.dhConfigNotModified') {
             \danog\MadelineProto\Logger::log(\danog\MadelineProto\Logger::VERBOSE, ['DH configuration not modified']);
 

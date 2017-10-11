@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 namespace ParagonIE\ConstantTime;
 
 /**
@@ -39,9 +38,9 @@ abstract class Base32 implements EncoderInterface
      * @param string $src
      * @return string
      */
-    public static function decode(string $src, bool $strictPadding = false): string
+    public static function decode($src)
     {
-        return static::doDecode($src, false, $strictPadding);
+        return static::doDecode($src, false);
     }
 
     /**
@@ -50,9 +49,9 @@ abstract class Base32 implements EncoderInterface
      * @param string $src
      * @return string
      */
-    public static function decodeUpper(string $src, bool $strictPadding = false): string
+    public static function decodeUpper($src)
     {
-        return static::doDecode($src, true, $strictPadding);
+        return static::doDecode($src, true);
     }
 
     /**
@@ -61,7 +60,7 @@ abstract class Base32 implements EncoderInterface
      * @param string $src
      * @return string
      */
-    public static function encode(string $src): string
+    public static function encode($src)
     {
         return static::doEncode($src, false);
     }
@@ -72,7 +71,7 @@ abstract class Base32 implements EncoderInterface
      * @param string $src
      * @return string
      */
-    public static function encodeUpper(string $src): string
+    public static function encodeUpper($src)
     {
         return static::doEncode($src, true);
     }
@@ -84,7 +83,7 @@ abstract class Base32 implements EncoderInterface
      * @param int $src
      * @return int
      */
-    protected static function decode5Bits(int $src): int
+    protected static function decode5Bits($src)
     {
         $ret = -1;
 
@@ -106,7 +105,7 @@ abstract class Base32 implements EncoderInterface
      * @param int $src
      * @return int
      */
-    protected static function decode5BitsUpper(int $src): int
+    protected static function decode5BitsUpper($src)
     {
         $ret = -1;
 
@@ -126,7 +125,7 @@ abstract class Base32 implements EncoderInterface
      * @param $src
      * @return string
      */
-    protected static function encode5Bits(int $src): string
+    protected static function encode5Bits($src)
     {
         $diff = 0x61;
 
@@ -145,7 +144,7 @@ abstract class Base32 implements EncoderInterface
      * @param $src
      * @return string
      */
-    protected static function encode5BitsUpper(int $src): string
+    protected static function encode5BitsUpper($src)
     {
         $diff = 0x41;
 
@@ -159,12 +158,11 @@ abstract class Base32 implements EncoderInterface
     /**
      * Base32 decoding
      *
-     * @param string $src
+     * @param $src
      * @param bool $upper
-     * @param bool $strictPadding
      * @return string
      */
-    protected static function doDecode(string $src, bool $upper = false, bool $strictPadding = false): string
+    protected static function doDecode($src, $upper = false)
     {
         // We do this to reduce code duplication:
         $method = $upper
@@ -176,24 +174,19 @@ abstract class Base32 implements EncoderInterface
         if ($srcLen === 0) {
             return '';
         }
-        if ($strictPadding) {
-            if (($srcLen & 7) === 0) {
-                for ($j = 0; $j < 7; ++$j) {
-                    if ($src[$srcLen - 1] === '=') {
-                        $srcLen--;
-                    } else {
-                        break;
-                    }
+        if (($srcLen & 7) === 0) {
+            for ($j = 0; $j < 7; ++$j) {
+                if ($src[$srcLen - 1] === '=') {
+                    $srcLen--;
+                } else {
+                    break;
                 }
             }
-            if (($srcLen & 7) === 1) {
-                throw new \RangeException(
-                    'Incorrect padding'
-                );
-            }
-        } else {
-            $src = \rtrim($src, '=');
-            $srcLen = Binary::safeStrlen($src);
+        }
+        if (($srcLen & 7) === 1) {
+            throw new \RangeException(
+                'Incorrect padding'
+            );
         }
 
         $err = 0;
@@ -321,7 +314,7 @@ abstract class Base32 implements EncoderInterface
      * @param bool $upper
      * @return string
      */
-    protected static function doEncode(string $src, bool $upper = false): string
+    protected static function doEncode($src, $upper = false)
     {
         // We do this to reduce code duplication:
         $method = $upper

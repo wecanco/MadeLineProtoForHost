@@ -54,17 +54,20 @@ trait Constructors
                 if (in_array($param['name'], ['flags', 'random_id', 'random_bytes'])) {
                     continue;
                 }
-                if ($type === 'EncryptedMessage' && $param['name'] === 'bytes') {
+                if ($type === 'EncryptedMessage' && $param['name'] === 'bytes' && !isset($this->settings['td'])) {
                     $param['name'] = 'decrypted_message';
                     $param['type'] = 'DecryptedMessage';
                 }
                 $type_or_subtype = isset($param['subtype']) ? 'subtype' : 'type';
-                $type_or_bare_type = (ctype_upper($this->end(explode('.', $param[$type_or_subtype]))[0]) || in_array($param[$type_or_subtype], ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int', 'long', 'int128', 'int256', 'int512'])) ? 'types' : 'constructors';
+                $type_or_bare_type = (ctype_upper($this->end(explode('.', $param[$type_or_subtype]))[0]) || in_array($param[$type_or_subtype], ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512'])) ? 'types' : 'constructors';
 
                 $param[$type_or_subtype] = str_replace(['.', 'true', 'false'], ['_', 'Bool', 'Bool'], $param[$type_or_subtype]);
 
                 if (preg_match('/%/', $param[$type_or_subtype])) {
                     $param[$type_or_subtype] = $this->constructors->find_by_type(str_replace('%', '', $param[$type_or_subtype]))['predicate'];
+                }
+                if (substr($param[$type_or_subtype], -1) === '>') {
+                    $param[$type_or_subtype] = substr($param[$type_or_subtype], 0, -1);
                 }
                 $params .= "'".$param['name']."' => ";
                 $param[$type_or_subtype] = '['.$this->escape($param[$type_or_subtype]).'](../'.$type_or_bare_type.'/'.$param[$type_or_subtype].'.md)';
@@ -95,20 +98,26 @@ trait Constructors
                 if (in_array($param['name'], ['flags', 'random_id', 'random_bytes'])) {
                     continue;
                 }
-                if ($type === 'EncryptedMessage' && $param['name'] === 'bytes') {
+                if ($type === 'EncryptedMessage' && $param['name'] === 'bytes' && !isset($this->settings['td'])) {
                     $param['name'] = 'decrypted_message';
                     $param['type'] = 'DecryptedMessage';
                 }
                 $ptype = str_replace('.', '_', $param[isset($param['subtype']) ? 'subtype' : 'type']);
-                $type_or_bare_type = 'types';
-                if (isset($param['subtype'])) {
+                //$type_or_bare_type = 'types';
+                /*if (isset($param['subtype'])) {
                     if ($param['type'] === 'vector') {
                         $type_or_bare_type = 'constructors';
                     }
-                }
+                }*/
                 if (preg_match('/%/', $ptype)) {
                     $ptype = $this->constructors->find_by_type(str_replace('%', '', $ptype))['predicate'];
                 }
+                $type_or_bare_type = ((ctype_upper($this->end(explode('_', $ptype))[0]) || in_array($ptype, ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512'])) && $ptype !== 'MTmessage') ? 'types' : 'constructors';
+
+                if (substr($ptype, -1) === '>') {
+                    $ptype = substr($ptype, 0, -1);
+                }
+
                 switch ($ptype) {
                     case 'true':
                     case 'false':
@@ -155,7 +164,9 @@ description: '.$description.'
 
 
 ';
-            $example = '### Example:
+            $example = '';
+            if (!isset($this->settings['td'])) {
+                $example = '### Example:
 
 ```
 $'.$constructor.$layer.' = '.$params.';
@@ -179,17 +190,17 @@ Or, if you\'re into Lua:
 
 ';
 
-            if ($hasreplymarkup) {
-                $example .= '
+                if ($hasreplymarkup) {
+                    $example .= '
 ## Usage of reply_markup
 
 You can provide bot API reply_markup objects here.  
 
 
 ';
-            }
-            if ($hasentities) {
-                $example .= '
+                }
+                if ($hasentities) {
+                    $example .= '
 ## Usage of parse_mode:
 
 Set parse_mode to html to enable HTML parsing of the message.  
@@ -221,6 +232,7 @@ You can also use normal markdown, note that to create mentions you must use the 
 
 MadelineProto supports all html entities supported by [html_entity_decode](http://php.net/manual/en/function.html-entity-decode.php).
 ';
+                }
             }
             file_put_contents('constructors/'.$constructor.$layer.'.md', $header.$table.$type.$example);
         }

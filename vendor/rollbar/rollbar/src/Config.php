@@ -54,6 +54,8 @@ class Config
 
     private $batched = false;
     private $batch_size = 50;
+
+    private $custom = array();
     /**
      * @var callable
      */
@@ -131,6 +133,7 @@ class Config
         $this->setScrubber($config);
         $this->setBatched($config);
         $this->setBatchSize($config);
+        $this->setCustom($config);
         $this->setResponseHandler($config);
         $this->setCheckIgnoreFunction($config);
         $this->setSendMessageTrace($config);
@@ -234,6 +237,13 @@ class Config
     {
         if (array_key_exists('batch_size', $config)) {
             $this->batch_size = $config['batch_size'];
+        }
+    }
+
+    private function setCustom($config)
+    {
+        if (array_key_exists('custom', $config)) {
+            $this->custom = $config['custom'];
         }
     }
 
@@ -420,6 +430,13 @@ class Config
      */
     public function transform($payload, $level, $toLog, $context)
     {
+        if (count($this->custom) > 0) {
+            $data = $payload->getData();
+            $custom = $data->getCustom();
+            $custom = array_merge(array(), $this->custom, (array)$custom);
+            $data->setCustom($custom);
+            $payload->setData($data);
+        }
         if (is_null($this->transformer)) {
             return $payload;
         }
@@ -438,10 +455,6 @@ class Config
 
     public function checkIgnored($payload, $accessToken, $toLog, $isUncaught)
     {
-        if ($this->shouldSuppress()) {
-            return true;
-        }
-        
         if (isset($this->checkIgnore)) {
             try {
                 if (call_user_func($this->checkIgnore, $isUncaught, $toLog, $payload)) {
@@ -453,16 +466,29 @@ class Config
             }
         }
         
-        if ($this->levelTooLow($payload)) {
+        if ($this->payloadLevelTooLow($payload)) {
             return true;
         }
-        
+
         if (!is_null($this->filter)) {
             return $this->filter->shouldSend($payload, $accessToken);
         }
 
+        return false;
+    }
+
+    public function internalCheckIgnored($level, $toLog)
+    {
+        if ($this->shouldSuppress()) {
+            return true;
+        }
+
+        if ($this->levelTooLow($this->levelFactory->fromName($level))) {
+            return true;
+        }
+
         if ($toLog instanceof ErrorWrapper) {
-            return $this->shouldIgnoreError($toLog);
+            return $this->shouldIgnoreErrorWrapper($toLog);
         }
         
         if ($toLog instanceof \Exception) {
@@ -471,26 +497,24 @@ class Config
         
         return false;
     }
-    
+
     /**
      * Check if the error should be ignored due to `included_errno` config,
      * `use_error_reporting` config or `error_sample_rates` config.
      *
-     * @param \Rollbar\ErrorWrapper $toLog
+     * @param errno
      *
      * @return bool
      */
-    protected function shouldIgnoreError(ErrorWrapper $toLog)
+    public function shouldIgnoreError($errno)
     {
-        $errno = $toLog->errorLevel;
-
-        if ($this->included_errno != -1 && ($errno & $this->included_errno) != $errno) {
-            // ignore
+        if ($this->use_error_reporting && ($errno & error_reporting()) === 0) {
+            // ignore due to error_reporting level
             return true;
         }
 
-        if ($this->use_error_reporting && ($errno & error_reporting()) != $errno) {
-            // ignore due to error_reporting level
+        if ($this->included_errno != -1 && ($errno & $this->included_errno) != $errno) {
+            // ignore
             return true;
         }
 
@@ -505,6 +529,19 @@ class Config
         }
         
         return false;
+    }
+
+    /**
+     * Check if the error should be ignored due to `included_errno` config,
+     * `use_error_reporting` config or `error_sample_rates` config.
+     *
+     * @param \Rollbar\ErrorWrapper $toLog
+     *
+     * @return bool
+     */
+    protected function shouldIgnoreErrorWrapper(ErrorWrapper $toLog)
+    {
+        return $this->shouldIgnoreError($toLog->errorLevel);
     }
     
     /**
@@ -565,9 +602,18 @@ class Config
      * @param Payload $payload
      * @return bool
      */
-    private function levelTooLow($payload)
+    private function payloadLevelTooLow($payload)
     {
-        return $payload->getData()->getLevel()->toInt() < $this->minimumLevel;
+        return $this->levelTooLow($payload->getData()->getLevel());
+    }
+
+    /**
+     * @param Level $level
+     * @return bool
+     */
+    private function levelTooLow($level)
+    {
+        return $level->toInt() < $this->minimumLevel;
     }
 
     private function shouldSuppress()

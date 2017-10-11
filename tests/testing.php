@@ -13,6 +13,20 @@ If not, see <http://www.gnu.org/licenses/>.
 set_include_path(get_include_path().':'.realpath(dirname(__FILE__).'/../').':'.realpath(dirname(__FILE__).'/../MadelineProto/'));
 chdir(dirname(__FILE__).'/../');
 require_once 'vendor/autoload.php';
+//include 'SocksProxy.php';
+if (!function_exists('readline')) {
+    function readline($prompt = null)
+    {
+        if ($prompt) {
+            echo $prompt;
+        }
+        $fp = fopen('php://stdin', 'r');
+        $line = rtrim(fgets($fp, 1024));
+
+        return $line;
+    }
+}
+
 if (file_exists('web_data.php')) {
     require_once 'web_data.php';
 }
@@ -36,20 +50,15 @@ if (getenv('TEST_SECRET_CHAT') == '') {
 }
 echo 'Loading settings...'.PHP_EOL;
 $settings = json_decode(getenv('MTPROTO_SETTINGS'), true) ?: [];
+//$settings['connection_settings']['all']['proxy'] = '\SocksProxy';
+//$settings['connection_settings']['all']['proxy_extra'] = ['address' => '190.83.240.10', 'port' => 20057];
 
 var_dump($settings);
 if ($MadelineProto === false) {
     echo 'Loading MadelineProto...'.PHP_EOL;
     $MadelineProto = new \danog\MadelineProto\API($settings);
     if (getenv('TRAVIS_COMMIT') == '') {
-        $checkedPhone = $MadelineProto->auth->checkPhone(// auth.checkPhone becomes auth->checkPhone
-            [
-                'phone_number'     => getenv('MTPROTO_NUMBER'),
-           ]
-        );
-
-        \danog\MadelineProto\Logger::log([$checkedPhone], \danog\MadelineProto\Logger::NOTICE);
-        $sentCode = $MadelineProto->phone_login(getenv('MTPROTO_NUMBER'));
+        $sentCode = $MadelineProto->phone_login(readline('Enter your phone number: '));
         \danog\MadelineProto\Logger::log([$sentCode], \danog\MadelineProto\Logger::NOTICE);
         echo 'Enter the code you received: ';
         $code = fgets(STDIN, (isset($sentCode['type']['length']) ? $sentCode['type']['length'] : 5) + 1);
@@ -66,13 +75,11 @@ if ($MadelineProto === false) {
             \danog\MadelineProto\Logger::log(['Registering new user'], \danog\MadelineProto\Logger::NOTICE);
             $authorization = $MadelineProto->complete_signup(readline('Please enter your first name: '), readline('Please enter your last name (can be empty): '));
         }
-
-        echo 'Serializing MadelineProto to session.madeline...'.PHP_EOL;
-        echo 'Wrote '.\danog\MadelineProto\Serialization::serialize('session.madeline', $MadelineProto).' bytes'.PHP_EOL;
     } else {
         $MadelineProto->bot_login(getenv('BOT_TOKEN'));
     }
 }
+$MadelineProto->session = 'session.madeline';
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::VERBOSE);
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::NOTICE);
@@ -92,7 +99,7 @@ if (stripos(readline('Do you want to make a call? (y/n): '), 'y') !== false) {
     while ($controller->getCallState() < \danog\MadelineProto\VoIP::CALL_STATE_READY) {
         $MadelineProto->get_updates();
     }
-    $MadelineProto->messages->sendMessage(['peer' => $controller->getOtherID(), 'message' => 'Emojis: '.implode('', $controller->getVisualization())]);
+    //$MadelineProto->messages->sendMessage(['peer' => $controller->getOtherID(), 'message' => 'Emojis: '.implode('', $controller->getVisualization())]);
     var_dump($controller->configuration);
     while ($controller->getCallState() < \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
         $MadelineProto->get_updates();
@@ -186,7 +193,6 @@ $media = [];
 
 // Sticker
 $inputFile = $MadelineProto->upload('tests/lel.webp');
-$inputFile['_'] = 'inputPhotoEmpty';
 var_dump($inputFile);
 $media['sticker'] = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type('tests/lel.webp'), 'caption' => 'test', 'attributes' => [['_' => 'documentAttributeSticker', 'alt' => 'LEL', 'stickerset' => ['_' => 'inputStickerSetEmpty']]]];
 
@@ -215,9 +221,6 @@ foreach (json_decode(getenv('TEST_DESTINATION_GROUPS'), true) as $peer) {
     }
 }
 //var_dump($MadelineProto->API->get_updates());
-echo 'Serializing MadelineProto to session.madeline...'.PHP_EOL;
-echo 'Wrote '.\danog\MadelineProto\Serialization::serialize('session.madeline', $MadelineProto).' bytes'.PHP_EOL;
-echo 'Size of MadelineProto instance is '.strlen(serialize($MadelineProto)).' bytes'.PHP_EOL;
 
 if ($bot_token = getenv('BOT_TOKEN')) {
     $MadelineProto = new \danog\MadelineProto\API($settings);

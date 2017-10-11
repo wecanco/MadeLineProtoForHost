@@ -15,7 +15,7 @@ namespace danog\MadelineProto;
 /**
  * Manages connection to telegram servers.
  */
-class Connection extends \Volatile
+class Connection
 {
     use \danog\Serializable;
     use \danog\MadelineProto\Tools;
@@ -73,9 +73,8 @@ class Connection extends \Volatile
         $this->port = $port;
         $this->proxy = $proxy;
         $this->extra = $extra;
-
-        if (($has_proxy = $proxy !== '\Socket') && !isset(class_implements($proxy)['\danog\MadelineProto\Proxy'])) {
-            throw new \danog\MadelineProto\Exception('Invalid proxy class provided!');
+        if (($has_proxy = $proxy !== '\Socket') && !isset(class_implements($proxy)['danog\MadelineProto\Proxy'])) {
+            throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['proxy_class_invalid']);
         }
         switch ($this->protocol) {
             case 'tcp_abridged':
@@ -83,14 +82,14 @@ class Connection extends \Volatile
                 if ($has_proxy && $this->extra !== []) {
                     $this->sock->setExtra($this->extra);
                 }
+                if (!$this->sock->connect($ip, $port)) {
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['socket_con_error']);
+                }
                 if (!\danog\MadelineProto\Logger::$has_thread) {
                     $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
                     $this->sock->setOption(\SOL_SOCKET, \SO_SNDTIMEO, $timeout);
                 }
                 $this->sock->setBlocking(true);
-                if (!$this->sock->connect($ip, $port)) {
-                    throw new Exception("Connection: couldn't connect to socket.");
-                }
                 $this->write(chr(239));
                 break;
             case 'tcp_intermediate':
@@ -98,11 +97,11 @@ class Connection extends \Volatile
                 if ($has_proxy && $this->extra !== []) {
                     $this->sock->setExtra($this->extra);
                 }
+                if (!$this->sock->connect($ip, $port)) {
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['socket_con_error']);
+                }
                 $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
                 $this->sock->setOption(\SOL_SOCKET, \SO_SNDTIMEO, $timeout);
-                if (!$this->sock->connect($ip, $port)) {
-                    throw new Exception("Connection: couldn't connect to socket.");
-                }
                 if (!\danog\MadelineProto\Logger::$has_thread) {
                     $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
                     $this->sock->setOption(\SOL_SOCKET, \SO_SNDTIMEO, $timeout);
@@ -117,7 +116,7 @@ class Connection extends \Volatile
                     $this->sock->setExtra($this->extra);
                 }
                 if (!$this->sock->connect($ip, $port)) {
-                    throw new Exception("Connection: couldn't connect to socket.");
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['socket_con_error']);
                 }
                 if (!\danog\MadelineProto\Logger::$has_thread) {
                     $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
@@ -134,7 +133,7 @@ class Connection extends \Volatile
                     $this->sock->setExtra($this->extra);
                 }
                 if (!$this->sock->connect($ip, $port)) {
-                    throw new Exception("Connection: couldn't connect to socket.");
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['socket_con_error']);
                 }
                 if (!\danog\MadelineProto\Logger::$has_thread) {
                     $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
@@ -147,7 +146,7 @@ class Connection extends \Volatile
                 $random[56] = $random[57] = $random[58] = $random[59] = chr(0xef);
                 $reversed = strrev(substr($random, 8, 48));
 
-                $this->obfuscated = ['encryption' => new \phpseclib\Crypt\AES(\phpseclib\Crypt\AES::MODE_CTR), 'decryption' => new \phpseclib\Crypt\AES(\phpseclib\Crypt\AES::MODE_CTR)];
+                $this->obfuscated = ['encryption' => new \phpseclib\Crypt\AES('ctr'), 'decryption' => new \phpseclib\Crypt\AES('ctr')];
                 $this->obfuscated['encryption']->enableContinuousBuffer();
                 $this->obfuscated['decryption']->enableContinuousBuffer();
 
@@ -159,7 +158,7 @@ class Connection extends \Volatile
                 $random = substr_replace(
                     $random,
                     substr(
-                        $this->obfuscated['encryption']->encrypt($random),
+                        @$this->obfuscated['encryption']->encrypt($random),
                         56,
                         8
                     ),
@@ -180,7 +179,7 @@ class Connection extends \Volatile
                     $this->sock->setExtra($this->extra);
                 }
                 if (!$this->sock->connect($this->parsed['host'], $port)) {
-                    throw new Exception("Connection: couldn't connect to socket.");
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['socket_con_error']);
                 }
                 if (!\danog\MadelineProto\Logger::$has_thread) {
                     $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
@@ -189,9 +188,9 @@ class Connection extends \Volatile
                 $this->sock->setBlocking(true);
                 break;
             case 'udp':
-                throw new Exception("Connection: This protocol isn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
-                throw new Exception('Connection: invalid protocol specified.');
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
                 break;
         }
     }
@@ -214,9 +213,9 @@ class Connection extends \Volatile
                 }
                 break;
             case 'udp':
-                throw new Exception("Connection: This protocol wasn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
-                throw new Exception('Connection: invalid protocol specified.');
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
                 break;
         }
     }
@@ -255,7 +254,7 @@ class Connection extends \Volatile
 
         switch ($this->protocol) {
             case 'obfuscated2':
-                $what = $this->obfuscated['encryption']->encrypt($what);
+                $what = @$this->obfuscated['encryption']->encrypt($what);
             case 'tcp_abridged':
             case 'tcp_intermediate':
             case 'tcp_full':
@@ -269,10 +268,10 @@ class Connection extends \Volatile
                 return $wrote;
                 break;
             case 'udp':
-                throw new Exception("Connection: This protocol wasn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
                 break;
             default:
-                throw new Exception('Connection: invalid protocol specified.');
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
                 break;
         }
     }
@@ -285,16 +284,16 @@ class Connection extends \Volatile
                 while (strlen($packet) < $length) {
                     $packet .= $this->sock->read($length - strlen($packet));
                     if ($packet === false || strlen($packet) === 0) {
-                        throw new \danog\MadelineProto\NothingInTheSocketException('Nothing in the socket!');
+                        throw new \danog\MadelineProto\NothingInTheSocketException(\danog\MadelineProto\Lang::$current_lang['nothing_in_socket']);
                     }
                 }
                 if (strlen($packet) !== $length) {
                     $this->close_and_reopen();
 
-                    throw new Exception("WARNING: Wrong length was read (should've read ".($length).', read '.strlen($packet).')!');
+                    throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['wrong_length_read'], $length, strlen($packet)));
                 }
 
-                return $this->obfuscated['decryption']->encrypt($packet);
+                return @$this->obfuscated['decryption']->encrypt($packet);
 
             case 'tcp_abridged':
             case 'tcp_intermediate':
@@ -305,20 +304,20 @@ class Connection extends \Volatile
                 while (strlen($packet) < $length) {
                     $packet .= $this->sock->read($length - strlen($packet));
                     if ($packet === false || strlen($packet) === 0) {
-                        throw new \danog\MadelineProto\NothingInTheSocketException('Nothing in the socket!');
+                        throw new \danog\MadelineProto\NothingInTheSocketException(\danog\MadelineProto\Lang::$current_lang['nothing_in_socket']);
                     }
                 }
                 if (strlen($packet) !== $length) {
                     $this->close_and_reopen();
 
-                    throw new Exception("WARNING: Wrong length was read (should've read ".($length).', read '.strlen($packet).')!');
+                    throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['wrong_length_read'], $length, strlen($packet)));
                 }
 
                 return $packet;
             case 'udp':
-                throw new Exception("Connection: This protocol wasn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
-                throw new Exception('Connection: invalid protocol specified.');
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
                 break;
         }
     }
@@ -364,7 +363,7 @@ class Connection extends \Volatile
                         break;
                     }
                     if ($current_header === false) {
-                        throw new Exception('No data in the socket!');
+                        throw new Exception(\danog\MadelineProto\Lang::$current_lang['no_data_in_socket']);
                     }
                     if (preg_match('|^Content-Length: |i', $current_header)) {
                         $length = (int) preg_replace('|Content-Length: |i', '', $current_header);
@@ -384,7 +383,7 @@ class Connection extends \Volatile
 
                 return $read;
             case 'udp':
-                throw new Exception("Connection: This protocol wasn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
         }
     }
 
@@ -416,7 +415,7 @@ class Connection extends \Volatile
                 break;
 
             case 'udp':
-                throw new Exception("Connection: This protocol wasn't implemented yet.");
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
                 break;
         }

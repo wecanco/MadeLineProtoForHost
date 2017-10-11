@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 namespace ParagonIE\ConstantTime;
 
 /**
@@ -43,7 +42,7 @@ abstract class Binary
      * @param string $str
      * @return int
      */
-    public static function safeStrlen(string $str): int
+    public static function safeStrlen($str)
     {
         if (\function_exists('mb_strlen')) {
             return \mb_strlen($str, '8bit');
@@ -65,10 +64,10 @@ abstract class Binary
      * @throws \TypeError
      */
     public static function safeSubstr(
-        string $str,
-        int $start = 0,
+        $str,
+        $start = 0,
         $length = null
-    ): string {
+    ) {
         if (\function_exists('mb_substr')) {
             // mb_substr($str, 0, NULL, '8bit') returns an empty string on PHP
             // 5.3, so we have to find the length ourselves.

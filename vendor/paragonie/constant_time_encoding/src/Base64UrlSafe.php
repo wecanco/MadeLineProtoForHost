@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 namespace ParagonIE\ConstantTime;
 
 /**
@@ -45,7 +44,7 @@ abstract class Base64UrlSafe extends Base64
      * @param int $src
      * @return int
      */
-    protected static function decode6Bits(int $src): int
+    protected static function decode6Bits($src)
     {
         $ret = -1;
 
@@ -74,7 +73,7 @@ abstract class Base64UrlSafe extends Base64
      * @param int $src
      * @return string
      */
-    protected static function encode6Bits(int $src): string
+    protected static function encode6Bits($src)
     {
         $diff = 0x41;
 

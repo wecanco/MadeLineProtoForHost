@@ -13,7 +13,7 @@
     file_put_contents($stopBotFile,"1");
     sleep(1);
     unlink($stopBotFile);
-	include('__madeline_config.php');
+	include('config.php');
 	
     $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
     exec($comm);
@@ -21,6 +21,7 @@
 
 	// نمونه کرون جاب:
 	//  */5 	* 	* 	* 	* 	wget -qO- http://tlbots.cf/_MadelineTest/Examples/StartUserBot.php?phone=+989357973301 &> /dev/null
+	//  */5 	* 	* 	* 	* 	/bin/php -f /home/USER/domains/tlbots.cf/public_html/_MadelineTest/Examples/UserBot.php +989357973301 &> /dev/null
 	
 		
 	// @WeCanGP | WeCan-Co.ir

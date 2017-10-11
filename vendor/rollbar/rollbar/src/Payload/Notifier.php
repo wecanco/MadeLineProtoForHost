@@ -3,7 +3,7 @@
 class Notifier implements \JsonSerializable
 {
     const NAME = "rollbar-php";
-    const VERSION = "1.3.1";
+    const VERSION = "1.3.2";
 
     public static function defaultNotifier()
     {
@@ -28,7 +28,6 @@ class Notifier implements \JsonSerializable
 
     public function setName($name)
     {
-        $this->utilities->validateString($name, "name", null, false);
         $this->name = $name;
         return $this;
     }
@@ -40,7 +39,6 @@ class Notifier implements \JsonSerializable
 
     public function setVersion($version)
     {
-        $this->utilities->validateString($version, "version", null, false);
         $this->version = $version;
         return $this;
     }
