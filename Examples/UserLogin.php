@@ -23,12 +23,18 @@
 	
 	if($RunInTerminal){
 		if(isset($argv[1])){
-			$_GET['phone'] = $argv[1];
+			if(trim($argv[1]) !=""){
+				$_GET['phone'] = $argv[1];
+			}
 			if(isset($argv[2])){
-				$_GET['code'] = $argv[2];
+				if(trim($argv[2]) !=""){
+					$_GET['code'] = $argv[2];
+				}
 			}
 			if(isset($argv[3])){
-				$_GET['pass'] = $argv[3];
+				if(trim($argv[3]) !=""){
+					$_GET['pass'] = $argv[3];
+				}
 			}
 		}else{
 			$_GET['phone'] = readline('Shomare Hamrahe Khod Ra Vared Namaed: ');
