@@ -25,7 +25,7 @@ trait AuthKeyHandler
     public function request_call($user)
     {
         if (!class_exists('\danog\MadelineProto\VoIP')) {
-            throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['libtgvoip_required']);
+            //throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['libtgvoip_required']);
         }
         array_walk($this->calls, function ($controller, $id) {
             if ($controller->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
