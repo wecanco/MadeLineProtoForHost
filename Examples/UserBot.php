@@ -147,7 +147,18 @@
 									$info = trim(str_replace("/translate ","",$message));
 									$info = explode("|",$info);
 									$lang = trim($info[0]);
-									$content = trim($info[1]);
+									if(isset($update['update']['message']['reply_to_msg_id'])){
+										$repID = $update['update']['message']['reply_to_msg_id'];
+										if(intval($peer) < 0){
+											$RepMessage = $MadelineProto->channels->getMessages(['channel' =>$peer , 'id' => [$repID] ]);
+										}else{
+											$RepMessage = $MadelineProto->messages->getMessages(['id' => [$repID] ]);
+										}
+										file_put_contents('RepMessage',json_encode($RepMessage));
+										$content = trim($RepMessage['messages'][0]['message']);
+									}else{
+										$content = trim($info[1]);
+									}
 									
 									$source 		= 'auto';
 
