@@ -17,7 +17,7 @@
 	}
 	
 	$BreakLine = "<br>";
-	if(isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false ){
+	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || isset($_SERVER['SHELL']) ){
 		$RunInTerminal = true;
 	}
 	
