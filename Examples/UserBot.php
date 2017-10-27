@@ -143,8 +143,8 @@
 									$InputContact = ['_' => 'inputPhoneContact','client_id' => 0, 'phone' => trim($info[0]), 'first_name' => trim($info[1]), 'last_name' => trim($info[2])];
 									$ImportedContacts = $MadelineProto->contacts->importContacts(['contacts' => [$InputContact] ]);
 									$text = json_encode($ImportedContacts);
-								}else if(strpos($message,"/translate ") !== false){
-									$info = trim(str_replace("/translate ","",$message));
+								}else if(strpos($message,"/translate ") !== false || strpos($message,"/tl ") !== false){
+									$info = trim(str_replace(array("/translate ","/tl "),"",$message));
 									$info = explode("|",$info);
 									$lang = trim($info[0]);
 									if(isset($update['update']['message']['reply_to_msg_id'])){
@@ -168,8 +168,10 @@
 									$trans="";
 									$orig="";
 									foreach($translation['sentences'] as $sentence){
-										$trans .= $sentence['trans']."\n";
-										$orig .= $sentence['orig']."\n";
+										if(isset($sentence['trans']) && isset($sentence['orig'])){
+											$trans .= $sentence['trans']."\n";
+											$orig .= $sentence['orig']."\n";
+										}
 									}
 									$text = "<b>$src:</b>
 <i>$orig</i>
