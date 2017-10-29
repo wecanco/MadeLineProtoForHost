@@ -18,9 +18,6 @@ if (!extension_loaded('pthreads')) {
 
             public function __construct(int $domain, int $type, int $protocol)
             {
-				//print_r('<br>domain:'.$domain.'<br>type:'.$type.'<br>protocol:'.$protocol.'<br><br><br>');
-				//var_dump(debug_backtrace()[0]);
-				//echo "<br>--------<br>";
                 $this->sock = socket_create($domain, $type, $protocol);
             }
 
@@ -64,7 +61,6 @@ if (!extension_loaded('pthreads')) {
 
             public function connect(string $address, int $port = 0)
             {
-				//print_r("<br>sock:".$this->sock."<br>address:".$address."<br>port:".$port."<br>----</br>");
                 return socket_connect($this->sock, $address, $port);
             }
 

@@ -46,7 +46,7 @@ class MTProto
     /*
         const V = 71;
     */
-    const V = 75;
+    const V = 77;
 
     const NOT_LOGGED_IN = 0;
     const WAITING_CODE = 1;
@@ -300,7 +300,8 @@ class MTProto
         $keys = array_keys((array) get_object_vars($this));
         if (count($keys) !== count(array_unique($keys))) {
             throw new Bug74586Exception();
-        }*/
+        }
+		*/
 
         /*
         if (method_exists($this->datacenter, 'wakeup')) $this->datacenter = $this->datacenter->wakeup();
@@ -360,6 +361,7 @@ class MTProto
             }
             $this->reset_session(true, true);
             $this->config = ['expires' => -1];
+            $this->dh_config = ['version' => 0];
             $this->__construct($settings);
             $force = true;
         }
@@ -538,10 +540,10 @@ class MTProto
                 'lang_code'       => $lang_code,
             ],
             'tl_schema'     => [ // TL scheme files
-                'layer'         => 71, // layer version
+                'layer'         => 72, // layer version
                 'src'           => [
                     'mtproto'      => __DIR__.'/TL_mtproto_v1.json', // mtproto TL scheme
-                    'telegram'     => __DIR__.'/TL_telegram_v71.tl', // telegram TL scheme
+                    'telegram'     => __DIR__.'/TL_telegram_v72.tl', // telegram TL scheme
                     'secret'       => __DIR__.'/TL_secret.tl', // secret chats TL scheme
                     'calls'        => __DIR__.'/TL_calls.tl', // calls TL scheme
                     //'td'           => __DIR__.'/TL_td.tl', // telegram-cli TL scheme

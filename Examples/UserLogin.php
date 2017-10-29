@@ -16,6 +16,30 @@
 		mkdir($sessionsDir);
 	}
 	
+	file_put_contents('LastRun',date("Y-m-d H:i:s", time()));
+	
+	exec("ps aux", $psRes);
+	$psResS = implode("\n",$psRes);
+	$UserBotF = getcwd().'/UserBot.php';
+	$UserBotF = explode("/",$UserBotF);
+	unset($UserBotF[0]);
+	unset($UserBotF[1]);
+	$UserBotF = implode("/",$UserBotF);
+	$ProcessCount=0;
+	foreach($psRes as $processLine){
+		if((strpos($processLine, $UserBotF) !== false)){
+			$ProcessCount++;
+		}
+	}
+	
+	if($ProcessCount > 2){
+		echo "stop: ";
+		print_r($psRes);
+		//file_put_contents('LastRun2',date("Y-m-d H:i:s", time())."\n--------\n".implode("\n",$psRes));
+		exit();
+	}
+
+	
 	$BreakLine = "<br>";
 	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || isset($_SERVER['SHELL']) ){
 		$RunInTerminal = true;
@@ -37,9 +61,9 @@
 				}
 			}
 		}else{
-			$_GET['phone'] = readline('Shomare Hamrahe Khod Ra Vared Namaed: ');
+			$_GET['phone'] = readline('Shomare Hamrahe Khod Ra Vared Namaed: (Phone Number) ');
 		}
-		$BreakLine = "";
+		$BreakLine = "\n";
 	}else{
 		echo '
 		<html dir="rtl">
@@ -52,8 +76,12 @@
 		';
 	}
 	
+	global $phones;
+	$phones=array();
 	if(isset($_GET['phone'])){
-		$phone = $_GET['phone'];
+		$phones[0]['number'] = $_GET['phone'];
+		$phones[0]['active'] = true;
+		$phones[0]['current'] = true;
 	}else{
 		echo '
 			<form action="" method="">
@@ -67,50 +95,44 @@
 	
 	//$MySettings = $settings_proxy;
 
-	$phone = str_replace(array(" ","(",")"),"",$phone); // شماره موبایلی که با آن لاگین میشوید
-	$sessionFile = $sessionsDir."/session_".str_replace(array("+","-","(",")"),"",$phone).""; // مسیر سشن
+	$phones[0]['number'] = str_replace(array(" ","(",")"),"",$phones[0]['number']); // شماره موبایلی که با آن لاگین میشوید
+	$sessionFile = $sessionsDir."/.session_".str_replace(array("+","-","(",")"),"",$phones[0]['number']).""; // مسیر سشن
 
-	if (file_exists($libPath.'web_data.php')) {
-		require_once $libPath.'web_data.php';
-	}
-
-	$MadelineProto = false;
+	$MadelineProto[$phones[0]['number']] = false;
 	echo "درحال آماده سازی...". PHP_EOL .$BreakLine;
 
 	if(file_exists($sessionFile)){
 		try {
 			echo 'درحال خواندن سشن: ('.$sessionFile.')...'. PHP_EOL .$BreakLine;
-			
 			//RemoveProxies($sessionFile);
-			
-			$MadelineProto = \danog\MadelineProto\Serialization::deserialize($sessionFile);
+			$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile);
 			echo 'سشن خوانده شد.'. PHP_EOL .$BreakLine;
 			if(!$RunInTerminal){
 				echo '<a href="./UserBot.php">توقف اکانت</a>'. PHP_EOL .$BreakLine;
 			}
 			// set proxy
-			//$MadelineProto->settings['logger']['logger'] = $MySettings['logger']['logger'];
-			//$MadelineProto->settings['connection_settings'] = $MySettings['connection_settings'];
-			//$MadelineProto->settings['app_info'] = $MySettings['app_info'];
+			//$MadelineProto[$phones[0]['number']]->settings['logger']['logger'] = $MySettings['logger']['logger'];
+			//$MadelineProto[$phones[0]['number']]->settings['connection_settings'] = $MySettings['connection_settings'];
+			//$MadelineProto[$phones[0]['number']]->settings['app_info'] = $MySettings['app_info'];
 			
 			// remove proxy
-			//unset($MadelineProto->settings['connection_settings']['all']['proxy']);
-			//unset($MadelineProto->settings['connection_settings']['all']['proxy_extra']);
-			//$MadelineProto->updates->API->chats = null;
-			//$MadelineProto->updates->API->full_chats = null;
-			//$MadelineProto->updates->API->updates = null;
-			//$MadelineProto->updates->API->constructors = null;
-			//$MadelineProto->updates->API->methods = null;
-			//for($i=0; $i<sizeof($MadelineProto->updates->API->datacenter->sockets); $i++){
-				//$MadelineProto->updates->API->datacenter->sockets[$i]->extra = [];
-				//$MadelineProto->updates->API->datacenter->sockets[$i]->proxy = '\Socket';
+			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy']);
+			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy_extra']);
+			//$MadelineProto[$phones[0]['number']]->updates->API->chats = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->full_chats = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->updates = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->constructors = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->methods = null;
+			//for($i=0; $i<sizeof($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets); $i++){
+				//$MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$i]->extra = [];
+				//$MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$i]->proxy = '\Socket';
 			//}
-			//foreach ($MadelineProto->updates->API->datacenter->sockets as $key => $socket) {
-				//print_r($MadelineProto->updates->API->datacenter->sockets[$key]);
+			//foreach ($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets as $key => $socket) {
+				//print_r($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$key]);
 				//exit();
 			//}
-			//$MadelineProto->updates->API->phone->API = null;
-			//$MadelineProto->updates->API->stickers->API = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->phone->API = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->stickers->API = null;
 			
 			
 		} catch (\danog\MadelineProto\Exception $e) {
@@ -120,21 +142,21 @@
 		}
 	}
 
-	if ($MadelineProto === false) {
+	if ($MadelineProto[$phones[0]['number']] === false) {
 		sleep(0.5);
 		echo 'درحال اتصال به سرور تلگرام...'.PHP_EOL;
-		$MadelineProto = new \danog\MadelineProto\API($settings);
+		$MadelineProto[$phones[0]['number']] = new \danog\MadelineProto\API($settings);
 		echo 'به سرور تلگرام متصل شد.'. PHP_EOL .$BreakLine;
 
 		echo 'درحال چک کردن شماره موبایل...'. PHP_EOL .$BreakLine;
-		$checkedPhone = $MadelineProto->auth->checkPhone(['phone_number' => $phone,]);
+		$checkedPhone = $MadelineProto[$phones[0]['number']]->auth->checkPhone(['phone_number' => $phones[0]['number'],]);
 		echo 'موبایل چک شد.'. PHP_EOL .$BreakLine;
 
 		echo 'درحال ارسال کد جهت ورود به اکانت...'. PHP_EOL .$BreakLine;
-		$sentCode = $MadelineProto->phone_login($phone);
-		$phone_code_hash = $sentCode['phone_code_hash'];
-		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto);
-		if($phone_code_hash !==""){
+		$sentCode = $MadelineProto[$phones[0]['number']]->phone_login($phones[0]['number']);
+		$phones_code_hash = $sentCode['phone_code_hash'];
+		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phones[0]['number']]);
+		if($phones_code_hash !==""){
 			if($RunInTerminal){
 				$_GET['code'] = readline('Code Taeed Ra Vared Namaed: ');
 			}else{
@@ -154,10 +176,10 @@
 		}
 	}
 	
-	if($MadelineProto != false && isset($_GET['code'])){
+	if($MadelineProto[$phones[0]['number']] != false && isset($_GET['code'])){
 		$code = $_GET['code'];
 		echo 'درحال تایید کد...'. PHP_EOL .$BreakLine;
-		$authorization = $MadelineProto->complete_phone_login($code);
+		$authorization = $MadelineProto[$phones[0]['number']]->complete_phone_login($code);
 
 		if ($authorization['_'] === 'account.noPassword') {
 			echo 'ورود دو مرحله ای شما فعال است و پسورد خود را وارد نکردید!'. PHP_EOL .$BreakLine;
@@ -182,7 +204,7 @@
 				}
 			}
 			// ورود دو مرحله ای
-			$authorization = $MadelineProto->complete_2fa_login($_GET['pass']);
+			$authorization = $MadelineProto[$phones[0]['number']]->complete_2fa_login($_GET['pass']);
 		}
 		if ($authorization['_'] === 'account.needSignup') {
 			// اگر برای اولین بار است که اکانت تلگرام روی این شماره فعال می شود، نام و نام خانوادگی را دریافت کن
@@ -205,14 +227,14 @@
 					exit();
 				}
 			}
-			$authorization = $MadelineProto->complete_signup($_GET['first_name'],$_GET['last_name']);
+			$authorization = $MadelineProto[$phones[0]['number']]->complete_signup($_GET['first_name'],$_GET['last_name']);
 		}
 		echo 'کد تایید شد.'. PHP_EOL .$BreakLine;
-		$updates = $MadelineProto->get_updates();
-		$MadelineProto->API->get_updates_difference();
-		$MadelineProto->API->store_db([], true);
-		$MadelineProto->API->reset_session();
-		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto);
+		$updates = $MadelineProto[$phones[0]['number']]->get_updates();
+		$MadelineProto[$phones[0]['number']]->API->get_updates_difference();
+		$MadelineProto[$phones[0]['number']]->API->store_db([], true);
+		$MadelineProto[$phones[0]['number']]->API->reset_session();
+		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phones[0]['number']]);
 		echo 'حالا میتوانید با از سشن زیر جهت استفاده از اکانت خود استفاده نمایید:'. PHP_EOL .$BreakLine;
 		echo $sessionFile. PHP_EOL .$BreakLine;
 	}

@@ -9,7 +9,9 @@ See the GNU Affero General Public License for more details.
 You should have received a copy of the GNU General Public License along with MadelineProto.
 If not, see <http://www.gnu.org/licenses/>.
 */
+
 namespace danog\MadelineProto;
+
 /**
  * Manages serialization of the MadelineProto instance.
  */
@@ -30,6 +32,7 @@ class Serialization
             $instance->API->setdem = false;
             $instance->API->__construct($instance->API->settings);
         }
+        $instance->serialized = time();
         if (!file_exists($lock = $filename.'.lock')) {
             touch($lock);
             clearstatcache();
@@ -40,8 +43,10 @@ class Serialization
         rename($filename.'.temp.session', $filename);
         flock($lock, LOCK_UN);
         fclose($lock);
+
         return $wrote;
     }
+
     /**
      * Deserialize API class.
      *
@@ -64,12 +69,14 @@ class Serialization
             $unserialized = file_get_contents($filename);
             flock($lock, LOCK_UN);
             fclose($lock);
+
             $tounserialize = str_replace('O:26:"danog\MadelineProto\Button":', 'O:35:"danog\MadelineProto\TL\Types\Button":', $unserialized);
             foreach (['RSA', 'TL\TLMethod', 'TL\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\Types\Button', 'TL\Types\Bytes', 'APIFactory'] as $class) {
                 class_exists('\danog\MadelineProto\\'.$class);
             }
             class_exists('\Volatile');
             \danog\MadelineProto\Logger::class_exists();
+
             try {
 //                $unserialized = \danog\Serialization::unserialize($tounserialize);
                 $unserialized = unserialize($tounserialize);
@@ -79,7 +86,7 @@ class Serialization
                 if (Logger::$constructed) {
                     Logger::log([(string) $e], Logger::ERROR);
                 }
-                if ($e->getMessage() === "Erroneous data format for unserializing 'phpseclib\Math\BigInteger'") {
+                if (strpos($e->getMessage(), "Erroneous data format for unserializing 'phpseclib\Math\BigInteger'") === 0) {
                     $tounserialize = str_replace('phpseclib\Math\BigInteger', 'phpseclib\Math\BigIntegor', $unserialized);
                 }
                 $unserialized = \danog\Serialization::unserialize($tounserialize);
@@ -93,6 +100,7 @@ class Serialization
         if ($unserialized === false) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialization_error']);
         }
+
         return $unserialized;
     }
 }

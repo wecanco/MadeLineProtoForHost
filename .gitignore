@@ -6,3 +6,5 @@ Examples/API.php
 src/danog/MadelineProto/VoIP/php-libtgvoip.php
 input.raw
 libtgvoip.so
+__
+UserBotPro.php

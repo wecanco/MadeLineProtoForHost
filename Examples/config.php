@@ -20,6 +20,16 @@
 	$sessionsDir = 'sessions/'; // پوشه ذخیره سشن ها
 	$RunInTerminal = false; // فایل فعالسازی اجرا در ترمینال
 	$MadelineURL ='http://tlapi.cf/MadeLineProtoForHost/Examples/'; // آدرس پوشه ای که فایل StartUserBot.php در آن است.
+	if(!file_exists('.admins')){
+		file_put_contents('.admins',"282120410");
+	}
+	$Admins = explode("\n",file_get_contents('.admins')); //array('282120410');
+	$Bots=array(
+		'WeMadelineBot' => array(
+							'token' => "437491880:AAGkh9Ytem_gtfyeW7hh4L_NqKnfaVkExSg",
+							'active' => true
+		)
+	);
 	
 	// تنظیمات ای پی آی میدلان جهت اتصال به سرور تلگرام
 	//$settings = json_decode('{"logger":{"logger":0},"app_info":{"api_id":6,"api_hash":"eb06d4abfb49dc3eeb1aeb98ae0f581e"}}', true) ?: [];

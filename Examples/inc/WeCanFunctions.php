@@ -1,9 +1,9 @@
 <?php
-/***********************************/
-/****************توابع**************/
-/************* WeCan-Co.ir**********/
-/***********************************/
-
+	/***********************************/
+	/****************توابع**************/
+	/************* WeCan-Co.ir**********/
+	/***********************************/
+	
 	if (!function_exists('readline')) {
 		function readline($prompt = null)
 		{
@@ -12,11 +12,11 @@
 			}
 			$fp = fopen('php://stdin', 'r');
 			$line = rtrim(fgets($fp, 1024));
-
+			
 			return $line;
 		}
 	}
-								
+	
 	function curl($url,$timeout=7){		
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -49,13 +49,27 @@
 	}
 	
 	function RemoveProxies($sessionFile){
-			$sess = file_get_contents($sessionFile);
-			
-			preg_match_all('/("extra";a:\\d:\\{s:)(.*?)(;})/s',$sess,$m);
-			foreach($m[0] as $extra){
-				$sess = str_replace($extra,'"extra";a:0:{}',$sess);
-			}
-			$sess = str_replace('s:11:"\\SocksProxy"','s:7:"\\Socket"',$sess);
-			
-			file_put_contents($sessionFile,$sess);
+		$sess = file_get_contents($sessionFile);
+		
+		preg_match_all('/("extra";a:\\d:\\{s:)(.*?)(;})/s',$sess,$m);
+		foreach($m[0] as $extra){
+			$sess = str_replace($extra,'"extra";a:0:{}',$sess);
+		}
+		$sess = str_replace('s:11:"\\SocksProxy"','s:7:"\\Socket"',$sess);
+		
+		file_put_contents($sessionFile,$sess);
 	}
+	
+	function retrieve_remote_file_size($url){
+		$ch = curl_init($url);
+		
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_HEADER, TRUE);
+		curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+		
+		$data = curl_exec($ch);
+		$size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+		
+		curl_close($ch);
+		return $size;
+	}	

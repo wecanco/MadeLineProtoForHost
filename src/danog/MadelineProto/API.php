@@ -16,6 +16,7 @@ class API extends APIFactory
 {
     use \danog\Serializable;
     public $session;
+    public $serialized = 0;
 
     public function ___construct($params = [])
     {
