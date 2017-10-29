@@ -204,7 +204,6 @@
 								}
 								$messageTXT = trim(implode(" ",$message_array));
 								
-<<<<<<< HEAD
 								switch(strtolower($Commond)){
 									case "/start2":
 										$ExistCase = true;
@@ -220,7 +219,6 @@
 										$ExistCase = true;
 										if(in_array($from_id,$Admins)){
 											$authorizations = $MadelineProto[$phone['number']]->account->getAuthorizations();
-											$text=json_encode($authorizations,JSON_PRETTY_PRINT);
 											$text="";
 											foreach($authorizations['authorizations'] as $authorization){
 												$text .="
@@ -246,33 +244,11 @@
 										$ExistCase = true;
 										if($messageTXT == ""){
 											$text='<a href="mention:'.$from_id.'">تماس با من</a>';
-=======
-										
-										
-								default:
-								if(strpos($message,"/mymention ") !== false){
-									$text='<a href="mention:'.$from_id.'">'.str_replace("/mymention ","",$message).'</a>';
-								}else if(strpos($message,"/addContact ") !== false){
-									$info = trim(str_replace("/addContact ","",$message));
-									$info = explode("|",$info."||");
-									$InputContact = ['_' => 'inputPhoneContact','client_id' => 0, 'phone' => trim($info[0]), 'first_name' => trim($info[1]), 'last_name' => trim($info[2])];
-									$ImportedContacts = $MadelineProto->contacts->importContacts(['contacts' => [$InputContact] ]);
-									$text = json_encode($ImportedContacts);
-								}else if(strpos($message,"/translate ") !== false || strpos($message,"/tl ") !== false){
-									$info = trim(str_replace(array("/translate ","/tl "),"",$message));
-									$info = explode("|",$info);
-									$lang = trim($info[0]);
-									if(isset($update['update']['message']['reply_to_msg_id'])){
-										$repID = $update['update']['message']['reply_to_msg_id'];
-										if(intval($peer) < 0){
-											$RepMessage = $MadelineProto->channels->getMessages(['channel' =>$peer , 'id' => [$repID] ]);
->>>>>>> 7e1ff9c0acedaa0bce03397ba75df899fc73b918
 										}else{
 											$text='<a href="mention:'.$from_id.'">'.$messageTXT.'</a>';
 										}
 									break;
 									
-<<<<<<< HEAD
 									
 									case "/addcontact":
 										$ExistCase = true;
@@ -315,22 +291,6 @@
 											}
 										}
 										$text = "<b>$src:</b>
-=======
-									$source 		= 'auto';
-
-									$translation 	= GoogleTranslate::translate($source, $lang, $content);
-									$translation = json_decode($translation,true);
-									$src = $translation['src'];
-									$trans="";
-									$orig="";
-									foreach($translation['sentences'] as $sentence){
-										if(isset($sentence['trans']) && isset($sentence['orig'])){
-											$trans .= $sentence['trans']."\n";
-											$orig .= $sentence['orig']."\n";
-										}
-									}
-									$text = "<b>$src:</b>
->>>>>>> 7e1ff9c0acedaa0bce03397ba75df899fc73b918
 <i>$orig</i>
 
 <b>$lang:</b>
