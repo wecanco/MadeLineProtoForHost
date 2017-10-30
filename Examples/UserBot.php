@@ -16,11 +16,12 @@
 	$ACsListF = ".CurrentAC";
 	$GPListF = ".GroupsList";
 	$FaqF = ".faqs";
+	$RemindsF = ".reminds";
 	$InlineMode = false;
 	$Serialize = false;
 	$SentMSGs=[];
 	$Splitor = "|";
-	$ExistCase = false;
+	
 	
 	if(!file_exists($FaqF)){
 		file_put_contents($FaqF,"{}");
@@ -28,6 +29,9 @@
 	
 	if(!file_exists($GPListF)){
 		file_put_contents($GPListF,"");
+	}
+	if(!file_exists($RemindsF)){
+		file_put_contents($RemindsF,"{}");
 	}
 	
 	if(sizeof($phones) > 0){
@@ -109,7 +113,23 @@
 				}
 			}
 			
+			$Reminds = json_decode(file_get_contents($RemindsF),true);
+			foreach($Reminds as $key => $remind){
+				if(isset($remind['time']) && $remind['status']=='active'){
+					if(time() >= $remind['time']){
+						$Reminds[$key]['status']='done';
+						$remindeText = $remind['note'];
+						$remindeTo = trim($remind['to']);
+						try{
+							$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $remindeTo, 'message' => $remindeText, 'parse_mode' => 'HTML' ]);
+							unset($Reminds[$key]);
+						}catch(Exception $e){}
+					}
+				}
+			}
+			
 			foreach($updates as $update){
+				$ExistCase = false;
 				if(($update['update']['_'] == 'updateNewMessage' || $update['update']['_'] == 'updateNewChannelMessage') ){
 				try {
 					$out=0;
@@ -329,8 +349,8 @@ $trans
 										//if($from_id != "" && in_array($from_id,$Admins)){
 										$link = $messageTXT;
 										$file='temp/img_'.time().'.'.$file_type;
-										if($photo !=""){
-										}else{
+										if($media ==""){
+											break;
 										}
 										$res = $MadelineProto[$phone['number']]->download_to_file($media, $file);
 										
@@ -372,14 +392,13 @@ $trans
 											$res = $MadelineProto[$phone['number']]->messages->importChatInvite(['hash' => $hash ]);
 											$gp = "-100".$res['chats'][0]['id'];
 											if(isset($res['chats'][0]['id'])){
-												$attackers = "@WSpammerBot
-@nsaattackbot";
+												$attackers = "@WSpammerBot";
 												
 												$attackers = explode("\n",$attackers);
 												try{
 													$res2 = $MadelineProto[$phone['number']]->channels->inviteToChannel(['channel' => $gp, 'users' => $attackers ]);
 												}catch (Exception $e){
-													
+													$text= "❌ ".$e->getMessage();
 												}
 												$res5 = $MadelineProto[$phone['number']]->channels->leaveChannel(['channel' => $gp ]);
 											}else{
@@ -423,18 +442,7 @@ $trans
 										unlink($fullPath);
 									break;
 									
-									case "/delmsg":
-										$ExistCase = true;
-										$id = $messageTXT;
-										if(is_numeric($id)){
-											if(intval($peer) < 0){
-												$res = $MadelineProto[$phone['number']]->channels->deleteMessages(['channel' => $peer, 'id' => [$id] ]);
-											}else{
-												$res = $MadelineProto[$phone['number']]->messages->deleteMessages(['id' => [$id] ]);
-											}
-										}
-									break;
-									
+
 									case "/call":
 										$ExistCase = true;
 										$to = $messageTXT;
@@ -461,7 +469,7 @@ $trans
 										$ExistCase = true;
 										$peer = $messageTXT;
 										$messages_PeerDialogs = $MadelineProto[$phone['number']]->messages->getPeerDialogs(['peers' => [$peer] ]);
-										$text = json_encode($messages_PeerDialogs);
+										$text = json_encode($messages_PeerDialogs,JSON_PRETTY_PRINT);
 									break;
 									
 									case "/html2text":
@@ -597,7 +605,7 @@ $trans
 											$name = $name[sizeof($name)-1];
 										}
 										if($file_size > 0 && $file_size <= $sizeLimit ){
-											$txt = "⏳ <b>درحال دانلود...</b> ".$name."";
+											$txt = "⏳ <b>درحال دانلود...</b> \n".$name."";
 											$m = $MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $txt, 'parse_mode' => 'HTML' ]);
 											if(isset($m['updates'][0]['id'])){
 												$mid = $m['updates'][0]['id'];
@@ -607,12 +615,12 @@ $trans
 											
 											$localFile = 'temp/'.$name;
 											curl_dl($link,$localFile,6000);
-											$txt = "⏳ <b>درحال آپلود روی سرور تلگرام...</b> ".$name."";
+											$txt = "⏳ <b>درحال آپلود روی سرور تلگرام...</b> \n".$name."";
 											$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 											$caption = '📌 '.$name.' | @WeCanGP';
 											
 											$inputFile = $MadelineProto[$phone['number']]->upload($localFile);
-											$txt = "⏳ درحال ارسال...: <b>".$name."</b>";
+											$txt = "⏳ درحال ارسال...: \n<b>".$name."</b>";
 											$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 											$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 											
@@ -633,6 +641,7 @@ $trans
 									case "/sendmessage":
 									case "/sendmsg":
 										$ExistCase = true;
+										$parms_a = explode($Splitor,$messageTXT.$Splitor.$Splitor.$Splitor);
 										$parms=[];
 										$parms['peer'] = $parms_a[0];
 										$parms['message'] = $parms_a[1];
@@ -642,7 +651,6 @@ $trans
 										}
 										
 										$res = $MadelineProto[$phone['number']]->messages->sendMessage($parms);
-										$text = json_encode($res,JSON_PRETTY_PRINT);
 									break;
 										
 									case "/getuserphotos":
@@ -674,7 +682,7 @@ $trans
 										
 									break;
 										
-									case "getchannelmessages":
+									case "/getchannelmessages":
 										$ExistCase = true;
 										$parms_a = explode($Splitor,$messageTXT.$Splitor.$Splitor);
 										$parms=[];
@@ -779,17 +787,26 @@ $trans
 								
 								}
 								
+								
 								if(!$ExistCase){
 									// امکانات پیشرفته
 									if(file_exists('UserBotPro.php')){
 										include('UserBotPro.php');
 									}
 								}
-									
+								
 								if(!$ExistCase){
 									switch($Commond){
 										default:
-											if($channel_id=="" && 1==2){
+										$dmid = str_replace("/delmsg","",$Commond);
+										if(is_numeric($dmid)){
+											$ExistCase = true;
+											if(intval($peer) < 0){
+												$res = $MadelineProto[$phone['number']]->channels->deleteMessages(['channel' => $peer, 'id' => [$dmid] ]);
+												}else{
+												$res = $MadelineProto[$phone['number']]->messages->deleteMessages(['id' => [$dmid] ]);
+											}
+										}else if($channel_id=="" && 1==2){
 											$text='سلام من ربات میدلاین هستم! منو @WeCanCo ساخته!
 دستورات من:
 <b>/start2</b>  -> شروع
@@ -805,6 +822,7 @@ $trans
 										break;
 									}
 								}
+								
 								
 								
 								
@@ -882,9 +900,10 @@ $trans
 						
 						
 						$sent=1;
-						$MadelineProto[$phone['number']]->account->updateProfile(['about' => 'آخرین عملیات: '.date("Y-m-d H:i:s", time()) ]);
+						//$MadelineProto[$phone['number']]->account->updateProfile(['about' => 'آخرین عملیات: '.date("Y-m-d H:i:s", time()) ]);
 					}
 					} catch (Exception $e) { 
+					//var_dump($e);
 					$err = $e->getMessage();
 					$err = substr($err,0,70);
 					if(isset($MadelineProto[$phone['number']])){
@@ -907,6 +926,7 @@ $trans
 		if($Serialize){
 			\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phone['number']]);
 		}
+		file_put_contents($RemindsF,json_encode($Reminds));
 	}
 	
 }
