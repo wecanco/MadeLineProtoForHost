@@ -13,7 +13,11 @@
 		$MadelineProto[$key]->settings['updates']['handle_updates'] = false;
 		$curdc = $MadelineProto[$key]->API->datacenter->curdc;
 		$parms = json_decode($_REQUEST['parms'],true);
-		$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
+		try{
+			$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
+		} catch (Exception $e) { 
+			$res = '{"error":'.$e->getMessage().'}';
+		}
 		echo json_encode($res,JSON_PRETTY_PRINT);
 	}else{
 		echo '{"error":"need: method (string), parms (json encoded), phone (string)"}';
