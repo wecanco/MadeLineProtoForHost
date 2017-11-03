@@ -1,7 +1,7 @@
 Examples/sessions/session*
 Examples/SentMSGs
 Examples/UserBot2.php
-Examples/SocksProxy.php
+Examples/inc/SocksProxy.php
 src/danog/MadelineProto/VoIP/php-libtgvoip.php
 input.raw
 libtgvoip.so
