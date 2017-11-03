@@ -15,6 +15,7 @@
 		$parms = json_decode($_REQUEST['parms'],true);
 		try{
 			$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
+			\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$key]);
 		} catch (Exception $e) { 
 			$res = ['error' => $e->getMessage()];
 		}
