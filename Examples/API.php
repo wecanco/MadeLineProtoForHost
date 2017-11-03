@@ -16,7 +16,7 @@
 		try{
 			$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
 		} catch (Exception $e) { 
-			$res = '{"error":'.$e->getMessage().'}';
+			$res = ['error' => $e->getMessage()];
 		}
 		echo json_encode($res,JSON_PRETTY_PRINT);
 	}else{
