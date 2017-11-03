@@ -65,15 +65,17 @@
 		}
 		$BreakLine = "\n";
 	}else{
-		echo '
-		<html dir="rtl">
-			<style>
-				input[type=text]{
-					width: 250px;
-				}
-			</style>
-			<body style="direction: rtl;font-family:tahoma;font-size: 12px;">
-		';
+		if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
+			echo '
+			<html dir="rtl">
+				<style>
+					input[type=text]{
+						width: 250px;
+					}
+				</style>
+				<body style="direction: rtl;font-family:tahoma;font-size: 12px;">
+			';
+		}
 	}
 	
 	global $phones;
@@ -99,16 +101,24 @@
 	$sessionFile = $sessionsDir."/.session_".str_replace(array("+","-","(",")"),"",$phones[0]['number']).""; // مسیر سشن
 
 	$MadelineProto[$phones[0]['number']] = false;
-	echo "درحال آماده سازی...". PHP_EOL .$BreakLine;
+	if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
+		echo "درحال آماده سازی...". PHP_EOL .$BreakLine;
+	}
 
 	if(file_exists($sessionFile)){
 		try {
-			echo 'درحال خواندن سشن: ('.$sessionFile.')...'. PHP_EOL .$BreakLine;
+			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
+				echo 'درحال خواندن سشن: ('.$sessionFile.')...'. PHP_EOL .$BreakLine;
+			}
 			//RemoveProxies($sessionFile);
-			$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile);
-			echo 'سشن خوانده شد.'. PHP_EOL .$BreakLine;
+			$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
+			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
+				echo 'سشن خوانده شد.'. PHP_EOL .$BreakLine;
+			}
 			if(!$RunInTerminal){
-				echo '<a href="./UserBot.php">توقف اکانت</a>'. PHP_EOL .$BreakLine;
+				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
+					echo '<a href="./UserBot.php">توقف اکانت</a>'. PHP_EOL .$BreakLine;
+				}
 			}
 			// set proxy
 			//$MadelineProto[$phones[0]['number']]->settings['logger']['logger'] = $MySettings['logger']['logger'];

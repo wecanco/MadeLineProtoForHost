@@ -78,7 +78,7 @@ class Serialization
             \danog\MadelineProto\Logger::class_exists();
 
             try {
-//                $unserialized = \danog\Serialization::unserialize($tounserialize);
+                //$unserialized = \danog\Serialization::unserialize($tounserialize);
                 $unserialized = unserialize($tounserialize);
             } catch (\danog\MadelineProto\Bug74586Exception $e) {
                 $unserialized = \danog\Serialization::unserialize($tounserialize);

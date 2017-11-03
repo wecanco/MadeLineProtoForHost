@@ -69,9 +69,9 @@
 		foreach($phones as $phone){
 			$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine ---------- $BreakLine";
 			echo ".";
-			$offset= -30;
+			$offset= -10;
 			if(isset($phone['last_update_id'])){
-				$offset = $phone['last_update_id'] - 50;
+				$offset = $phone['last_update_id'] - 10;
 			}else{
 				$phone['last_update_id'] = $offset;
 			}
@@ -120,9 +120,9 @@
 						$Reminds[$key]['status']='done';
 						$remindeText = $remind['note'];
 						$remindeTo = trim($remind['to']);
+						unset($Reminds[$key]);
 						try{
 							$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $remindeTo, 'message' => $remindeText, 'parse_mode' => 'HTML' ]);
-							unset($Reminds[$key]);
 						}catch(Exception $e){}
 					}
 				}
@@ -226,6 +226,7 @@
 								
 								switch(strtolower($Commond)){
 									case "/start2":
+									case "/start":
 										$ExistCase = true;
 										$text='سلام من ربات میدلاین هستم! منو @WeCanCo ساخته! 🙃';
 									break;
@@ -281,6 +282,7 @@
 									
 									case "/translate":
 									case "/tl":
+									case "/tr":
 										$ExistCase = true;
 										$info = $messageTXT;
 										$info = explode($Splitor,$info);
@@ -783,6 +785,39 @@ $trans
 										
 									break;
 									
+									case "/screen":
+										$ExistCase = true;
+										if($messageTXT !=""){
+											$parms = explode($Splitor,$messageTXT.$Splitor.$Splitor);
+											$with = 1024;
+											$mobile = "false";
+											$url = trim($parms[0]);
+											$url = str_replace(array("https","http"),"",$url);
+											if((trim($parms[1])) =="mobile"){
+												$mobile = "true";
+											}
+											if(intval(trim($parms[2])) > 0){
+												$with = intval(trim($parms[2]));
+											}
+											
+											$link = "https://thumbnail.ws/get/thumbnail/?apikey=ab45a17344aa033247137cf2d457fc39ee4e7e16a463&width=".$with."&mobile=".$mobile."&url=".trim($url);
+											$name='screen_'.time().".jpg";
+											$localFile = 'temp/'.$name;
+											curl_dl($link,$localFile);											
+											$caption = '📌 '.$messageTXT.' | @WeCanGP';
+											
+											$inputFile = $MadelineProto[$phone['number']]->upload($localFile);
+
+											$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
+											
+											$p = ['peer' => $peer, 'media' => $inputMedia];
+											$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
+											unlink($localFile);
+										}
+										
+										
+									break;
+									
 									
 								
 								}
@@ -803,7 +838,7 @@ $trans
 											$ExistCase = true;
 											if(intval($peer) < 0){
 												$res = $MadelineProto[$phone['number']]->channels->deleteMessages(['channel' => $peer, 'id' => [$dmid] ]);
-												}else{
+											}else{
 												$res = $MadelineProto[$phone['number']]->messages->deleteMessages(['id' => [$dmid] ]);
 											}
 										}else if($channel_id=="" && 1==2){
