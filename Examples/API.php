@@ -12,6 +12,7 @@
 		$key = $phones[0]['number'];
 		$MadelineProto[$key]->settings['updates']['handle_updates'] = false;
 		$curdc = $MadelineProto[$key]->API->datacenter->curdc;
+		//$curdc = 4;
 		$parms = json_decode($_REQUEST['parms'],true);
 		try{
 			$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);

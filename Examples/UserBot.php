@@ -68,8 +68,7 @@
 	while(true){
 		foreach($phones as $phone){
 			$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine ---------- $BreakLine";
-			echo ".";
-			$offset= -10;
+			$offset= -1;
 			if(isset($phone['last_update_id'])){
 				$offset = $phone['last_update_id'] - 10;
 			}else{
@@ -99,8 +98,11 @@
 	
 			$sessionFile = $sessionsDir."/.session_".$ClearedPhone.""; // مسیر سشن
 			//$updates = $MadelineProto[$phone['number']]->get_updates(['offset' => $offset, 'limit' => 50]);
+			$MadelineProto[$phone['number']]->settings['updates']['handle_updates'] = true;
 			$updates = $MadelineProto[$phone['number']]->API->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]);
-			file_put_contents('updates_'.$ClearedPhone,json_encode($updates,JSON_PRETTY_PRINT));
+			//file_put_contents('updates_'.$ClearedPhone,json_encode($updates,JSON_PRETTY_PRINT));
+			
+			/*
 			if(sizeof($updates) > 0){
 				foreach($updates as $key => $val){
 					$update = $updates[$key];
@@ -112,6 +114,7 @@
 					}
 				}
 			}
+			*/
 			
 			$Reminds = json_decode(file_get_contents($RemindsF),true);
 			foreach($Reminds as $key => $remind){
@@ -127,9 +130,11 @@
 					}
 				}
 			}
-			
+			echo $phone['last_update_id'].", ";
+			if(sizeof($updates) > 0){
 			foreach($updates as $update){
 				$ExistCase = false;
+				$phone['last_update_id'] = $update['update_id'];
 				if(($update['update']['_'] == 'updateNewMessage' || $update['update']['_'] == 'updateNewChannelMessage') ){
 				try {
 					$out=0;
@@ -258,6 +263,8 @@
 ======================
 											";
 											}
+										}else{
+											$text ="❌ فقط وی کن میتونه! 😏";
 										}
 									break;
 									
@@ -948,7 +955,7 @@ $trans
 				if($sent==1){
 					echo "پیام ارسال شد! $BreakLine";
 				}else{
-					echo ". ";
+					echo ".";
 				}
 				
 			}
@@ -956,6 +963,8 @@ $trans
 			
 			
 			
+		}
+		
 		}
 		
 		if($Serialize){
