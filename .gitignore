@@ -3,6 +3,6 @@ libtgvoip.so
 UserBotPro.php
 __
 Examples/inc/SocksProxy.php
-Examples/sessions/session*
+Examples/sessions/.session*
 Examples/SentMSGs
 src/danog/MadelineProto/VoIP/php-libtgvoip.php

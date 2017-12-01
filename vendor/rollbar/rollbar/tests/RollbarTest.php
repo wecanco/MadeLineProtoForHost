@@ -165,4 +165,18 @@ class RollbarTest extends BaseRollbarTest
         Rollbar::flush();
         $this->assertTrue(true);
     }
+
+    public function testExceptionHandler($exception = null)
+    {
+        if ($exception) {
+            $backtrace = debug_backtrace();
+            $this->assertEquals('exceptionHandler', $backtrace[2]['function']);
+            return;
+        }
+        set_exception_handler(array($this, 'testExceptionHandler'));
+        Rollbar::setupExceptionHandling();
+        Rollbar::exceptionHandler(new \Exception());
+        $handler = set_exception_handler('Rollbar\Rollbar::exceptionHandler');
+        $this->assertEquals('testExceptionHandler', $handler[1]);
+    }
 }

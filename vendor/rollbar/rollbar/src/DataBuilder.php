@@ -248,7 +248,7 @@ class DataBuilder implements DataBuilderInterface
         $this->serverExtras = isset($config['serverExtras']) ? $config['serverExtras'] : null;
     }
 
-    protected function setCustom($config)
+    public function setCustom($config)
     {
         $this->custom = isset($config['custom']) ? $config['custom'] : null;
     }
@@ -342,7 +342,7 @@ class DataBuilder implements DataBuilderInterface
             ->setRequest($this->getRequest())
             ->setPerson($this->getPerson())
             ->setServer($this->getServer())
-            ->setCustom($this->getCustom($toLog, $context))
+            ->setCustom($this->getCustomForPayload($toLog, $context))
             ->setFingerprint($this->getFingerprint())
             ->setTitle($this->getTitle())
             ->setUuid($this->getUuid())
@@ -499,8 +499,8 @@ class DataBuilder implements DataBuilderInterface
             (string)$toLog,
             $context,
             $this->sendMessageTrace ?
-                debug_backtrace($this->localVarsDump ? 0 : DEBUG_BACKTRACE_IGNORE_ARGS) :
-                null
+            debug_backtrace($this->localVarsDump ? 0 : DEBUG_BACKTRACE_IGNORE_ARGS) :
+            null
         );
     }
 
@@ -887,26 +887,46 @@ class DataBuilder implements DataBuilderInterface
     {
         return $this->serverExtras;
     }
-
-    protected function getCustom($toLog, $context)
+    
+    public function getCustom()
     {
-        $custom = $this->custom;
+        return $this->custom;
+    }
+
+    protected function getCustomForPayload($toLog, $context)
+    {
+        $custom = $this->getCustom();
 
         // Make this an array if possible:
         if ($custom instanceof \JsonSerializable) {
             $custom = $custom->jsonSerialize();
         } elseif (is_null($custom)) {
-            return null;
+            $custom = array();
         } elseif (!is_array($custom)) {
             $custom = get_object_vars($custom);
         }
 
-        $baseException = $this->getBaseException();
-        if (!$toLog instanceof $baseException) {
-            return array_replace_recursive(array(), $custom);
-        }
-
         return array_replace_recursive(array(), $context, $custom);
+    }
+    
+    public function addCustom($key, $data)
+    {
+        if ($this->custom === null) {
+            $this->custom = array();
+        }
+        
+        if (!is_array($this->custom)) {
+            throw new \Exception(
+                "Custom data configured in Rollbar::init() is not an array."
+            );
+        }
+        
+        $this->custom[$key] = $data;
+    }
+    
+    public function removeCustom($key)
+    {
+        unset($this->custom[$key]);
     }
 
     protected function getFingerprint()

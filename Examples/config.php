@@ -17,7 +17,7 @@
 	
 	
 	$libPath ='../'; // مسیر روت کتابخانه میدلاین
-	$sessionsDir = 'sessions/'; // پوشه ذخیره سشن ها
+	$sessionsDir = 'sessions'; // پوشه ذخیره سشن ها
 	$RunInTerminal = false; // فایل فعالسازی اجرا در ترمینال
 	$MadelineURL ='http://tlapi.cf/MadeLineProtoForHost/Examples/'; // آدرس پوشه ای که فایل StartUserBot.php در آن است.
 	if(!file_exists('.admins')){
@@ -27,12 +27,13 @@
 	$Bots=array(
 		'WeMadelineBot' => array(
 							'token' => "437491880:AAGkh9Ytem_gtfyeW7hh4L_NqKnfaVkExSg",
-							'active' => true
+							'active' => false
 		)
 	);
 	
 	// تنظیمات ای پی آی میدلان جهت اتصال به سرور تلگرام
 	//$settings = json_decode('{"logger":{"logger":0},"app_info":{"api_id":6,"api_hash":"eb06d4abfb49dc3eeb1aeb98ae0f581e"}}', true) ?: [];
+	//$ipv6 = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0;
 	$settings = 
 	[
 		'logger' => [
@@ -43,7 +44,7 @@
             'all' => [
                     'protocol' => 'tcp_full',
                     'test_mode' => false,
-					'ipv6' => '',
+					'ipv6' => $ipv6,
                     'timeout' => 2,
 					'proxy' => '\Socket',
                     'proxy_extra' => [],

@@ -25,7 +25,7 @@ trait AuthKeyHandler
     public function request_call($user)
     {
         if (!class_exists('\danog\MadelineProto\VoIP')) {
-            //throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['libtgvoip_required']);
+            throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['libtgvoip_required']);
         }
         array_walk($this->calls, function ($controller, $id) {
             if ($controller->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
@@ -139,15 +139,15 @@ trait AuthKeyHandler
         $this->calls[$params['id']]->configuration['shared_config'] = array_merge($this->method_call('phone.getCallConfig', [], ['datacenter' => $this->datacenter->curdc]), $this->calls[$params['id']]->configuration['shared_config']);
         $this->calls[$params['id']]->configuration['endpoints'] = array_merge([$res['connection']], $res['alternative_connections'], $this->calls[$params['id']]->configuration['endpoints']);
         $this->calls[$params['id']]->configuration = array_merge([
-            'recv_timeout'         => $this->config['call_receive_timeout_ms'] / 1000,
-            'init_timeout'         => $this->config['call_connect_timeout_ms'] / 1000,
-            'data_saving'          => \danog\MadelineProto\VoIP::DATA_SAVING_NEVER,
-            'enable_NS'            => true,
-            'enable_AEC'           => true,
-            'enable_AGC'           => true,
+            'recv_timeout' => $this->config['call_receive_timeout_ms'] / 1000,
+            'init_timeout' => $this->config['call_connect_timeout_ms'] / 1000,
+            'data_saving'  => \danog\MadelineProto\VoIP::DATA_SAVING_NEVER,
+            'enable_NS'    => true,
+            'enable_AEC'   => true,
+            'enable_AGC'   => true,
 
-            'auth_key'      => $key,
-            'network_type'  => \danog\MadelineProto\VoIP::NET_TYPE_ETHERNET,
+            'auth_key'     => $key,
+            'network_type' => \danog\MadelineProto\VoIP::NET_TYPE_ETHERNET,
         ], $this->calls[$params['id']]->configuration);
         $this->calls[$params['id']]->parseConfig();
         $res = $this->calls[$params['id']]->startTheMagic();
@@ -199,15 +199,15 @@ trait AuthKeyHandler
         $this->calls[$params['id']]->configuration['endpoints'] = array_merge([$params['connection']], $params['alternative_connections'], $this->calls[$params['id']]->configuration['endpoints']);
 
         $this->calls[$params['id']]->configuration = array_merge([
-            'recv_timeout'         => $this->config['call_receive_timeout_ms'] / 1000,
-            'init_timeout'         => $this->config['call_connect_timeout_ms'] / 1000,
-            'data_saving'          => \danog\MadelineProto\VoIP::DATA_SAVING_NEVER,
-            'enable_NS'            => true,
-            'enable_AEC'           => true,
-            'enable_AGC'           => true,
+            'recv_timeout' => $this->config['call_receive_timeout_ms'] / 1000,
+            'init_timeout' => $this->config['call_connect_timeout_ms'] / 1000,
+            'data_saving'  => \danog\MadelineProto\VoIP::DATA_SAVING_NEVER,
+            'enable_NS'    => true,
+            'enable_AEC'   => true,
+            'enable_AGC'   => true,
 
-            'auth_key'      => $key,
-            'network_type'  => \danog\MadelineProto\VoIP::NET_TYPE_ETHERNET,
+            'auth_key'     => $key,
+            'network_type' => \danog\MadelineProto\VoIP::NET_TYPE_ETHERNET,
         ], $this->calls[$params['id']]->configuration);
         var_dump($this->calls[$params['id']]->configuration);
         $this->calls[$params['id']]->parseConfig();

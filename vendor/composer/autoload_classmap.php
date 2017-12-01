@@ -6,5 +6,4 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-	//'SocksProxy' => array($baseDir.'/src/danog/MadelineProto/SocksProxy.php')
 );

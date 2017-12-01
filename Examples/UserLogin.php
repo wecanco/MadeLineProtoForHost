@@ -18,8 +18,13 @@
 	
 	file_put_contents('LastRun',date("Y-m-d H:i:s", time()));
 	
-	exec("ps aux", $psRes);
-	$psResS = implode("\n",$psRes);
+	try{
+		exec("ps aux", $psRes);
+		$psResS = implode("\n",$psRes);
+	} catch (Exception $e) { 
+		$psRes = ['error' => $e->getMessage()];
+	}
+	
 	$UserBotF = getcwd().'/UserBot.php';
 	$UserBotF = explode("/",$UserBotF);
 	unset($UserBotF[0]);
@@ -39,9 +44,10 @@
 		exit();
 	}
 
-	
 	$BreakLine = "<br>";
-	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || isset($_SERVER['SHELL']) ){
+	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || 
+		isset($_SERVER['SHELL']) || 
+		(isset($_SERVER['ComSpec']) && strpos(strtolower($_SERVER['ComSpec']), 'cmd.exe') !== false ) ){
 		$RunInTerminal = true;
 	}
 	
@@ -102,22 +108,22 @@
 
 	$MadelineProto[$phones[0]['number']] = false;
 	if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
-		echo "درحال آماده سازی...". PHP_EOL .$BreakLine;
+		echo "loading...". PHP_EOL .$BreakLine;
 	}
 
 	if(file_exists($sessionFile)){
 		try {
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
-				echo 'درحال خواندن سشن: ('.$sessionFile.')...'. PHP_EOL .$BreakLine;
+				echo 'reading session file... ['.$sessionFile.']'. PHP_EOL .$BreakLine;
 			}
 			//RemoveProxies($sessionFile);
 			$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
-				echo 'سشن خوانده شد.'. PHP_EOL .$BreakLine;
+				echo 'session file readed.'. PHP_EOL .$BreakLine;
 			}
 			if(!$RunInTerminal){
 				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
-					echo '<a href="./UserBot.php">توقف اکانت</a>'. PHP_EOL .$BreakLine;
+					echo '<a href="./UserBot.php">STOP BOT</a>'. PHP_EOL .$BreakLine;
 				}
 			}
 			// set proxy
@@ -128,9 +134,9 @@
 			// remove proxy
 			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy']);
 			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy_extra']);
-			//$MadelineProto[$phones[0]['number']]->updates->API->chats = null;
-			//$MadelineProto[$phones[0]['number']]->updates->API->full_chats = null;
-			//$MadelineProto[$phones[0]['number']]->updates->API->updates = null;
+			//$MadelineProto[$phones[0]['number']]->updates->API->chats = [];
+			//$MadelineProto[$phones[0]['number']]->updates->API->full_chats = [];
+			//$MadelineProto[$phones[0]['number']]->updates->API->updates = [];
 			//$MadelineProto[$phones[0]['number']]->updates->API->constructors = null;
 			//$MadelineProto[$phones[0]['number']]->updates->API->methods = null;
 			//for($i=0; $i<sizeof($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets); $i++){
@@ -146,7 +152,7 @@
 			
 			
 		} catch (\danog\MadelineProto\Exception $e) {
-			echo 'خطا: '. PHP_EOL .$BreakLine;
+			echo 'Error: '. PHP_EOL .$BreakLine;
 			var_dump($e->getMessage());
 			exit();
 		}
@@ -154,23 +160,23 @@
 
 	if ($MadelineProto[$phones[0]['number']] === false) {
 		sleep(0.5);
-		echo 'درحال اتصال به سرور تلگرام...'.PHP_EOL;
+		echo 'Connecting to Telegram Server...'.PHP_EOL;
 		$MadelineProto[$phones[0]['number']] = new \danog\MadelineProto\API($settings);
-		echo 'به سرور تلگرام متصل شد.'. PHP_EOL .$BreakLine;
+		echo 'Connected to Telegram.'. PHP_EOL .$BreakLine;
 
-		echo 'درحال چک کردن شماره موبایل...'. PHP_EOL .$BreakLine;
+		echo 'Checking Phone Number...'. PHP_EOL .$BreakLine;
 		$checkedPhone = $MadelineProto[$phones[0]['number']]->auth->checkPhone(['phone_number' => $phones[0]['number'],]);
-		echo 'موبایل چک شد.'. PHP_EOL .$BreakLine;
+		echo 'Phone Number Checked.'. PHP_EOL .$BreakLine;
 
-		echo 'درحال ارسال کد جهت ورود به اکانت...'. PHP_EOL .$BreakLine;
+		echo 'Sending Code...'. PHP_EOL .$BreakLine;
 		$sentCode = $MadelineProto[$phones[0]['number']]->phone_login($phones[0]['number']);
 		$phones_code_hash = $sentCode['phone_code_hash'];
 		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phones[0]['number']]);
 		if($phones_code_hash !==""){
 			if($RunInTerminal){
-				$_GET['code'] = readline('Code Taeed Ra Vared Namaed: ');
+				$_GET['code'] = readline('Enter Code: ');
 			}else{
-				echo 'کد به تلگرام شما ارسال شد.'. PHP_EOL .$BreakLine;
+				echo 'Code Sent.'. PHP_EOL .$BreakLine;
 				echo '
 				<form action="" method="">
 					<input type="hidden" name="phone" value="'.$_GET['phone'].'" />
@@ -181,18 +187,18 @@
 				exit();
 			}
 		}else{
-			echo 'خطا در ارسال کد.'. PHP_EOL .$BreakLine;
+			echo 'Error while sending code!'. PHP_EOL .$BreakLine;
 			exit();
 		}
 	}
 	
 	if($MadelineProto[$phones[0]['number']] != false && isset($_GET['code'])){
 		$code = $_GET['code'];
-		echo 'درحال تایید کد...'. PHP_EOL .$BreakLine;
+		echo 'Confrim Code...'. PHP_EOL .$BreakLine;
 		$authorization = $MadelineProto[$phones[0]['number']]->complete_phone_login($code);
 
 		if ($authorization['_'] === 'account.noPassword') {
-			echo 'ورود دو مرحله ای شما فعال است و پسورد خود را وارد نکردید!'. PHP_EOL .$BreakLine;
+			echo 'You Should Enter your Password!'. PHP_EOL .$BreakLine;
 			exit();
 		}
 		if ($authorization['_'] === 'account.password') {
@@ -201,7 +207,7 @@
 				$_GET['pass'] = readline('Password: ('.$help.')');
 			}else{
 				if(!isset($_GET['pass'])){
-					echo "راهنمای پسورد اکانت: ".$help. PHP_EOL .$BreakLine;
+					echo "Password Help: ".$help. PHP_EOL .$BreakLine;
 					echo '
 					<form action="" method="">
 						<input type="hidden" name="phone" value="'.$_GET['phone'].'" />

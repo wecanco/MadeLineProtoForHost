@@ -6,7 +6,7 @@
 	// را به 
 	// _stop_bot
 	// تغییرنام دهید و جهت استارت مجدد اول نام فایل بالا را به حال اول برگردانده و دوباره فایل جاری را با متد فون یکبار درمرورگر اجرا کنید
-	//?phone=+989905586201
+	//?phone=+989357973301
 	
 	if(file_exists('.CurrentAC')){
 		$phone = explode("\n",file_get_contents('.CurrentAC'))[0];
@@ -29,7 +29,7 @@
 
 	// نمونه کرون جاب:
 	//  */5 	* 	* 	* 	* 	wget -qO- http://tlbots.cf/_MadelineTest/Examples/StartUserBot.php?phone=+989357973301 &> /dev/null
-	//  */5 	* 	* 	* 	* 	/bin/php -f /home2/tlbotscf/public_html/MadeLineProtoForHost/Examples/UserBot.php +989357973301 &> /dev/null
+	//  * 	* 	* 	* 	* 	php -q /home2/tlbotscf/public_html/MadeLineProtoForHost/Examples/UserBot.php +989357973301 &> /dev/null
 	
 		
 	// @WeCanGP | WeCan-Co.ir

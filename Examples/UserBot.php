@@ -6,7 +6,7 @@
 	require_once('inc/GTranslator.php'); // کلاس ترجمه گوگل
 	
 	try{
-		mkdir('temp');
+		//mkdir('temp');
 	} catch (Exception $e) { 
 		//$text = "❌ ".$e->getMessage(); 
 	}
@@ -18,7 +18,7 @@
 	$FaqF = ".faqs";
 	$RemindsF = ".reminds";
 	$InlineMode = false;
-	$Serialize = false;
+	$Serialize = true;
 	$SentMSGs=[];
 	$Splitor = "|";
 	
@@ -52,7 +52,8 @@
 	
 	}
 	
-	
+	echo "\nget bots...\n";
+	$MadelineProtoBot = [];
 	foreach($Bots as $bkey => $bval){
 		if($Bots[$bkey]['active']){
 			try{
@@ -98,11 +99,12 @@
 	
 			$sessionFile = $sessionsDir."/.session_".$ClearedPhone.""; // مسیر سشن
 			//$updates = $MadelineProto[$phone['number']]->get_updates(['offset' => $offset, 'limit' => 50]);
+			echo "\nset settings...\n";
 			$MadelineProto[$phone['number']]->settings['updates']['handle_updates'] = true;
-			$updates = $MadelineProto[$phone['number']]->API->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]);
+			echo "\nget updates...\n";
+			$updates = $MadelineProto[$phone['number']]->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]);
 			//file_put_contents('updates_'.$ClearedPhone,json_encode($updates,JSON_PRETTY_PRINT));
 			
-			/*
 			if(sizeof($updates) > 0){
 				foreach($updates as $key => $val){
 					$update = $updates[$key];
@@ -114,105 +116,108 @@
 					}
 				}
 			}
-			*/
+			
 			
 			$Reminds = json_decode(file_get_contents($RemindsF),true);
-			foreach($Reminds as $key => $remind){
-				if(isset($remind['time']) && $remind['status']=='active'){
-					if(time() >= $remind['time']){
-						$Reminds[$key]['status']='done';
-						$remindeText = $remind['note'];
-						$remindeTo = trim($remind['to']);
-						unset($Reminds[$key]);
-						try{
-							$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $remindeTo, 'message' => $remindeText, 'parse_mode' => 'HTML' ]);
-						}catch(Exception $e){}
+			if(count($Reminds) > 0){
+				foreach($Reminds as $key => $remind){
+					if(isset($remind['time']) && $remind['status']=='active'){
+						if(time() >= $remind['time']){
+							$Reminds[$key]['status']='done';
+							$remindeText = $remind['note'];
+							$remindeTo = trim($remind['to']);
+							unset($Reminds[$key]);
+							try{
+								$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $remindeTo, 'message' => $remindeText, 'parse_mode' => 'HTML' ]);
+							}catch(Exception $e){}
+						}
 					}
 				}
 			}
-			echo $phone['last_update_id'].", ";
+			
 			if(sizeof($updates) > 0){
 			foreach($updates as $update){
 				$ExistCase = false;
 				$phone['last_update_id'] = $update['update_id'];
-				if(($update['update']['_'] == 'updateNewMessage' || $update['update']['_'] == 'updateNewChannelMessage') ){
-				try {
-					$out=0;
-					$text='';
-					$peer='';
-					$channel_id = "";
-					$uniq="";
-					$mid=null;
-					
-					if(isset($update['update']['message']['out'])){
-						$out = $update['update']['message']['out'];
-					}
-					$message='';
-					if(isset($update['update']['message']['message'])){
-						$message = $update['update']['message']['message'];
-					}
-					$media='';
-					$document='';
-					$photo='';
-					$caption='';
-					$caption2='';
-					$file_type='';
-					if(isset($update['update']['message']['media']['caption'])){
-						$caption = trim($update['update']['message']['media']['caption']);
-						$caption2 = strtolower($caption);
-					}
-					if(isset($update['update']['message']['media'])){
-						$media = $update['update']['message']['media'];
-					}
-					if(isset($media['document'])){
-						$document = $media['document'];
-						//$thumb = $document['thumb'];
-						switch($document['mime_type']){
-							case "image/png":
-							case "image/jpeg":
-							$file_type = explode("/",$document['mime_type'])[1];
-							if(in_array($caption2,array('pic2sticker','i love wecanco')) ){
-								$photo = $document;
-								$message = '/pic2sticker ';
-							}
-							break;
-						}
-					}
-					if(isset($media['photo'])){
-						$photo = $media['photo'];
+				echo $phone['last_update_id'].", ";
+				
+				$out=0;
+				$text='';
+				$peer='';
+				$channel_id = "";
+				$uniq="";
+				$mid=null;
+				
+				if(isset($update['update']['message']['out'])){
+					$out = $update['update']['message']['out'];
+				}
+				$message='';
+				if(isset($update['update']['message']['message'])){
+					$message = $update['update']['message']['message'];
+				}
+				$media='';
+				$document='';
+				$photo='';
+				$caption='';
+				$caption2='';
+				$file_type='';
+				if(isset($update['update']['message']['media']['caption'])){
+					$caption = trim($update['update']['message']['media']['caption']);
+					$caption2 = strtolower($caption);
+				}
+				if(isset($update['update']['message']['media'])){
+					$media = $update['update']['message']['media'];
+				}
+				if(isset($media['document'])){
+					$document = $media['document'];
+					//$thumb = $document['thumb'];
+					switch($document['mime_type']){
+						case "image/png":
+						case "image/jpeg":
+						$file_type = explode("/",$document['mime_type'])[1];
 						if(in_array($caption2,array('pic2sticker','i love wecanco')) ){
-							$file_type='jpg';
+							$photo = $document;
 							$message = '/pic2sticker ';
 						}
+						break;
 					}
-					
-					
-					$sent=0;
+				}
+				if(isset($media['photo'])){
+					$photo = $media['photo'];
+					if(in_array($caption2,array('pic2sticker','i love wecanco')) ){
+						$file_type='jpg';
+						$message = '/pic2sticker ';
+					}
+				}
+
+				$sent=0;
+				
+				$mid = $update['update']['message']['id'];
+				$from_id="";
+				if(isset($update['update']['message']['from_id'])){
+					$from_id = $update['update']['message']['from_id'];
+					$peer = $from_id;
+				}
+				
+				if(isset($update['update']['message']['to_id']['channel_id'])){
+					$channel_id = $update['update']['message']['to_id']['channel_id'];
+					$peer = "-100".$channel_id;
+				}
+				
+				$date = $update['update']['message']['date'];
+				$uniq = $update['update_id']."_".$from_id."_".$mid."_".$date;
+				
+				//seen
+				if(intval($peer) < 0){
+					$MadelineProto[$phone['number']]->channels->readHistory(['channel' => $peer, 'max_id' => $mid ]);
+					$MadelineProto[$phone['number']]->channels->readMessageContents(['channel' => $peer, 'id' => [$mid] ]);
+				}else{
+					$MadelineProto[$phone['number']]->messages->readHistory(['peer' => $peer , 'max_id' => $mid ]);
+				}
+				if(($update['update']['_'] == 'updateNewMessage' || $update['update']['_'] == 'updateNewChannelMessage') ){
+				try {
 					if($out != 1){
 						if($message !=""){
-							$mid = $update['update']['message']['id'];
-							$from_id="";
-							if(isset($update['update']['message']['from_id'])){
-								$from_id = $update['update']['message']['from_id'];
-								$peer = $from_id;
-							}
-							
-							if(isset($update['update']['message']['to_id']['channel_id'])){
-								$channel_id = $update['update']['message']['to_id']['channel_id'];
-								$peer = "-100".$channel_id;
-							}
-							
-							$date = $update['update']['message']['date'];
-							$uniq = $from_id."_".$mid."_".$date;
-							
-							//seen
-							if(intval($peer) < 0){
-								$MadelineProto[$phone['number']]->channels->readHistory(['channel' => $peer, 'max_id' => $mid ]);
-								$MadelineProto[$phone['number']]->channels->readMessageContents(['channel' => $peer, 'id' => [$mid] ]);
-							}else{
-								$MadelineProto[$phone['number']]->messages->readHistory(['peer' => $peer , 'max_id' => $mid ]);
-							}
-								
 							if(!isset($phone['current']) || !$phone['current']){
 								continue;
 							}	

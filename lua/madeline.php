@@ -53,7 +53,6 @@ if (!is_object($Lua)) {
             break;
     }
 }
-
 $offset = 0;
 while (true) {
     $updates = $Lua->MadelineProto->API->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]); // Just like in the bot API, you can specify an offset, a limit and a timeout

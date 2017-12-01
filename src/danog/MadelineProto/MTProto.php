@@ -46,7 +46,7 @@ class MTProto
     /*
         const V = 71;
     */
-    const V = 77;
+    const V = 79;
 
     const NOT_LOGGED_IN = 0;
     const WAITING_CODE = 1;
@@ -78,12 +78,12 @@ class MTProto
         'updates.getDifference'        => 'You cannot use this method directly, see https://daniil.it/MadelineProto for more info on handling updates',
         'updates.getState'             => 'You cannot use this method directly, see https://daniil.it/MadelineProto for more info on handling updates',
 
-        'upload.getCdnFile'            => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
-        'upload.getCdnFileHashes'      => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
-        'upload.reuploadCdnFile'       => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
-        'upload.getFile'               => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
-        'upload.saveFilePart'          => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
-        'upload.saveBigFilePart'       => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.getCdnFile'       => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.getCdnFileHashes' => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.reuploadCdnFile'  => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.getFile'          => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.saveFilePart'     => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
+        'upload.saveBigFilePart'  => 'You cannot use this method directly, use the upload, download_to_stream, download_to_file, download_to_dir methods instead; see https://daniil.it/MadelineProto for more info',
 
     ];
     const BAD_MSG_ERROR_CODES = [
@@ -153,7 +153,7 @@ class MTProto
 
     ];
     const TD_REVERSE = [
-        'sendMessage'=> 'messages.sendMessage',
+        'sendMessage' => 'messages.sendMessage',
     ];
     const TD_IGNORE = ['updateMessageID'];
 
@@ -174,7 +174,7 @@ class MTProto
     private $msg_ids = [];
     private $v = 0;
 
-    private $dialog_params = ['_' => 'MadelineProto.dialogParams', 'limit' => 0, 'offset_date' => 0, 'offset_id' => 0, 'offset_peer' =>  ['_' => 'inputPeerEmpty'], 'count' => 0];
+    private $dialog_params = ['_' => 'MadelineProto.dialogParams', 'limit' => 0, 'offset_date' => 0, 'offset_id' => 0, 'offset_peer' => ['_' => 'inputPeerEmpty'], 'count' => 0];
     private $zero;
     private $one;
     private $two;
@@ -186,10 +186,10 @@ class MTProto
 
     private $ipv6 = false;
     public $run_workers = false;
-    public $threads = false;
     public $setdem = false;
     public $storage = [];
     private $emojis;
+    private $postpone_updates = false;
 
     public function ___construct($settings = [])
     {
@@ -236,8 +236,6 @@ class MTProto
         $this->twoe1984 = new \phpseclib\Math\BigInteger('1751908409537131537220509645351687597690304110853111572994449976845956819751541616602568796259317428464425605223064365804210081422215355425149431390635151955247955156636234741221447435733643262808668929902091770092492911737768377135426590363166295684370498604708288556044687341394398676292971255828404734517580702346564613427770683056761383955397564338690628093211465848244049196353703022640400205739093118270803778352768276670202698397214556629204420309965547056893233608758387329699097930255380715679250799950923553703740673620901978370802540218870279314810722790539899334271514365444369275682816');
         $this->twoe2047 = new \phpseclib\Math\BigInteger('16158503035655503650357438344334975980222051334857742016065172713762327569433945446598600705761456731844358980460949009747059779575245460547544076193224141560315438683650498045875098875194826053398028819192033784138396109321309878080919047169238085235290822926018152521443787945770532904303776199561965192760957166694834171210342487393282284747428088017663161029038902829665513096354230157075129296432088558362971801859230928678799175576150822952201848806616643615613562842355410104862578550863465661734839271290328348967522998634176499319107762583194718667771801067716614802322659239302476074096777926805529798115328');
         $this->twoe2048 = new \phpseclib\Math\BigInteger('32317006071311007300714876688669951960444102669715484032130345427524655138867890893197201411522913463688717960921898019494119559150490921095088152386448283120630877367300996091750197750389652106796057638384067568276792218642619756161838094338476170470581645852036305042887575891541065808607552399123930385521914333389668342420684974786564569494856176035326322058077805659331026192708460314150258592864177116725943603718461857357598351152301645904403697613233287231227125684710820209725157101726931323469678542580656697935045997268352998638215525166389437335543602135433229604645318478604952148193555853611059596230656');
-
-        $this->setup_threads();
 
         $this->connect_to_all_dcs();
         $this->datacenter->curdc = 2;
@@ -294,24 +292,20 @@ class MTProto
             }
         }
         // Detect ipv6
+        $oldipv6 = $this->ipv6;
         $this->ipv6 = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0;
-		/*
-        preg_match('/const V = (\d+);/', file_get_contents('https://raw.githubusercontent.com/danog/MadelineProto/master/src/danog/MadelineProto/MTProto.php'), $matches);
+
+        if ($oldipv6 !== $this->ipv6) {
+            $this->settings['connection_settings']['all']['ipv6'] = $this->ipv6;
+            $this->datacenter->settings = $this->settings['connection_settings'];
+            $this->connect_to_all_dcs();
+        }
+        preg_match('/const V = (\d+);/', @file_get_contents('https://raw.githubusercontent.com/danog/MadelineProto/master/src/danog/MadelineProto/MTProto.php'), $matches);
         $keys = array_keys((array) get_object_vars($this));
         if (count($keys) !== count(array_unique($keys))) {
             throw new Bug74586Exception();
         }
-		*/
 
-        /*
-        if (method_exists($this->datacenter, 'wakeup')) $this->datacenter = $this->datacenter->wakeup();
-        foreach ($this->rsa_keys as $key => $elem) {
-            if (method_exists($elem, 'wakeup')) $this->rsa_keys[$key] = $elem->wakeup();
-        }
-        foreach ($this->datacenter->sockets as $key => $elem) {
-            if (method_exists($elem, 'wakeup')) $this->datacenter->sockets[$key] = $elem->wakeup();
-        }
-        */
         if (isset($this->data)) {
             foreach ($this->data as $k => $v) {
                 $this->{$k} = $v;
@@ -324,11 +318,6 @@ class MTProto
         $this->updates_state['sync_loading'] = false;
         foreach ($this->channels_state as $key => $state) {
             $this->channels_state[$key]['sync_loading'] = false;
-        }
-        foreach (debug_backtrace(0) as $trace) {
-            if (isset($trace['function']) && isset($trace['class']) && $trace['function'] === 'deserialize' && $trace['class'] === 'danog\MadelineProto\Serialization') {
-                $this->updates_state['sync_loading'] = isset($trace['args'][1]) && $trace['args'][1];
-            }
         }
         $force = false;
         $this->reset_session();
@@ -365,7 +354,10 @@ class MTProto
             $this->__construct($settings);
             $force = true;
         }
-        $this->setup_threads();
+        if (!$this->settings['updates']['handle_old_updates']) {
+            $this->channels_state = [];
+            $this->got_state = false;
+        }
         $this->datacenter->__construct($this->settings['connection'], $this->settings['connection_settings']);
         if ($this->get_self()) {
             $this->authorized = self::LOGGED_IN;
@@ -374,7 +366,7 @@ class MTProto
             $this->get_cdn_config($this->datacenter->curdc);
             $this->setup_logger();
         }
-        if ($this->authorized === self::LOGGED_IN && !$this->authorization['user']['bot']) {
+        if ($this->authorized === self::LOGGED_IN && !$this->authorization['user']['bot'] && $this->settings['peer']['cache_all_peers_on_startup']) {
             $this->get_dialogs($force);
         }
         if ($this->authorized === self::LOGGED_IN && $this->settings['updates']['handle_updates'] && !$this->updates_state['sync_loading']) {
@@ -388,52 +380,6 @@ class MTProto
         if (\danog\MadelineProto\Logger::$has_thread && is_object(\Thread::getCurrentThread())) {
             return;
         }
-        if (isset(Logger::$storage[spl_object_hash($this)])) {
-            $this->run_workers = false;
-            while ($number = Logger::$storage[spl_object_hash($this)]->collect()) {
-                \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['shutdown_reader_pool'], $number)], \danog\MadelineProto\Logger::NOTICE);
-            }
-            Logger::$storage[spl_object_hash($this)]->shutdown();
-        }
-    }
-
-    public function setup_threads()
-    {
-        if ($this->threads = $this->run_workers = class_exists('\Pool') && in_array(php_sapi_name(), ['cli', 'phpdbg']) && $this->settings['threading']['allow_threading'] && extension_loaded('pthreads')) {
-            \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['threading_on']], \danog\MadelineProto\Logger::NOTICE);
-            $this->start_threads();
-        }
-    }
-
-    public function start_threads()
-    {
-        if ($this->threads && !is_object(\Thread::getCurrentThread())) {
-            $dcs = $this->datacenter->get_dcs(false);
-            if (!isset(Logger::$storage[spl_object_hash($this)])) {
-                Logger::$storage[spl_object_hash($this)] = new \Pool(count($dcs));
-            }
-            if (!isset($this->readers)) {
-                $this->readers = [];
-            }
-            foreach ($dcs as $dc) {
-                if (!isset($this->readers[$dc])) {
-                    Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['socket_reader'], $number).\danog\MadelineProto\Lang::$current_lang['socket_status_1']], Logger::WARNING);
-                    $this->readers[$dc] = new \danog\MadelineProto\Threads\SocketReader($this, $dc);
-                }
-                if (!$this->readers[$dc]->isRunning()) {
-                    Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['socket_reader'], $number).\danog\MadelineProto\Lang::$current_lang['socket_status_2']], Logger::WARNING);
-                    $this->readers[$dc]->garbage = false;
-                    Logger::$storage[spl_object_hash($this)]->submit($this->readers[$dc]);
-                    Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['socket_reader'], $number).\danog\MadelineProto\Lang::$current_lang['socket_status_3']], Logger::WARNING);
-                    while (!$this->readers[$dc]->ready);
-                    Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['socket_reader'], $number).\danog\MadelineProto\Lang::$current_lang['socket_status_4']], Logger::WARNING);
-                } else {
-                    Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['socket_reader'], $number).\danog\MadelineProto\Lang::$current_lang['socket_status_5']], Logger::ULTRA_VERBOSE);
-                }
-            }
-        }
-
-        return true;
     }
 
     public function parse_settings($settings)
@@ -522,35 +468,35 @@ class MTProto
             ],
             'connection_settings' => [ // connection settings
                 'all' => [ // These settings will be applied on every datacenter that hasn't a custom settings subarray...
-                    'protocol'     => 'tcp_full', // can be tcp_full, tcp_abridged, tcp_intermediate, http, https, obfuscated2, udp (unsupported)
-                    'test_mode'    => false, // decides whether to connect to the main telegram servers or to the testing servers (deep telegram)
-                    'ipv6'         => $this->ipv6, // decides whether to use ipv6, ipv6 attribute of API attribute of API class contains autodetected boolean
-                    'timeout'      => 2, // timeout for sockets
-                    'proxy'        => '\Socket', // The proxy class to use
-                    'proxy_extra'  => [], // Extra parameters to pass to the proxy class using setExtra
+                    'protocol'    => 'tcp_full', // can be tcp_full, tcp_abridged, tcp_intermediate, http, https, obfuscated2, udp (unsupported)
+                    'test_mode'   => false, // decides whether to connect to the main telegram servers or to the testing servers (deep telegram)
+                    'ipv6'        => $this->ipv6, // decides whether to use ipv6, ipv6 attribute of API attribute of API class contains autodetected boolean
+                    'timeout'     => 2, // timeout for sockets
+                    'proxy'       => '\Socket', // The proxy class to use
+                    'proxy_extra' => [], // Extra parameters to pass to the proxy class using setExtra
                 ],
             ],
             'app_info' => [ // obtained in https://my.telegram.org
                 //'api_id'          => you should put an API id in the settings array you provide
                 //'api_hash'        => you should put an API hash in the settings array you provide
-                'device_model'    => $device_model,
-                'system_version'  => $system_version,
-                'app_version'     => 'Unicorn', // ðŸŒš
+                'device_model'   => $device_model,
+                'system_version' => $system_version,
+                'app_version'    => 'Unicorn', // ðŸŒš
 //                'app_version'     => self::V,
-                'lang_code'       => $lang_code,
+                'lang_code' => $lang_code,
             ],
-            'tl_schema'     => [ // TL scheme files
-                'layer'         => 72, // layer version
-                'src'           => [
-                    'mtproto'      => __DIR__.'/TL_mtproto_v1.json', // mtproto TL scheme
-                    'telegram'     => __DIR__.'/TL_telegram_v72.tl', // telegram TL scheme
-                    'secret'       => __DIR__.'/TL_secret.tl', // secret chats TL scheme
-                    'calls'        => __DIR__.'/TL_calls.tl', // calls TL scheme
+            'tl_schema' => [ // TL scheme files
+                'layer' => 73, // layer version
+                'src'   => [
+                    'mtproto'  => __DIR__.'/TL_mtproto_v1.json', // mtproto TL scheme
+                    'telegram' => __DIR__.'/TL_telegram_v73.tl', // telegram TL scheme
+                    'secret'   => __DIR__.'/TL_secret.tl', // secret chats TL scheme
+                    'calls'    => __DIR__.'/TL_calls.tl', // calls TL scheme
                     //'td'           => __DIR__.'/TL_td.tl', // telegram-cli TL scheme
-                    'botAPI'       => __DIR__.'/TL_botAPI.tl', // bot API TL scheme for file ids
+                    'botAPI' => __DIR__.'/TL_botAPI.tl', // bot API TL scheme for file ids
                 ],
             ],
-            'logger'       => [ // Logger settings
+            'logger' => [ // Logger settings
                 /*
                  * logger modes:
                  * 0 - No logger
@@ -560,38 +506,41 @@ class MTProto
                  * 4 - Call callable provided in logger_param. logger_param must accept two parameters: array $message, int $level
                  *     $message is an array containing the messages the log, $level, is the logging level
                  */
-                'logger'             => 1, // write to
-                'logger_param'       => '/tmp/MadelineProto.log',
-                'logger'             => 3, // overwrite previous setting and echo logs
-                'logger_level'       => Logger::VERBOSE, // Logging level, available logging levels are: ULTRA_VERBOSE, VERBOSE, NOTICE, WARNING, ERROR, FATAL_ERROR. Can be provided as last parameter to the logging function.
-                'rollbar_token'      => 'c07d9b2f73c2461297b0beaef6c1662f',
+                'logger'        => 1, // write to
+                'logger_param'  => '/tmp/MadelineProto.log',
+                'logger'        => 3, // overwrite previous setting and echo logs
+                'logger_level'  => Logger::VERBOSE, // Logging level, available logging levels are: ULTRA_VERBOSE, VERBOSE, NOTICE, WARNING, ERROR, FATAL_ERROR. Can be provided as last parameter to the logging function.
+                'rollbar_token' => 'c07d9b2f73c2461297b0beaef6c1662f',
                 //'rollbar_token'      => 'f9fff6689aea4905b58eec73f66c791d' // You can provide a token for the rollbar log management system
             ],
-            'max_tries'         => [
+            'max_tries' => [
                 'query'         => 5, // How many times should I try to call a method or send an object before throwing an exception
                 'authorization' => 5, // How many times should I try to generate an authorization key before throwing an exception
                 'response'      => 5, // How many times should I try to get a response of a query before throwing an exception
             ],
-            'flood_timeout'     => [
-                'wait_if_lt'    => 20, // Sleeps if flood block time is lower than this
+            'flood_timeout' => [
+                'wait_if_lt' => 20, // Sleeps if flood block time is lower than this
             ],
-            'msg_array_limit'        => [ // How big should be the arrays containing the incoming and outgoing messages?
+            'msg_array_limit' => [ // How big should be the arrays containing the incoming and outgoing messages?
                 'incoming'   => 200,
                 'outgoing'   => 200,
                 'call_queue' => 200,
             ],
-            'peer'      => [
-                'full_info_cache_time' => 60,
+            'peer' => [
+                'full_info_cache_time'       => 3600, // Full peer info cache validity
+                'full_fetch'                 => false, // Should madeline fetch the full member list of every group it meets?
+                'cache_all_peers_on_startup' => false, // Should madeline fetch the full chat list on startup?
             ],
             'requests' => [
                 'gzip_encode_if_gt' => 500,  // Should I try using gzip encoding for requests bigger than N bytes? Set to -1 to disable.
             ],
-            'updates'   => [
-                'handle_updates'      => true, // Should I handle updates?
-                'callback'            => 'get_updates_update_handler', // A callable function that will be called every time an update is received, must accept an array (for the update) as the only parameter
+            'updates' => [
+                'handle_updates'     => true, // Should I handle updates?
+                'handle_old_updates' => true, // Should I handle old updates on startup?
+                'callback'           => 'get_updates_update_handler', // A callable function that will be called every time an update is received, must accept an array (for the update) as the only parameter
             ],
             'secret_chats' => [
-                'accept_chats'      => true, // Should I accept secret chats? Can be true, false or on array of user ids from which to accept chats
+                'accept_chats' => true, // Should I accept secret chats? Can be true, false or on array of user ids from which to accept chats
             ],
             'threading' => [
                 'allow_threading' => false, // Should I use threading, if it is enabled?
@@ -665,7 +614,6 @@ class MTProto
         foreach ($old = $this->datacenter->get_dcs() as $new_dc) {
             $this->datacenter->dc_connect($new_dc);
         }
-        $this->setup_threads();
         $this->init_authorization();
         if ($old !== $this->datacenter->get_dcs()) {
             $this->connect_to_all_dcs();
@@ -716,6 +664,7 @@ class MTProto
     public function sync_authorization($authorized_dc)
     {
         $this->updates_state['sync_loading'] = true;
+        $this->postpone_updates = true;
 
         try {
             foreach ($this->datacenter->sockets as $new_dc => $socket) {
@@ -735,6 +684,7 @@ class MTProto
                 $authorization = $this->method_call('auth.importAuthorization', $exported_authorization, ['datacenter' => $new_dc]);
             }
         } finally {
+            $this->postpone_updates = false;
             $this->updates_state['sync_loading'] = false;
         }
 
@@ -751,15 +701,15 @@ class MTProto
                 'layer' => $this->settings['tl_schema']['layer'],
                 'query' => $this->serialize_method('initConnection',
                     [
-                        'api_id'                => $this->settings['app_info']['api_id'],
-                        'api_hash'              => $this->settings['app_info']['api_hash'],
-                        'device_model'          => strpos($options['datacenter'], 'cdn') === false ? $this->settings['app_info']['device_model'] : 'n/a',
-                        'system_version'        => strpos($options['datacenter'], 'cdn') === false ? $this->settings['app_info']['system_version'] : 'n/a',
-                        'app_version'           => $this->settings['app_info']['app_version'],
-                        'system_lang_code'      => $this->settings['app_info']['lang_code'],
-                        'lang_code'             => $this->settings['app_info']['lang_code'],
-                        'lang_pack'             => '',
-                        'query'                 => $this->serialize_method($method, $arguments),
+                        'api_id'           => $this->settings['app_info']['api_id'],
+                        'api_hash'         => $this->settings['app_info']['api_hash'],
+                        'device_model'     => strpos($options['datacenter'], 'cdn') === false ? $this->settings['app_info']['device_model'] : 'n/a',
+                        'system_version'   => strpos($options['datacenter'], 'cdn') === false ? $this->settings['app_info']['system_version'] : 'n/a',
+                        'app_version'      => $this->settings['app_info']['app_version'],
+                        'system_lang_code' => $this->settings['app_info']['lang_code'],
+                        'lang_code'        => $this->settings['app_info']['lang_code'],
+                        'lang_pack'        => '',
+                        'query'            => $this->serialize_method($method, $arguments),
                     ]
                 ),
             ],

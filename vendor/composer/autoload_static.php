@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite73566d568979f0959aee9ffe7f86e34
+class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
 {
     public static $files = array (
         '5255c38a0faeba867671b61dfda6d864' => __DIR__ . '/..' . '/paragonie/random_compat/lib/random.php',
@@ -37,10 +37,6 @@ class ComposerStaticInite73566d568979f0959aee9ffe7f86e34
         array (
             'Psr\\Log\\' => 8,
             'ParagonIE\\ConstantTime\\' => 23,
-        ),
-        'F' => 
-        array (
-            'Fluent\\Logger\\' => 14,
         ),
         'D' => 
         array (
@@ -75,10 +71,6 @@ class ComposerStaticInite73566d568979f0959aee9ffe7f86e34
         array (
             0 => __DIR__ . '/..' . '/paragonie/constant_time_encoding/src',
         ),
-        'Fluent\\Logger\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/fluent/logger/src',
-        ),
         'Dotenv\\' => 
         array (
             0 => __DIR__ . '/..' . '/vlucas/phpdotenv/src',
@@ -110,9 +102,9 @@ class ComposerStaticInite73566d568979f0959aee9ffe7f86e34
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite73566d568979f0959aee9ffe7f86e34::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite73566d568979f0959aee9ffe7f86e34::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInite73566d568979f0959aee9ffe7f86e34::$prefixesPsr0;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }

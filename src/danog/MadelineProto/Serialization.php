@@ -58,7 +58,6 @@ class Serialization
      */
     public static function deserialize($filename, $no_updates = false)
     {
-        set_error_handler(['\danog\MadelineProto\Exception', 'ExceptionErrorHandler']);
         if (file_exists($filename)) {
             if (!file_exists($lock = $filename.'.lock')) {
                 touch($lock);
@@ -78,7 +77,7 @@ class Serialization
             \danog\MadelineProto\Logger::class_exists();
 
             try {
-                //$unserialized = \danog\Serialization::unserialize($tounserialize);
+                //                $unserialized = \danog\Serialization::unserialize($tounserialize);
                 $unserialized = unserialize($tounserialize);
             } catch (\danog\MadelineProto\Bug74586Exception $e) {
                 $unserialized = \danog\Serialization::unserialize($tounserialize);
@@ -99,6 +98,9 @@ class Serialization
         }
         if ($unserialized === false) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialization_error']);
+        }
+        if ($unserialized instanceof \danog\MadelineProto\API) {
+            $unserialized->session = $filename;
         }
 
         return $unserialized;

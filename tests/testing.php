@@ -12,6 +12,9 @@ If not, see <http://www.gnu.org/licenses/>.
 */
 set_include_path(get_include_path().':'.realpath(dirname(__FILE__).'/../').':'.realpath(dirname(__FILE__).'/../MadelineProto/'));
 chdir(dirname(__FILE__).'/../');
+if (!file_exists('vendor/autoload.php')) {
+    die('You did not run composer update');
+}
 require_once 'vendor/autoload.php';
 //include 'SocksProxy.php';
 if (!function_exists('readline')) {
@@ -35,11 +38,10 @@ echo 'Deserializing MadelineProto from session.madeline...'.PHP_EOL;
 $MadelineProto = false;
 
 try {
-    $MadelineProto = \danog\MadelineProto\Serialization::deserialize('session.madeline');
+    $MadelineProto = new \danog\MadelineProto\API('session.madeline');
 } catch (\danog\MadelineProto\Exception $e) {
     var_dump($e->getMessage());
 }
-
 if (file_exists('.env')) {
     echo 'Loading .env...'.PHP_EOL;
     $dotenv = new Dotenv\Dotenv(getcwd());
@@ -49,6 +51,7 @@ if (getenv('TEST_SECRET_CHAT') == '') {
     die('TEST_SECRET_CHAT is not defined in .env, please define it.'.PHP_EOL);
 }
 echo 'Loading settings...'.PHP_EOL;
+var_dump(getenv('MTPROTO_SETTINGS'));
 $settings = json_decode(getenv('MTPROTO_SETTINGS'), true) ?: [];
 //$settings['connection_settings']['all']['proxy'] = '\SocksProxy';
 //$settings['connection_settings']['all']['proxy_extra'] = ['address' => '209.195.74.200', 'port' => 43545];
@@ -86,6 +89,7 @@ $MadelineProto->session = 'session.madeline';
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::WARNING);
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::ERROR);
 \danog\MadelineProto\Logger::log(['hey'], \danog\MadelineProto\Logger::FATAL_ERROR);
+//$MadelineProto->phone->createGroupCall(['channel' => -1001333587884
 
 $message = (getenv('TRAVIS_COMMIT') == '') ? 'I iz works always (io laborare sembre) (yo lavorar siempre) (mi labori ĉiam) (я всегда работать) (Ik werkuh altijd) (Ngimbonga ngaso sonke isikhathi ukusebenza)' : ('Travis ci tests in progress: commit '.getenv('TRAVIS_COMMIT').', job '.getenv('TRAVIS_JOB_NUMBER').', PHP version: '.getenv('TRAVIS_PHP_VERSION'));
 
