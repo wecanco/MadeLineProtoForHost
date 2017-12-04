@@ -2,7 +2,8 @@ input.raw
 libtgvoip.so
 UserBotPro.php
 __
+Examples/BotView/
 Examples/inc/SocksProxy.php
 Examples/sessions/.session*
-Examples/SentMSGs
+Examples/.SentMSGs_*
 src/danog/MadelineProto/VoIP/php-libtgvoip.php
