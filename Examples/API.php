@@ -17,6 +17,7 @@
 		try{
 			switch(strtolower($method)){
 				case "get_updates":
+					$MadelineProto[$key]->settings['updates']['handle_updates'] = true;
 					$res = $MadelineProto[$key]->API->get_updates($parms);
 				break;
 				
