@@ -15,7 +15,23 @@
 		//$curdc = 4;
 		$parms = json_decode($_REQUEST['parms'],true);
 		try{
-			$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
+			switch(strtolower($method)){
+				case "get_updates":
+					$res = $MadelineProto[$key]->API->get_updates($parms);
+				break;
+				
+				case "get_dialogs":
+					$bool = false;
+					if(isset($parms[0]) && $parms[0]){
+						$bool = true;
+					}
+					$res = $MadelineProto[$key]->get_dialogs($bool);
+				break;
+				
+				default:
+					$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
+				break;
+			}
 			\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$key]);
 		} catch (Exception $e) { 
 			$res = ['error' => $e->getMessage()];
