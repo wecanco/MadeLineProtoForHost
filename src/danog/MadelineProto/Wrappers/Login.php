@@ -19,6 +19,9 @@ trait Login
 {
     public function logout()
     {
+        foreach ($this->datacenter->sockets as $socket) {
+            $socket->authorized = false;
+        }
         $this->authorized = self::NOT_LOGGED_IN;
         $this->authorization = null;
         $this->updates = [];
@@ -51,12 +54,14 @@ trait Login
             ], ['datacenter' => $this->datacenter->curdc]
         );
         $this->authorized = self::LOGGED_IN;
-        $this->sync_authorization($this->datacenter->curdc);
+        $this->datacenter->sockets[$this->datacenter->curdc]->authorized = true;
+
         $this->updates = [];
         $this->updates_key = 0;
         if (!isset($this->settings['pwr']['pwr']) || !$this->settings['pwr']['pwr']) {
             @file_get_contents('https://api.pwrtelegram.xyz/bot'.$token.'/getme');
         }
+        $this->init_authorization();
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['login_ok']], \danog\MadelineProto\Logger::NOTICE);
 
         return $this->authorization;
@@ -128,7 +133,8 @@ trait Login
         }
         $this->authorized = self::LOGGED_IN;
         $this->authorization = $authorization;
-        $this->sync_authorization($this->datacenter->curdc);
+        $this->datacenter->sockets[$this->datacenter->curdc]->authorized = true;
+        $this->init_authorization();
 
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['login_ok']], \danog\MadelineProto\Logger::NOTICE);
 
@@ -143,6 +149,9 @@ trait Login
         }
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['login_auth_key']], \danog\MadelineProto\Logger::NOTICE);
         list($dc_id, $auth_key) = $authorization;
+        if (!is_array($auth_key)) {
+            $auth_key = ['auth_key' => $auth_key, 'id' => substr(sha1($auth_key, true), -8), 'server_salt' => ''];
+        }
         $this->datacenter->sockets[$dc_id]->session_id = $this->random(8);
         $this->datacenter->sockets[$dc_id]->session_in_seq_no = 0;
         $this->datacenter->sockets[$dc_id]->session_out_seq_no = 0;
@@ -152,11 +161,12 @@ trait Login
         $this->datacenter->sockets[$dc_id]->outgoing_messages = [];
         $this->datacenter->sockets[$dc_id]->new_outgoing = [];
         $this->datacenter->sockets[$dc_id]->new_incoming = [];
+        $this->datacenter->sockets[$dc_id]->authorized = true;
 
         $this->authorized = self::LOGGED_IN;
         $this->init_authorization();
 
-        return $this->authorization = $this->sync_authorization($dc_id);
+        return $this->get_self();
     }
 
     public function export_authorization()
@@ -164,8 +174,9 @@ trait Login
         if ($this->authorized !== self::LOGGED_IN) {
             throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['not_logged_in']);
         }
+        $this->get_self();
 
-        return [$this->datacenter->curdc, $this->datacenter->sockets[$this->datacenter->curdc]->auth_key];
+        return [$this->datacenter->curdc, $this->datacenter->sockets[$this->datacenter->curdc]->auth_key['auth_key']];
     }
 
     public function complete_signup($first_name, $last_name)
@@ -186,7 +197,8 @@ trait Login
             ], ['datacenter' => $this->datacenter->curdc]
         );
         $this->authorized = self::LOGGED_IN;
-        $this->sync_authorization($this->datacenter->curdc);
+        $this->datacenter->sockets[$this->datacenter->curdc]->authorized = true;
+        $this->init_authorization();
 
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['signup_ok']], \danog\MadelineProto\Logger::NOTICE);
 
@@ -207,7 +219,9 @@ trait Login
             ], ['datacenter' => $this->datacenter->curdc]
         );
         $this->authorized = self::LOGGED_IN;
-        $this->sync_authorization($this->datacenter->curdc);
+        $this->datacenter->sockets[$this->datacenter->curdc]->authorized = true;
+        $this->init_authorization();
+
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['login_ok']], \danog\MadelineProto\Logger::NOTICE);
 
         return $this->authorization;

@@ -920,7 +920,7 @@ $trans
 							
 							
 							$BotResults = $MadelineProto[$phone['number']]->messages->getInlineBotResults(['bot' => "@".$FirstBotKey, 'peer' => $peer, 'query' => (json_encode($query)), 'offset' => '0' ]);
-
+							
 							$query_id = $BotResults['query_id'];
 							$query_res_id = $BotResults['results'][0]['id'];
 							
@@ -952,6 +952,7 @@ $trans
 					} catch (Exception $e) { 
 					//var_dump($e);
 					$err = $e->getMessage();
+					file_put_contents('e_'.time().'.txt',json_encode($e));
 					$err = substr($err,0,70);
 					if(isset($MadelineProto[$phone['number']])){
 						$MadelineProto[$phone['number']]->account->updateProfile(['about' => $err ]);

@@ -17,6 +17,20 @@ namespace danog\MadelineProto;
  */
 class Serialization
 {
+    public static $instances = [];
+
+    public static function serialize_all($exception)
+    {
+        echo $exception.PHP_EOL;
+
+        return;
+        foreach (self::$instances as $instance) {
+            if (isset($instance->session)) {
+                $instance->serialize();
+            }
+        }
+    }
+
     /**
      * Serialize API class.
      *
@@ -102,6 +116,7 @@ class Serialization
         if ($unserialized instanceof \danog\MadelineProto\API) {
             $unserialized->session = $filename;
         }
+        self::$instances[spl_object_hash($unserialized)] = $unserialized;
 
         return $unserialized;
     }

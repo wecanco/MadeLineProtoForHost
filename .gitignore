@@ -3,6 +3,7 @@ libtgvoip.so
 UserBotPro.php
 __
 Examples/BotView/
+Examples/ChannelPostRob/
 Examples/inc/SocksProxy.php
 Examples/sessions/.session*
 Examples/.SentMSGs_*

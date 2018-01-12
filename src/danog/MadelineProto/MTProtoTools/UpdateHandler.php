@@ -80,7 +80,26 @@ trait UpdateHandler
         $time = microtime(true);
 
         try {
-            $this->get_updates_difference();
+            try {
+                if (($error = $this->recv_message($this->datacenter->curdc)) !== true) {
+                    if ($error === -404) {
+                        if ($this->datacenter->sockets[$this->datacenter->curdc]->temp_auth_key !== null) {
+                            \danog\MadelineProto\Logger::log(['WARNING: Resetting auth key...'], \danog\MadelineProto\Logger::WARNING);
+                            $this->datacenter->sockets[$this->datacenter->curdc]->temp_auth_key = null;
+                            $this->init_authorization();
+
+                            throw new \danog\MadelineProto\Exception('I had to recreate the temporary authorization key');
+                        }
+                    }
+
+                    throw new \danog\MadelineProto\RPCErrorException($error, $error);
+                }
+                $only_updates = $this->handle_messages($this->datacenter->curdc);
+            } catch (\danog\MadelineProto\NothingInTheSocketException $e) {
+            }
+            if (time() - $this->last_recv > $this->settings['updates']['getdifference_interval']) {
+                $this->get_updates_difference();
+            }
         } catch (\danog\MadelineProto\RPCErrorException $e) {
             if ($e->rpc !== 'RPC_CALL_FAIL') {
                 throw $e;
@@ -137,7 +156,11 @@ trait UpdateHandler
 
     public function check_msg_id($message)
     {
-        $peer_id = $this->get_info($message['to_id'])['bot_api_id'];
+        try {
+            $peer_id = $this->get_info($message['to_id'])['bot_api_id'];
+        } catch (\danog\MadelineProto\Exception $e) {
+            return true;
+        }
         $message_id = $message['id'];
 
         if (!isset($this->msg_ids[$peer_id]) || $message_id > $this->msg_ids[$peer_id]) {

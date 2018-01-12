@@ -196,7 +196,7 @@
 		$code = $_GET['code'];
 		echo 'Confrim Code...'. PHP_EOL .$BreakLine;
 		$authorization = $MadelineProto[$phones[0]['number']]->complete_phone_login($code);
-
+		\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phones[0]['number']]);
 		if ($authorization['_'] === 'account.noPassword') {
 			echo 'You Should Enter your Password!'. PHP_EOL .$BreakLine;
 			exit();

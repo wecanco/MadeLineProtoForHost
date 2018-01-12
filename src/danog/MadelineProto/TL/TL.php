@@ -42,7 +42,7 @@ trait TL
                 $e = null;
                 $class = null;
                 $dparams = [];
-                foreach ($tl_file as $line) {
+                foreach ($tl_file as $line_number => $line) {
                     $line = rtrim($line);
                     if (preg_match('|^//@|', $line)) {
                         $list = explode(' @', str_replace('//', ' ', $line));
@@ -181,11 +181,6 @@ trait TL
                 $this->{($scheme_type === 'td' ? 'td_' : '').'methods'}->add($elem);
                 if ($scheme_type === 'secret') {
                     $this->encrypted_layer = max($this->encrypted_layer, $elem['layer']);
-                }
-            }
-            if ($this->encrypted_layer != $orig && isset($this->secret_chats)) {
-                foreach ($this->secret_chats as $chat => $data) {
-                    $this->notify_layer($chat);
                 }
             }
         }

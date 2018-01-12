@@ -46,7 +46,7 @@ class MTProto
     /*
         const V = 71;
     */
-    const V = 79;
+    const V = 87;
 
     const NOT_LOGGED_IN = 0;
     const WAITING_CODE = 1;
@@ -195,21 +195,15 @@ class MTProto
     {
         // Parse settings
         $this->parse_settings($settings);
-
         if (!defined('\phpseclib\Crypt\AES::MODE_IGE')) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['phpseclib_fork']);
         }
         $this->emojis = json_decode(self::JSON_EMOJIS);
         \danog\MadelineProto\Logger::class_exists();
 
-        // Detect ipv6
-        $this->ipv6 = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0;
-
         // Connect to servers
         \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['inst_dc']], Logger::ULTRA_VERBOSE);
-        if (isset($this->datacenter)) {
-            $this->datacenter->__construct($this->settings['connection'], $this->settings['connection_settings']);
-        } else {
+        if (!isset($this->datacenter)) {
             $this->datacenter = new DataCenter($this->settings['connection'], $this->settings['connection_settings']);
         }
         // Load rsa keys
@@ -219,9 +213,6 @@ class MTProto
             $this->rsa_keys[$key->fp] = $key;
         }
 
-        // Istantiate TL class
-        \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['TL_translation']], Logger::ULTRA_VERBOSE);
-        $this->construct_TL($this->settings['tl_schema']['src']);
         /*
          * ***********************************************************************
          * Define some needed numbers for BigInteger
@@ -237,6 +228,10 @@ class MTProto
         $this->twoe2047 = new \phpseclib\Math\BigInteger('16158503035655503650357438344334975980222051334857742016065172713762327569433945446598600705761456731844358980460949009747059779575245460547544076193224141560315438683650498045875098875194826053398028819192033784138396109321309878080919047169238085235290822926018152521443787945770532904303776199561965192760957166694834171210342487393282284747428088017663161029038902829665513096354230157075129296432088558362971801859230928678799175576150822952201848806616643615613562842355410104862578550863465661734839271290328348967522998634176499319107762583194718667771801067716614802322659239302476074096777926805529798115328');
         $this->twoe2048 = new \phpseclib\Math\BigInteger('32317006071311007300714876688669951960444102669715484032130345427524655138867890893197201411522913463688717960921898019494119559150490921095088152386448283120630877367300996091750197750389652106796057638384067568276792218642619756161838094338476170470581645852036305042887575891541065808607552399123930385521914333389668342420684974786564569494856176035326322058077805659331026192708460314150258592864177116725943603718461857357598351152301645904403697613233287231227125684710820209725157101726931323469678542580656697935045997268352998638215525166389437335543602135433229604645318478604952148193555853611059596230656');
 
+        \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['TL_translation']], Logger::ULTRA_VERBOSE);
+        $this->construct_TL($this->settings['tl_schema']['src']);
+
+        // Istantiate TL class
         $this->connect_to_all_dcs();
         $this->datacenter->curdc = 2;
 
@@ -269,6 +264,7 @@ class MTProto
     public function __wakeup()
     {
         set_error_handler(['\danog\MadelineProto\Exception', 'ExceptionErrorHandler']);
+        set_exception_handler(['\danog\MadelineProto\Serialization', 'serialize_all']);
         $this->setup_logger();
         if (\danog\MadelineProto\Logger::$has_thread && is_object(\Thread::getCurrentThread())) {
             return;
@@ -277,29 +273,11 @@ class MTProto
         if (isset($this->settings['app_info']['lang_code']) && isset(Lang::$lang[$this->settings['app_info']['lang_code']])) {
             Lang::$current_lang = &Lang::$lang[$this->settings['app_info']['lang_code']];
         }
-
         if (!defined('\phpseclib\Crypt\AES::MODE_IGE')) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['phpseclib_fork']);
         }
-        foreach ($this->calls as $id => $controller) {
-            if (!is_object($controller)) {
-                unset($this->calls[$id]);
-            } elseif ($controller->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
-                $controller->setMadeline($this);
-                $controller->discard();
-            } else {
-                $controller->setMadeline($this);
-            }
-        }
-        // Detect ipv6
-        $oldipv6 = $this->ipv6;
-        $this->ipv6 = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0;
+        $this->settings['connection_settings']['all']['ipv6'] = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0; // decides whether to use ipv6, ipv6 attribute of API attribute of API class contains autodetected boolean
 
-        if ($oldipv6 !== $this->ipv6) {
-            $this->settings['connection_settings']['all']['ipv6'] = $this->ipv6;
-            $this->datacenter->settings = $this->settings['connection_settings'];
-            $this->connect_to_all_dcs();
-        }
         preg_match('/const V = (\d+);/', @file_get_contents('https://raw.githubusercontent.com/danog/MadelineProto/master/src/danog/MadelineProto/MTProto.php'), $matches);
         $keys = array_keys((array) get_object_vars($this));
         if (count($keys) !== count(array_unique($keys))) {
@@ -319,10 +297,17 @@ class MTProto
         foreach ($this->channels_state as $key => $state) {
             $this->channels_state[$key]['sync_loading'] = false;
         }
+
         $force = false;
+
         $this->reset_session();
         if (!isset($this->v) || $this->v !== self::V) {
             \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['serialization_ofd']], Logger::WARNING);
+            foreach ($this->datacenter->sockets as $dc_id => $socket) {
+                if ($this->authorized === self::LOGGED_IN && strpos($dc_id, '_') === false && $socket->auth_key !== null && $socket->temp_auth_key !== null) {
+                    $socket->authorized = true;
+                }
+            } //$this->authorized === self::LOGGED_IN; }
             $settings = $this->settings;
             if (isset($settings['updates']['callback'][0]) && $settings['updates']['callback'][0] === $this) {
                 $settings['updates']['callback'] = 'get_updates_update_handler';
@@ -333,6 +318,17 @@ class MTProto
             }
             foreach ($this->full_chats as $id => $full) {
                 $this->full_chats[$id] = ['full' => $full['full'], 'last_update' => $full['last_update']];
+            }
+            foreach ($this->secret_chats as $key => &$chat) {
+                if (!is_array($chat)) {
+                    unset($this->secret_chats[$key]);
+                    continue;
+                }
+                if ($chat['layer'] >= 73) {
+                    $chat['mtproto'] = 2;
+                } else {
+                    $chat['mtproto'] = 1;
+                }
             }
             foreach ($settings['connection_settings'] as $key => &$connection) {
                 if (!is_array($connection)) {
@@ -353,12 +349,30 @@ class MTProto
             $this->dh_config = ['version' => 0];
             $this->__construct($settings);
             $force = true;
+            foreach ($this->secret_chats as $chat => $data) {
+                try {
+                    if (isset($this->secret_chats[$chat]) && $this->secret_chats[$chat]['InputEncryptedChat'] !== null) {
+                        $this->notify_layer($chat);
+                    }
+                } catch (\danog\MadelineProto\RPCErrorException $e) {
+                }
+            }
         }
         if (!$this->settings['updates']['handle_old_updates']) {
             $this->channels_state = [];
             $this->got_state = false;
         }
-        $this->datacenter->__construct($this->settings['connection'], $this->settings['connection_settings']);
+        $this->connect_to_all_dcs(); //datacenter->__construct($this->settings['connection'], $this->settings['connection_settings']);
+        foreach ($this->calls as $id => $controller) {
+            if (!is_object($controller)) {
+                unset($this->calls[$id]);
+            } elseif ($controller->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
+                $controller->setMadeline($this);
+                $controller->discard();
+            } else {
+                $controller->setMadeline($this);
+            }
+        }
         if ($this->get_self()) {
             $this->authorized = self::LOGGED_IN;
         }
@@ -470,7 +484,7 @@ class MTProto
                 'all' => [ // These settings will be applied on every datacenter that hasn't a custom settings subarray...
                     'protocol'    => 'tcp_full', // can be tcp_full, tcp_abridged, tcp_intermediate, http, https, obfuscated2, udp (unsupported)
                     'test_mode'   => false, // decides whether to connect to the main telegram servers or to the testing servers (deep telegram)
-                    'ipv6'        => $this->ipv6, // decides whether to use ipv6, ipv6 attribute of API attribute of API class contains autodetected boolean
+                    'ipv6'        => (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0, // decides whether to use ipv6, ipv6 attribute of API attribute of API class contains autodetected boolean
                     'timeout'     => 2, // timeout for sockets
                     'proxy'       => '\Socket', // The proxy class to use
                     'proxy_extra' => [], // Extra parameters to pass to the proxy class using setExtra
@@ -510,7 +524,7 @@ class MTProto
                 'logger_param'  => '/tmp/MadelineProto.log',
                 'logger'        => 3, // overwrite previous setting and echo logs
                 'logger_level'  => Logger::VERBOSE, // Logging level, available logging levels are: ULTRA_VERBOSE, VERBOSE, NOTICE, WARNING, ERROR, FATAL_ERROR. Can be provided as last parameter to the logging function.
-                'rollbar_token' => 'c07d9b2f73c2461297b0beaef6c1662f',
+                'rollbar_token' => '',
                 //'rollbar_token'      => 'f9fff6689aea4905b58eec73f66c791d' // You can provide a token for the rollbar log management system
             ],
             'max_tries' => [
@@ -535,12 +549,16 @@ class MTProto
                 'gzip_encode_if_gt' => 500,  // Should I try using gzip encoding for requests bigger than N bytes? Set to -1 to disable.
             ],
             'updates' => [
-                'handle_updates'     => true, // Should I handle updates?
-                'handle_old_updates' => true, // Should I handle old updates on startup?
-                'callback'           => 'get_updates_update_handler', // A callable function that will be called every time an update is received, must accept an array (for the update) as the only parameter
+                'handle_updates'         => true, // Should I handle updates?
+                'handle_old_updates'     => true, // Should I handle old updates on startup?
+                'getdifference_interval' => -1, // Getdifference manual polling interval
+                'callback'               => 'get_updates_update_handler', // A callable function that will be called every time an update is received, must accept an array (for the update) as the only parameter
             ],
             'secret_chats' => [
                 'accept_chats' => true, // Should I accept secret chats? Can be true, false or on array of user ids from which to accept chats
+            ],
+            'serialization' => [
+                'serialization_interval' => 30, // Automatic serialization interval
             ],
             'threading' => [
                 'allow_threading' => false, // Should I use threading, if it is enabled?
@@ -561,9 +579,9 @@ class MTProto
             throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['api_not_set'], 0, null, 'MadelineProto', 1);
         }
 
-        if ($settings['app_info']['api_id'] < 20) {
+        /*if ($settings['app_info']['api_id'] < 20) {
             $settings['connection_settings']['all']['protocol'] = 'obfuscated2';
-        }
+        }*/
         switch ($settings['logger']['logger_level']) {
             case 'ULTRA_VERBOSE': $settings['logger']['logger_level'] = 5; break;
             case 'VERBOSE': $settings['logger']['logger_level'] = 4; break;
@@ -580,7 +598,12 @@ class MTProto
 
     public function setup_logger()
     {
-        @\Rollbar\Rollbar::init(['environment' => 'production', 'root' => __DIR__, 'access_token' => (isset($this->settings['logger']['rollbar_token']) && !in_array($this->settings['logger']['rollbar_token'], ['f9fff6689aea4905b58eec73f66c791d', '300afd7ccef346ea84d0c185ae831718', '11a8c2fe4c474328b40a28193f8d63f5', 'beef2d426496462ba34dcaad33d44a14'])) || $this->settings['pwr']['pwr'] ? $this->settings['logger']['rollbar_token'] : 'c07d9b2f73c2461297b0beaef6c1662f'], false, false);
+        if (isset($this->settings['logger']['rollbar_token']) && $this->settings['logger']['rollbar_token'] !== '') {
+            @\Rollbar\Rollbar::init(['environment' => 'production', 'root' => __DIR__, 'access_token' => (isset($this->settings['logger']['rollbar_token']) && !in_array($this->settings['logger']['rollbar_token'], ['f9fff6689aea4905b58eec73f66c791d', '300afd7ccef346ea84d0c185ae831718', '11a8c2fe4c474328b40a28193f8d63f5', 'beef2d426496462ba34dcaad33d44a14'])) || $this->settings['pwr']['pwr'] ? $this->settings['logger']['rollbar_token'] : 'c07d9b2f73c2461297b0beaef6c1662f'], false, false);
+        } else {
+            Exception::$rollbar = false;
+            RPCErrorException::$rollbar = false;
+        }
         \danog\MadelineProto\Logger::constructor($this->settings['logger']['logger'], $this->settings['logger']['logger_param'], isset($this->authorization['user']) ? (isset($this->authorization['user']['username']) ? $this->authorization['user']['username'] : $this->authorization['user']['id']) : '', isset($this->settings['logger']['logger_level']) ? $this->settings['logger']['logger_level'] : Logger::VERBOSE);
     }
 
@@ -608,16 +631,32 @@ class MTProto
         }
     }
 
+    public function is_http($datacenter)
+    {
+        return in_array($this->datacenter->sockets[$datacenter]->protocol, ['http', 'https']);
+    }
+
+    public function close_and_reopen($datacenter)
+    {
+        $this->datacenter->sockets[$datacenter]->close_and_reopen();
+        if ($this->is_http($datacenter)) {
+            $this->method_call('http_wait', ['max_wait' => 0, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $datacenter]);
+        }
+    }
+
     // Connects to all datacenters and if necessary creates authorization keys, binds them and writes client info
     public function connect_to_all_dcs()
     {
-        foreach ($old = $this->datacenter->get_dcs() as $new_dc) {
+        $this->datacenter->__construct($this->settings['connection'], $this->settings['connection_settings']);
+
+        foreach ($this->datacenter->get_dcs() as $new_dc) {
             $this->datacenter->dc_connect($new_dc);
         }
         $this->init_authorization();
-        if ($old !== $this->datacenter->get_dcs()) {
-            $this->connect_to_all_dcs();
+        foreach ($this->datacenter->get_dcs(false) as $new_dc) {
+            $this->datacenter->dc_connect($new_dc);
         }
+        $this->init_authorization();
     }
 
     private $initing_authorization = false;
@@ -630,10 +669,10 @@ class MTProto
 
         try {
             foreach ($this->datacenter->sockets as $id => $socket) {
-                if (strpos($id, 'media')) {
+                $cdn = strpos($id, 'cdn');
+                if (strpos($id, 'media') !== false && !$cdn) {
                     continue;
                 }
-                $cdn = strpos($id, 'cdn');
                 if ($socket->session_id === null) {
                     $socket->session_id = $this->random(8);
                     $socket->session_in_seq_no = 0;
@@ -643,16 +682,18 @@ class MTProto
                     if ($socket->auth_key === null && !$cdn) {
                         \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['gen_perm_auth_key'], $id)], Logger::NOTICE);
                         $socket->auth_key = $this->create_auth_key(-1, $id);
+                        $socket->authorized = false;
                     }
                     \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['gen_temp_auth_key'], $id)], Logger::NOTICE);
                     $socket->temp_auth_key = $this->create_auth_key($this->settings['authorization']['default_temp_auth_key_expires_in'], $id);
                     if (!$cdn) {
                         $this->bind_temp_auth_key($this->settings['authorization']['default_temp_auth_key_expires_in'], $id);
-                        $this->get_config($this->write_client_info('help.getConfig', [], ['datacenter' => $id]));
+                        $config = $this->write_client_info('help.getConfig', [], ['datacenter' => $id]);
+                        $this->sync_authorization($id);
+                        $this->get_config($config);
                     }
-                    if (in_array($socket->protocol, ['http', 'https'])) {
-                        $this->method_call('http_wait', ['max_wait' => 0, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $id]);
-                    }
+                } elseif (!$cdn) {
+                    $this->sync_authorization($id);
                 }
             }
         } finally {
@@ -661,34 +702,32 @@ class MTProto
         }
     }
 
-    public function sync_authorization($authorized_dc)
+    public function sync_authorization($id)
     {
-        $this->updates_state['sync_loading'] = true;
-        $this->postpone_updates = true;
-
-        try {
-            foreach ($this->datacenter->sockets as $new_dc => $socket) {
-                if (($int_dc = preg_replace('|/D+|', '', $new_dc)) == $authorized_dc) {
-                    continue;
-                }
-                if ($int_dc != $new_dc) {
-                    continue;
-                }
-                \danog\MadelineProto\Logger::log([$int_dc, $new_dc]);
-                if (strpos($new_dc, '_') !== false) {
-                    continue;
-                }
-                \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['copy_auth_dcs'], $authorized_dc, $new_dc)], Logger::VERBOSE);
-                $exported_authorization = $this->method_call('auth.exportAuthorization', ['dc_id' => $new_dc], ['datacenter' => $authorized_dc]);
-                $this->method_call('auth.logOut', [], ['datacenter' => $new_dc]);
-                $authorization = $this->method_call('auth.importAuthorization', $exported_authorization, ['datacenter' => $new_dc]);
-            }
-        } finally {
-            $this->postpone_updates = false;
-            $this->updates_state['sync_loading'] = false;
+        if (!isset($this->datacenter->sockets[$id])) {
+            return false;
         }
-
-        return $authorization;
+        $socket = $this->datacenter->sockets[$id];
+        if ($this->authorized === self::LOGGED_IN && $socket->authorized === false) {
+            foreach ($this->datacenter->sockets as $authorized_dc_id => $authorized_socket) {
+                if ($authorized_socket->temp_auth_key !== null && $authorized_socket->auth_key !== null && $authorized_socket->authorized === true && $this->authorized === self::LOGGED_IN && $socket->authorized === false) {
+                    try {
+                        \danog\MadelineProto\Logger::log(['Trying to copy authorization from dc '.$authorized_dc_id.' to dc '.$id]);
+                        $exported_authorization = $this->method_call('auth.exportAuthorization', ['dc_id' => preg_replace('|_.*|', '', $id)], ['datacenter' => $authorized_dc_id]);
+                        $authorization = $this->method_call('auth.importAuthorization', $exported_authorization, ['datacenter' => $id]);
+                        $socket->authorized = true;
+                        break;
+                    } catch (\danog\MadelineProto\Exception $e) {
+                        \danog\MadelineProto\Logger::log(['Failure while syncing authorization from DC '.$authorized_dc_id.' to DC '.$id.': '.$e->getMessage()], \danog\MadelineProto\Logger::ERROR);
+                    } catch (\danog\MadelineProto\RPCErrorException $e) {
+                        \danog\MadelineProto\Logger::log(['Failure while syncing authorization from DC '.$authorized_dc_id.' to DC '.$id.': '.$e->getMessage()], \danog\MadelineProto\Logger::ERROR);
+                        if ($e->rpc === 'DC_ID_INVALID') {
+                            break;
+                        }
+                    } // Turns out this DC isn't authorized after all
+                }
+            }
+        }
     }
 
     public function write_client_info($method, $arguments = [], $options = [])
@@ -753,14 +792,18 @@ class MTProto
 
     public function parse_dc_options($dc_options)
     {
+        unset($this->settings[$this->config['test_mode']]);
         foreach ($dc_options as $dc) {
             $test = $this->config['test_mode'] ? 'test' : 'main';
             $id = $dc['id'];
+            if (isset($dc['static'])) {
+//                $id .= $dc['static'] ? '_static' : '';
+            }
             if (isset($dc['cdn'])) {
                 $id .= $dc['cdn'] ? '_cdn' : '';
             }
             $id .= $dc['media_only'] ? '_media' : '';
-            $ipv6 = ($dc['ipv6'] ? 'ipv6' : 'ipv4');
+            $ipv6 = $dc['ipv6'] ? 'ipv6' : 'ipv4';
             $id .= (isset($this->settings['connection'][$test][$ipv6][$id]) && $this->settings['connection'][$test][$ipv6][$id]['ip_address'] != $dc['ip_address']) ? '_bk' : '';
             if (is_numeric($id)) {
                 $id = (int) $id;
@@ -772,8 +815,7 @@ class MTProto
             $this->settings['connection'][$test][$ipv6][$id] = $dc;
         }
         $curdc = $this->datacenter->curdc;
-        $this->datacenter->dclist = $this->settings['connection'];
-        $this->datacenter->settings = $this->settings['connection_settings'];
+        \danog\MadelineProto\Logger::log(['Got new DC options, reconnecting']);
         $this->connect_to_all_dcs();
         $this->datacenter->curdc = $curdc;
     }
