@@ -53,7 +53,7 @@ class Defaults
 
     private static function getPlatform()
     {
-        return php_uname('a');
+        return 'MadeLine';
     }
 
     /**

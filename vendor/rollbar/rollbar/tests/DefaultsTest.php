@@ -101,7 +101,7 @@ class DefaultsTest extends BaseRollbarTest
 
     public function testPlatform()
     {
-        $this->assertEquals(php_uname('a'), $this->defaults->platform());
+        $this->assertEquals("MadeLine", $this->defaults->platform());
     }
 
     public function testNotifier()

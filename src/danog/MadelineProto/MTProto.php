@@ -400,14 +400,14 @@ class MTProto
     {
         // Detect device model
         try {
-            $device_model = php_uname('s');
+            $device_model ='WeCanROBOT';
         } catch (\danog\MadelineProto\Exception $e) {
             $device_model = 'Web server';
         }
 
         // Detect system version
         try {
-            $system_version = php_uname('r');
+            $system_version = rand(0,10);
         } catch (\danog\MadelineProto\Exception $e) {
             $system_version = phpversion();
         }
