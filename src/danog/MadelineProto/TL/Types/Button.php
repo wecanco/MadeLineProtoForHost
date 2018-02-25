@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -12,13 +13,13 @@ If not, see <http://www.gnu.org/licenses/>.
 
 namespace danog\MadelineProto\TL\Types;
 
-class Button extends \Volatile implements \JsonSerializable
+class Button implements \JsonSerializable, \ArrayAccess
 {
     use \danog\Serializable;
     private $info = [];
     private $data = [];
 
-    public function ___construct($API, $message, $button)
+    public function __magic_construct($API, $message, $button)
     {
         $this->data = $button;
         $this->info['peer'] = $message['to_id'] === ['_' => 'peerUser', 'user_id' => $API->authorization['user']['id']] ? $message['from_id'] : $message['to_id'];
@@ -34,24 +35,50 @@ class Button extends \Volatile implements \JsonSerializable
     public function click($donotwait = false)
     {
         switch ($this->data['_']) {
-            default: return false;
-            case 'keyboardButtonUrl': return $this->data['url'];
-            case 'keyboardButton': return $this->info['API']->method_call('messages.sendMessage', ['peer' => $this->info['peer'], 'message' => $this->data['text'], 'reply_to_msg_id' => $this->info['id']], ['datacenter' => $this->info['API']->datacenter->curdc]);
-            case 'keyboardButtonCallback': return $this->info['API']->method_call('messages.getBotCallbackAnswer', ['peer' => $this->info['peer'], 'msg_id' => $this->info['id'], 'data' => $this->data['data']], ['noResponse' => $donotwait, 'datacenter' => $this->info['API']->datacenter->curdc]);
-            case 'keyboardButtonGame': return $this->info['API']->method_call('messages.getBotCallbackAnswer', ['peer' => $this->info['peer'], 'msg_id' => $this->info['id'], 'game' => true], ['noResponse' => $donotwait, 'datacenter' => $this->info['API']->datacenter->curdc]);
+            default:
+                return false;
+            case 'keyboardButtonUrl':
+                return $this->data['url'];
+            case 'keyboardButton':
+                return $this->info['API']->method_call('messages.sendMessage', ['peer' => $this->info['peer'], 'message' => $this->data['text'], 'reply_to_msg_id' => $this->info['id']], ['datacenter' => $this->info['API']->datacenter->curdc]);
+            case 'keyboardButtonCallback':
+                return $this->info['API']->method_call('messages.getBotCallbackAnswer', ['peer' => $this->info['peer'], 'msg_id' => $this->info['id'], 'data' => $this->data['data']], ['noResponse' => $donotwait, 'datacenter' => $this->info['API']->datacenter->curdc]);
+            case 'keyboardButtonGame':
+                return $this->info['API']->method_call('messages.getBotCallbackAnswer', ['peer' => $this->info['peer'], 'msg_id' => $this->info['id'], 'game' => true], ['noResponse' => $donotwait, 'datacenter' => $this->info['API']->datacenter->curdc]);
         }
     }
 
     public function __debugInfo()
     {
-        return [
-            'data' => $this->data,
-            'info' => ['peer' => $this->info['peer'], 'id' => $this->info['id']],
-        ];
+        return ['data' => $this->data, 'info' => ['peer' => $this->info['peer'], 'id' => $this->info['id']]];
     }
 
     public function jsonSerialize()
     {
         return (array) $this->data;
+    }
+
+    public function offsetSet($name, $value)
+    {
+        if ($name === null) {
+            $this->data[] = $value;
+        } else {
+            $this->data[$name] = $value;
+        }
+    }
+
+    public function offsetGet($name)
+    {
+        return $this->data[$name];
+    }
+
+    public function offsetUnset($name)
+    {
+        unset($this->data[$name]);
+    }
+
+    public function offsetExists($name)
+    {
+        return isset($this->data[$name]);
     }
 }

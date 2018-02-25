@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -19,7 +20,7 @@ class Lua
     protected $Lua;
     protected $script;
 
-    public function ___construct($script, $MadelineProto)
+    public function __magic_construct($script, $MadelineProto)
     {
         if (!file_exists($script)) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['script_not_exist']);
@@ -160,7 +161,7 @@ class Lua
     public static function convert_objects(&$data)
     {
         array_walk_recursive($data, function (&$value, $key) {
-            if (is_object($value) && !($value instanceof \phpseclib\Math\BigInteger)) {
+            if (is_object($value) && !$value instanceof \phpseclib\Math\BigInteger) {
                 $newval = [];
                 foreach (get_class_methods($value) as $name) {
                     $newval[$name] = [$value, $name];

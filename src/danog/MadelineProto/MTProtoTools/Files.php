@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -54,7 +55,6 @@ trait Files
             $ige->enableContinuousBuffer();
         }
         $ctx = hash_init('md5');
-
         while (ftell($f) !== $file_size) {
             $bytes = stream_get_contents($f, $part_size);
             if ($encrypted === true) {
@@ -67,7 +67,6 @@ trait Files
             $cb(ftell($f) * 100 / $file_size);
         }
         fclose($f);
-
         $constructor = ['_' => $constructor, 'id' => $file_id, 'parts' => $part_total_num, 'name' => $file_name, 'md5_checksum' => hash_final($ctx)];
         if ($encrypted === true) {
             $constructor['key_fingerprint'] = $fingerprint;
@@ -95,132 +94,129 @@ trait Files
         $res = [];
         switch ($message_media['_']) {
             case 'encryptedMessage':
-            if ($message_media['decrypted_message']['media']['_'] === 'decryptedMessageMediaExternalDocument') {
-                return $this->get_download_info($message_media['decrypted_message']['media']);
-            }
-            $res['InputFileLocation'] = ['_' => 'inputEncryptedFileLocation', 'id' => $message_media['file']['id'], 'access_hash' => $message_media['file']['access_hash'], 'dc_id' => $message_media['file']['dc_id']];
-            $res['size'] = $message_media['decrypted_message']['media']['size'];
-            $res['key_fingerprint'] = $message_media['file']['key_fingerprint'];
-            $res['key'] = $message_media['decrypted_message']['media']['key'];
-            $res['iv'] = $message_media['decrypted_message']['media']['iv'];
-            if (isset($message_media['decrypted_message']['media']['file_name'])) {
-                $pathinfo = pathinfo($message_media['decrypted_message']['media']['file_name']);
-                if (isset($pathinfo['extension'])) {
-                    $res['ext'] = '.'.$pathinfo['extension'];
+                if ($message_media['decrypted_message']['media']['_'] === 'decryptedMessageMediaExternalDocument') {
+                    return $this->get_download_info($message_media['decrypted_message']['media']);
                 }
-                $res['name'] = $pathinfo['filename'];
-            }
-            if (isset($message_media['decrypted_message']['media']['mime_type'])) {
-                $res['mime'] = $message_media['decrypted_message']['media']['mime_type'];
-            } elseif ($message_media['decrypted_message']['media']['_'] === 'decryptedMessageMediaPhoto') {
-                $res['mime'] = 'image/jpeg';
-            }
-
-            if (isset($message_media['decrypted_message']['media']['attributes'])) {
-                foreach ($message_media['decrypted_message']['media']['attributes'] as $attribute) {
-                    switch ($attribute['_']) {
-                    case 'documentAttributeFilename':
-                    $pathinfo = pathinfo($attribute['file_name']);
+                $res['InputFileLocation'] = ['_' => 'inputEncryptedFileLocation', 'id' => $message_media['file']['id'], 'access_hash' => $message_media['file']['access_hash'], 'dc_id' => $message_media['file']['dc_id']];
+                $res['size'] = $message_media['decrypted_message']['media']['size'];
+                $res['key_fingerprint'] = $message_media['file']['key_fingerprint'];
+                $res['key'] = $message_media['decrypted_message']['media']['key'];
+                $res['iv'] = $message_media['decrypted_message']['media']['iv'];
+                if (isset($message_media['decrypted_message']['media']['file_name'])) {
+                    $pathinfo = pathinfo($message_media['decrypted_message']['media']['file_name']);
                     if (isset($pathinfo['extension'])) {
                         $res['ext'] = '.'.$pathinfo['extension'];
                     }
                     $res['name'] = $pathinfo['filename'];
-                    break;
-                    case 'documentAttributeAudio':
-                    $audio = $attribute;
-                    break;
                 }
+                if (isset($message_media['decrypted_message']['media']['mime_type'])) {
+                    $res['mime'] = $message_media['decrypted_message']['media']['mime_type'];
+                } elseif ($message_media['decrypted_message']['media']['_'] === 'decryptedMessageMediaPhoto') {
+                    $res['mime'] = 'image/jpeg';
                 }
-            }
-            if (isset($audio) && isset($audio['title']) && !isset($res['name'])) {
-                $res['name'] = $audio['title'];
-                if (isset($audio['performer'])) {
-                    $res['name'] .= ' - '.$audio['performer'];
+                if (isset($message_media['decrypted_message']['media']['attributes'])) {
+                    foreach ($message_media['decrypted_message']['media']['attributes'] as $attribute) {
+                        switch ($attribute['_']) {
+                            case 'documentAttributeFilename':
+                                $pathinfo = pathinfo($attribute['file_name']);
+                                if (isset($pathinfo['extension'])) {
+                                    $res['ext'] = '.'.$pathinfo['extension'];
+                                }
+                                $res['name'] = $pathinfo['filename'];
+                                break;
+                            case 'documentAttributeAudio':
+                                $audio = $attribute;
+                                break;
+                        }
+                    }
                 }
-            }
-            if (!isset($res['ext'])) {
-                $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], $this->get_extension_from_mime($res['mime']));
-            }
-            if (!isset($res['name'])) {
-                $res['name'] = $message_media['file']['access_hash'];
-            }
+                if (isset($audio) && isset($audio['title']) && !isset($res['name'])) {
+                    $res['name'] = $audio['title'];
+                    if (isset($audio['performer'])) {
+                        $res['name'] .= ' - '.$audio['performer'];
+                    }
+                }
+                if (!isset($res['ext'])) {
+                    $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], $this->get_extension_from_mime($res['mime']));
+                }
+                if (!isset($res['name'])) {
+                    $res['name'] = $message_media['file']['access_hash'];
+                }
 
-            return $res;
+                return $res;
             case 'photo':
             case 'messageMediaPhoto':
-            if ($message_media['_'] == 'photo') {
-                $photo = end($message_media['sizes']);
-            } else {
-                $photo = end($message_media['photo']['sizes']);
-            }
-            $res['name'] = $photo['location']['volume_id'].'_'.$photo['location']['local_id'];
-            $res['InputFileLocation'] = ['_' => 'inputFileLocation', 'volume_id' => $photo['location']['volume_id'], 'local_id' => $photo['location']['local_id'], 'secret' => $photo['location']['secret'], 'dc_id' => $photo['location']['dc_id']];
+                if ($message_media['_'] == 'photo') {
+                    $photo = end($message_media['sizes']);
+                } else {
+                    $photo = end($message_media['photo']['sizes']);
+                }
+                $res['name'] = $photo['location']['volume_id'].'_'.$photo['location']['local_id'];
+                $res['InputFileLocation'] = ['_' => 'inputFileLocation', 'volume_id' => $photo['location']['volume_id'], 'local_id' => $photo['location']['local_id'], 'secret' => $photo['location']['secret'], 'dc_id' => $photo['location']['dc_id']];
+                $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], '.jpg');
+                $res['mime'] = 'image/jpeg';
+                if (isset($photo['location']['size'])) {
+                    $res['size'] = $photo['location']['size'];
+                }
+                if (isset($photo['location']['bytes'])) {
+                    $res['size'] = strlen($photo['location']['bytes']);
+                }
 
-            $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], '.jpg');
-            $res['mime'] = 'image/jpeg';
-            if (isset($photo['location']['size'])) {
-                $res['size'] = $photo['location']['size'];
-            }
-            if (isset($photo['location']['bytes'])) {
-                $res['size'] = strlen($photo['location']['bytes']);
-            }
-
-            return $res;
+                return $res;
             case 'photoSize':
             case 'photoCachedSize':
-            $res['name'] = $message_media['location']['volume_id'].'_'.$message_media['location']['local_id'];
-            $res['InputFileLocation'] = ['_' => 'inputFileLocation', 'volume_id' => $message_media['location']['volume_id'], 'local_id' => $message_media['location']['local_id'], 'secret' => $message_media['location']['secret'], 'dc_id' => $message_media['location']['dc_id']];
-            $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], '.jpg');
-            $res['mime'] = 'image/jpeg';
-            if (isset($photo['location']['size'])) {
-                $res['size'] = $photo['location']['size'];
-            }
-            if (isset($photo['location']['bytes'])) {
-                $res['size'] = strlen($photo['location']['bytes']);
-            }
+                $res['name'] = $message_media['location']['volume_id'].'_'.$message_media['location']['local_id'];
+                $res['InputFileLocation'] = ['_' => 'inputFileLocation', 'volume_id' => $message_media['location']['volume_id'], 'local_id' => $message_media['location']['local_id'], 'secret' => $message_media['location']['secret'], 'dc_id' => $message_media['location']['dc_id']];
+                $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], '.jpg');
+                $res['mime'] = 'image/jpeg';
+                if (isset($photo['location']['size'])) {
+                    $res['size'] = $photo['location']['size'];
+                }
+                if (isset($photo['location']['bytes'])) {
+                    $res['size'] = strlen($photo['location']['bytes']);
+                }
 
-            return $res;
+                return $res;
             case 'decryptedMessageMediaExternalDocument':
             case 'document':
-            $message_media = ['document' => $message_media];
+                $message_media = ['document' => $message_media];
             case 'messageMediaDocument':
-            foreach ($message_media['document']['attributes'] as $attribute) {
-                switch ($attribute['_']) {
-                    case 'documentAttributeFilename':
-                    $pathinfo = pathinfo($attribute['file_name']);
-                    if (isset($pathinfo['extension'])) {
-                        $res['ext'] = '.'.$pathinfo['extension'];
+                foreach ($message_media['document']['attributes'] as $attribute) {
+                    switch ($attribute['_']) {
+                        case 'documentAttributeFilename':
+                            $pathinfo = pathinfo($attribute['file_name']);
+                            if (isset($pathinfo['extension'])) {
+                                $res['ext'] = '.'.$pathinfo['extension'];
+                            }
+                            $res['name'] = $pathinfo['filename'];
+                            break;
+                        case 'documentAttributeAudio':
+                            $audio = $attribute;
+                            break;
                     }
-                    $res['name'] = $pathinfo['filename'];
-                    break;
-                    case 'documentAttributeAudio':
-                    $audio = $attribute;
-                    break;
                 }
-            }
-            if (isset($audio) && isset($audio['title']) && !isset($res['name'])) {
-                $res['name'] = $audio['title'];
-                if (isset($audio['performer'])) {
-                    $res['name'] .= ' - '.$audio['performer'];
+                if (isset($audio) && isset($audio['title']) && !isset($res['name'])) {
+                    $res['name'] = $audio['title'];
+                    if (isset($audio['performer'])) {
+                        $res['name'] .= ' - '.$audio['performer'];
+                    }
                 }
-            }
-            $res['InputFileLocation'] = ['_' => 'inputDocumentFileLocation', 'id' => $message_media['document']['id'], 'access_hash' => $message_media['document']['access_hash'], 'version' => isset($message_media['document']['version']) ? $message_media['document']['version'] : 0, 'dc_id' => $message_media['document']['dc_id']];
-            if (!isset($res['ext'])) {
-                $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], $this->get_extension_from_mime($message_media['document']['mime_type']));
-            }
-            if (!isset($res['name'])) {
-                $res['name'] = $message_media['document']['access_hash'];
-            }
+                $res['InputFileLocation'] = ['_' => 'inputDocumentFileLocation', 'id' => $message_media['document']['id'], 'access_hash' => $message_media['document']['access_hash'], 'version' => isset($message_media['document']['version']) ? $message_media['document']['version'] : 0, 'dc_id' => $message_media['document']['dc_id']];
+                if (!isset($res['ext'])) {
+                    $res['ext'] = $this->get_extension_from_location($res['InputFileLocation'], $this->get_extension_from_mime($message_media['document']['mime_type']));
+                }
+                if (!isset($res['name'])) {
+                    $res['name'] = $message_media['document']['access_hash'];
+                }
+                if (isset($message_media['document']['size'])) {
+                    $res['size'] = $message_media['document']['size'];
+                }
+                $res['name'] .= '_'.$message_media['document']['id'];
+                $res['mime'] = $message_media['document']['mime_type'];
 
-            if (isset($message_media['document']['size'])) {
-                $res['size'] = $message_media['document']['size'];
-            }
-            $res['name'] .= '_'.$message_media['document']['id'];
-            $res['mime'] = $message_media['document']['mime_type'];
-
-            return $res;
+                return $res;
             default:
-            throw new \danog\MadelineProto\Exception('Invalid constructor provided: '.$message_media['_']);
+                throw new \danog\MadelineProto\Exception('Invalid constructor provided: '.$message_media['_']);
         }
     }
 
@@ -240,11 +236,16 @@ trait Files
         $file = realpath($file);
         $message_media = $this->get_download_info($message_media);
         $stream = fopen($file, 'r+b');
+        \danog\MadelineProto\Logger::log(['Waiting for lock of file to download...']);
         flock($stream, LOCK_EX);
-        $this->download_to_stream($message_media, $stream, $cb, filesize($file), -1);
-        flock($stream, LOCK_UN);
-        fclose($stream);
-        clearstatcache();
+
+        try {
+            $this->download_to_stream($message_media, $stream, $cb, filesize($file), -1);
+        } finally {
+            flock($stream, LOCK_UN);
+            fclose($stream);
+            clearstatcache();
+        }
 
         return $file;
     }
@@ -265,7 +266,7 @@ trait Files
             $end = $message_media['size'];
         }
         $size = $end - $offset;
-        $part_size = 128 * 1024;
+        $part_size = 1024 * 1024;
         $percent = 0;
         $datacenter = isset($message_media['InputFileLocation']['dc_id']) ? $message_media['InputFileLocation']['dc_id'] : $this->datacenter->curdc;
         if (isset($message_media['key'])) {
@@ -290,15 +291,11 @@ trait Files
                 $res = $cdn ? $this->method_call('upload.getCdnFile', ['file_token' => $message_media['file_token'], 'offset' => $offset, 'limit' => $part_size], ['heavy' => true, 'datacenter' => $datacenter]) : $this->method_call('upload.getFile', ['location' => $message_media['InputFileLocation'], 'offset' => $offset, 'limit' => $part_size], ['heavy' => true, 'datacenter' => &$datacenter]);
             } catch (\danog\MadelineProto\RPCErrorException $e) {
                 switch ($e->rpc) {
-                    case 'OFFSET_INVALID':
-                    //\Rollbar\Rollbar::log(\Rollbar\Payload\Level::error(), $e->rpc, ['info' => $message_media, 'offset' => $offset]);
-                    break;
                     case 'FILE_TOKEN_INVALID':
-                    $cdn = false;
-                    continue 2;
-
+                        $cdn = false;
+                        continue 2;
                     default:
-                    throw $e;
+                        throw $e;
                 }
             }
             if ($res['_'] === 'upload.fileCdnRedirect') {
@@ -325,11 +322,10 @@ trait Files
                     switch ($e->rpc) {
                         case 'FILE_TOKEN_INVALID':
                         case 'REQUEST_TOKEN_INVALID':
-                        $cdn = false;
-                        continue 2;
-
+                            $cdn = false;
+                            continue 2;
                         default:
-                        throw $e;
+                            throw $e;
                     }
                 }
                 continue;
@@ -347,10 +343,10 @@ trait Files
             if (isset($message_media['cdn_key'])) {
                 $ivec = substr($message_media['cdn_iv'], 0, 12).pack('N', $offset >> 4);
                 $res['bytes'] = $this->ctr_encrypt($res['bytes'], $message_media['cdn_key'], $ivec);
+                $this->check_cdn_hash($message_media['file_token'], $offset, $res['bytes'], $old_dc);
             }
             if (isset($message_media['key'])) {
                 $res['bytes'] = $ige->decrypt($res['bytes']);
-                $this->check_cdn_hash($message_media['file_token'], $offset, $res['bytes'], $datacenter);
             }
             if ($start_at) {
                 $res['bytes'] = substr($res['bytes'], $start_at);
@@ -365,7 +361,6 @@ trait Files
             $offset += strlen($res['bytes']);
             $downloaded_size += strlen($res['bytes']);
             \danog\MadelineProto\Logger::log([fwrite($stream, $res['bytes'])], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
-
             if ($theend) {
                 break;
             }
@@ -391,22 +386,25 @@ trait Files
             $this->cdn_hashes = [];
         }
         foreach ($hashes as $hash) {
-            $this->cdn_hashes[$file][$hash['offset']] = ['limit' => $hash['limit'], 'hash' => $hash['hash']];
+            $this->cdn_hashes[$file][$hash['offset']] = ['limit' => $hash['limit'], 'hash' => (string) $hash['hash']];
         }
     }
 
     private function check_cdn_hash($file, $offset, $data, &$datacenter)
     {
-        if (!isset($this->cdn_hashes[$file][$offset])) {
-            $this->add_cdn_hashes($this->method_call('upload.getCdnFileHashes', ['file_token' => $file, 'offset' => $offset], ['datacenter' => &$datacenter]));
+        while (strlen($data)) {
+            if (!isset($this->cdn_hashes[$file][$offset])) {
+                $this->add_cdn_hashes($file, $this->method_call('upload.getCdnFileHashes', ['file_token' => $file, 'offset' => $offset], ['datacenter' => $datacenter]));
+            }
+            if (!isset($this->cdn_hashes[$file][$offset])) {
+                throw new \danog\MadelineProto\Exception('Could not fetch CDN hashes for offset '.$offset);
+            }
+            if (hash('sha256', substr($data, 0, $this->cdn_hashes[$file][$offset]['limit']), true) !== $this->cdn_hashes[$file][$offset]['hash']) {
+                throw new \danog\MadelineProto\SecurityException('CDN hash mismatch for offset '.$offset);
+            }
+            $data = substr($data, $this->cdn_hashes[$file][$offset]['limit']);
+            $offset += $this->cdn_hashes[$file][$offset]['limit'];
         }
-        if (!isset($this->cdn_hashes[$file][$offset])) {
-            throw new \danog\MadelineProto\Exception('Could not fetch CDN hashes for offset '.$offset);
-        }
-        if (hash('sha256', $data, true) !== $this->cdn_hashes[$file][$offset]['hash']) {
-            throw new \danog\MadelineProto\SecurityException('CDN hashe mismatch for offset '.$offset);
-        }
-        unset($this->cdn_hashes[$file][$offset]);
 
         return true;
     }

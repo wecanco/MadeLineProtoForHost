@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -16,19 +17,13 @@ trait DialogHandler
 {
     public function get_dialogs($force = true)
     {
-        if ($force ||
-            !isset($this->dialog_params['offset_date']) || is_null($this->dialog_params['offset_date']) ||
-            !isset($this->dialog_params['offset_id']) || is_null($this->dialog_params['offset_id']) ||
-            !isset($this->dialog_params['offset_peer']) || is_null($this->dialog_params['offset_peer']) ||
-            !isset($this->dialog_params['count']) || is_null($this->dialog_params['count'])
-        ) {
+        if ($force || !isset($this->dialog_params['offset_date']) || is_null($this->dialog_params['offset_date']) || !isset($this->dialog_params['offset_id']) || is_null($this->dialog_params['offset_id']) || !isset($this->dialog_params['offset_peer']) || is_null($this->dialog_params['offset_peer']) || !isset($this->dialog_params['count']) || is_null($this->dialog_params['count'])) {
             $this->dialog_params = ['limit' => 0, 'offset_date' => 0, 'offset_id' => 0, 'offset_peer' => ['_' => 'inputPeerEmpty'], 'count' => 0];
         }
         $this->updates_state['sync_loading'] = true;
         $res = ['dialogs' => [0], 'count' => 1];
         $datacenter = $this->datacenter->curdc;
         $peers = [];
-
         $this->postpone_updates = true;
 
         try {

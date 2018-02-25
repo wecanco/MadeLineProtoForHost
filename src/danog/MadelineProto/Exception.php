@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -19,7 +20,7 @@ class Exception extends \Exception
 
     public function __toString()
     {
-        return $this->file === 'MadelineProto' ? $this->message : '\danog\MadelineProto\Exception'.($this->message !== '' ? ': ' : '').$this->message.' in '.$this->file.':'.$this->line.PHP_EOL.'TL Trace (YOU ABSOLUTELY MUST READ THE TEXT BELOW):'.PHP_EOL.$this->getTLTrace();
+        return $this->file === 'MadelineProto' ? $this->message : '\\danog\\MadelineProto\\Exception'.($this->message !== '' ? ': ' : '').$this->message.' in '.$this->file.':'.$this->line.PHP_EOL.'Revision: '.@file_get_contents(__DIR__.'/../../../.git/refs/heads/master').PHP_EOL.'TL Trace (YOU ABSOLUTELY MUST READ THE TEXT BELOW):'.PHP_EOL.$this->getTLTrace();
     }
 
     public function __construct($message = null, $code = 0, self $previous = null, $file = null, $line = null)
@@ -36,10 +37,7 @@ class Exception extends \Exception
             $this->line = $line;
         }
         parent::__construct($message, $code, $previous);
-
-        if (\danog\MadelineProto\Logger::$constructed) {
-            \danog\MadelineProto\Logger::log([$message.' in '.basename($this->file).':'.$this->line], \danog\MadelineProto\Logger::FATAL_ERROR);
-        }
+        \danog\MadelineProto\Logger::log([$message.' in '.basename($this->file).':'.$this->line], \danog\MadelineProto\Logger::FATAL_ERROR);
         if (in_array($message, ['The session is corrupted!', 'Re-executing query...', 'I had to recreate the temporary authorization key', 'This peer is not present in the internal peer database', "Couldn't get response", 'Chat forbidden', 'The php-libtgvoip extension is required to accept and manage calls. See daniil.it/MadelineProto for more info.', 'File does not exist', 'Please install this fork of phpseclib: https://github.com/danog/phpseclib'])) {
             return;
         }
@@ -60,7 +58,8 @@ class Exception extends \Exception
     {
         // If error is suppressed with @, don't throw an exception
         if (error_reporting() === 0) {
-            return true; // return true to continue through the others error handlers
+            return true;
+            // return true to continue through the others error handlers
         }
 
         throw new self($errstr, $errno, null, $errfile, $errline);

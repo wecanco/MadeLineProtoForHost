@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -14,33 +15,33 @@ namespace danog\MadelineProto;
 
 interface Proxy
 {
-    public function __construct(int $domain, int $type, int $protocol);
+    public function __construct($domain, $type, $protocol);
 
-    public function setOption(int $level, int $name, $value);
+    public function setOption($level, $name, $value);
 
-    public function getOption(int $level, int $name);
+    public function getOption($level, $name);
 
-    public function setBlocking(bool $blocking);
+    public function setBlocking($blocking);
 
-    public function bind(string $address, int $port = 0);
+    public function bind($address, $port = 0);
 
-    public function listen(int $backlog = 0);
+    public function listen($backlog = 0);
 
     public function accept();
 
-    public function connect(string $address, int $port = 0);
+    public function connect($address, $port = 0);
 
-    public function select(array &$read, array &$write, array &$except, int $tv_sec, int $tv_usec = 0);
+    public function select(array &$read, array &$write, array &$except, $tv_sec, $tv_usec = 0);
 
-    public function read(int $length, int $flags = 0);
+    public function read($length, $flags = 0);
 
-    public function write(string $buffer, int $length = -1);
+    public function write($buffer, $length = -1);
 
-    public function send(string $data, int $length, int $flags);
+    public function send($data, $length, $flags);
 
     public function close();
 
-    public function getPeerName(bool $port = true);
+    public function getPeerName($port = true);
 
-    public function getSockName(bool $port = true);
+    public function getSockName($port = true);
 }

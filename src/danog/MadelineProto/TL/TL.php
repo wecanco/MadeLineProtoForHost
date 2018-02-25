@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -72,7 +73,7 @@ trait TL
                         }
                         continue;
                     }
-                    $line = preg_replace(['|//.*|', '|^\s+$|'], '', $line);
+                    $line = preg_replace(['|//.*|', '|^\\s+$|'], '', $line);
                     if ($line === '') {
                         continue;
                     }
@@ -84,49 +85,24 @@ trait TL
                         $type = 'constructors';
                         continue;
                     }
-                    if (preg_match('|^===\d*===|', $line)) {
-                        $layer = (int) preg_replace('|\D*|', '', $line);
+                    if (preg_match('|^===\\d*===|', $line)) {
+                        $layer = (int) preg_replace('|\\D*|', '', $line);
                         continue;
                     }
                     if (preg_match('/^vector#/', $line)) {
                         continue;
                     }
-                    if (preg_match('/ \?= /', $line)) {
+                    if (preg_match('/ \\?= /', $line)) {
                         continue;
                     }
-                    $name = preg_replace(['/#.*/', '/\s.*/'], '', $line);
+                    $name = preg_replace(['/#.*/', '/\\s.*/'], '', $line);
                     if (in_array($name, ['bytes', 'int128', 'int256', 'int512'])) {
                         continue;
                     }
-                    $clean = preg_replace([
-                        '/:bytes /',
-                        '/;/',
-                        '/#[a-f0-9]+ /',
-                        '/ [a-zA-Z0-9_]+\:flags\.[0-9]+\?true/',
-                        '/[<]/',
-                        '/[>]/',
-                        '/  /',
-                        '/^ /',
-                        '/ $/',
-                        '/\?bytes /',
-                        '/{/',
-                        '/}/',
-                     ], [
-                        ':string ',
-                        '',
-                        ' ',
-                        '',
-                        ' ',
-                        ' ',
-                        ' ',
-                        '',
-                        '',
-                        '?string ',
-                        '',
-                        '', ], $line);
+                    $clean = preg_replace(['/:bytes /', '/;/', '/#[a-f0-9]+ /', '/ [a-zA-Z0-9_]+\\:flags\\.[0-9]+\\?true/', '/[<]/', '/[>]/', '/  /', '/^ /', '/ $/', '/\\?bytes /', '/{/', '/}/'], [':string ', '', ' ', '', ' ', ' ', ' ', '', '', '?string ', '', ''], $line);
                     $id = hash('crc32b', $clean);
-                    if (preg_match('/^[^\s]+#/', $line)) {
-                        $nid = str_pad(preg_replace(['/^[^#]+#/', '/\s.+/'], '', $line), 8, '0', \STR_PAD_LEFT);
+                    if (preg_match('/^[^\\s]+#/', $line)) {
+                        $nid = str_pad(preg_replace(['/^[^#]+#/', '/\\s.+/'], '', $line), 8, '0', \STR_PAD_LEFT);
                         if ($id !== $nid && $scheme_type !== 'botAPI') {
                             \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['crc32_mismatch'], $id, $nid, $line)], \danog\MadelineProto\Logger::ERROR);
                         }
@@ -140,11 +116,11 @@ trait TL
                     $TL_dict[$type][$key][$type === 'constructors' ? 'predicate' : 'method'] = $name;
                     $TL_dict[$type][$key]['id'] = strrev(hex2bin($id));
                     $TL_dict[$type][$key]['params'] = [];
-                    $TL_dict[$type][$key]['type'] = preg_replace(['/.+\s/', '/;/'], '', $line);
+                    $TL_dict[$type][$key]['type'] = preg_replace(['/.+\\s/', '/;/'], '', $line);
                     if ($layer !== null) {
                         $TL_dict[$type][$key]['layer'] = $layer;
                     }
-                    foreach (explode(' ', preg_replace(['/^[^\s]+\s/', '/=\s[^\s]+/', '/\s$/'], '', $line)) as $param) {
+                    foreach (explode(' ', preg_replace(['/^[^\\s]+\\s/', '/=\\s[^\\s]+/', '/\\s$/'], '', $line)) as $param) {
                         if ($param === '') {
                             continue;
                         }
@@ -175,7 +151,6 @@ trait TL
                 }
                 $this->{($scheme_type === 'td' ? 'td_' : '').'constructors'}->add($elem, $scheme_type);
             }
-
             \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['translating_methods']], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
             foreach ($TL_dict['methods'] as $elem) {
                 $this->{($scheme_type === 'td' ? 'td_' : '').'methods'}->add($elem);
@@ -256,7 +231,6 @@ trait TL
                 if (is_object($object)) {
                     return str_pad(strrev($object->toBytes()), 8, chr(0));
                 }
-
                 if (is_string($object) && strlen($object) === 8) {
                     return $object;
                 }
@@ -292,14 +266,13 @@ trait TL
                 if (!is_string($object)) {
                     throw new Exception("You didn't provide a valid string");
                 }
-
                 $object = pack('C*', ...unpack('C*', $object));
                 $l = strlen($object);
                 $concat = '';
                 if ($l <= 253) {
                     $concat .= chr($l);
                     $concat .= $object;
-                    $concat .= pack('@'.$this->posmod((-$l - 1), 4));
+                    $concat .= pack('@'.$this->posmod(-$l - 1, 4));
                 } else {
                     $concat .= chr(254);
                     $concat .= substr($this->pack_signed_int($l), 0, 3);
@@ -309,7 +282,7 @@ trait TL
 
                 return $concat;
             case 'bytes':
-                if (!is_string($object) && !($object instanceof \danog\MadelineProto\TL\Types\Bytes)) {
+                if (!is_string($object) && !$object instanceof \danog\MadelineProto\TL\Types\Bytes) {
                     throw new Exception("You didn't provide a valid string");
                 }
                 $l = strlen($object);
@@ -317,7 +290,7 @@ trait TL
                 if ($l <= 253) {
                     $concat .= chr($l);
                     $concat .= $object;
-                    $concat .= pack('@'.$this->posmod((-$l - 1), 4));
+                    $concat .= pack('@'.$this->posmod(-$l - 1, 4));
                 } else {
                     $concat .= chr(254);
                     $concat .= substr($this->pack_signed_int($l), 0, 3);
@@ -327,7 +300,7 @@ trait TL
 
                 return $concat;
             case 'Bool':
-                return $this->constructors->find_by_predicate(((bool) $object) ? 'boolTrue' : 'boolFalse')['id'];
+                return $this->constructors->find_by_predicate((bool) $object ? 'boolTrue' : 'boolFalse')['id'];
             case 'true':
                 return;
             case '!X':
@@ -343,10 +316,23 @@ trait TL
                 }
 
                 return $concat;
+            case 'vector':
+                if (!is_array($object)) {
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['array_invalid']);
+                }
+                $concat = $this->pack_unsigned_int(count($object));
+                foreach ($object as $k => $current_object) {
+                    $concat .= $this->serialize_object(['type' => $type['subtype']], $current_object, $k);
+                }
 
+                return $concat;
+            case 'Object':
+                if (is_string($object)) {
+                    return $object;
+                }
         }
         $auto = false;
-        if ((!is_array($object) || (isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type'])) && in_array($type['type'], ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer'])) {
+        if ((!is_array($object) || isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type']) && in_array($type['type'], ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer'])) {
             $object = $this->get_info($object);
             if (!isset($object[$type['type']])) {
                 throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['peer_not_in_db']);
@@ -355,7 +341,6 @@ trait TL
         }
         if (!isset($object['_'])) {
             $constructorData = $this->constructors->find_by_predicate($type['type'], $layer);
-
             if ($constructorData === false) {
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['predicate_not_set']);
             }
@@ -363,28 +348,24 @@ trait TL
             $object['_'] = $constructorData['predicate'];
         }
         $predicate = $object['_'];
-
         $constructorData = $this->constructors->find_by_predicate($predicate, $layer);
         if ($constructorData === false) {
             \danog\MadelineProto\Logger::log([$object], \danog\MadelineProto\Logger::FATAL_ERROR);
 
             throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['type_extract_error'], $predicate));
         }
-
-        if ($bare = ($type['type'] != '' && $type['type'][0] === '%')) {
+        if ($bare = $type['type'] != '' && $type['type'][0] === '%') {
             $type['type'] = substr($type['type'], 1);
         }
-
         if ($predicate === $type['type'] && !$auto) {
             $bare = true;
         }
-
-        $concat = '';
-        if ($constructorData['predicate'] === 'messageEntityMentionName') {
+        if ($predicate === 'messageEntityMentionName') {
             $constructorData = $this->constructors->find_by_predicate('inputMessageEntityMentionName');
         }
+        $concat = '';
         if (!$bare) {
-            $concat .= $constructorData['id'];
+            $concat = $constructorData['id'];
         }
 
         return $concat.$this->serialize_params($constructorData, $object, '', $layer);
@@ -403,7 +384,6 @@ trait TL
     public function serialize_params($tl, $arguments, $ctx, $layer = -1)
     {
         $serialized = '';
-
         $arguments = $this->botAPI_to_MTProto($arguments);
         $flags = 0;
         foreach ($tl['params'] as $cur_flag) {
@@ -411,17 +391,17 @@ trait TL
                 switch ($cur_flag['type']) {
                     case 'true':
                     case 'false':
-                        $flags = (isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']]) ? ($flags | $cur_flag['pow']) : ($flags & ~$cur_flag['pow']);
+                        $flags = isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']] ? $flags | $cur_flag['pow'] : $flags & ~$cur_flag['pow'];
                         unset($arguments[$cur_flag['name']]);
                         break;
                     case 'Bool':
-                        $arguments[$cur_flag['name']] = (isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']]) && (($flags & $cur_flag['pow']) != 0);
+                        $arguments[$cur_flag['name']] = isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']] && ($flags & $cur_flag['pow']) != 0;
                         if (($flags & $cur_flag['pow']) === 0) {
                             unset($arguments[$cur_flag['name']]);
                         }
                         break;
                     default:
-                        $flags = (isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']] !== null) ? ($flags | $cur_flag['pow']) : ($flags & ~$cur_flag['pow']);
+                        $flags = isset($arguments[$cur_flag['name']]) && $arguments[$cur_flag['name']] !== null ? $flags | $cur_flag['pow'] : $flags & ~$cur_flag['pow'];
                         break;
                 }
             }
@@ -434,7 +414,7 @@ trait TL
                     continue;
                 }
                 if ($current_argument['name'] === 'random_bytes') {
-                    $serialized .= $this->serialize_object(['type' => 'bytes'], $this->random(15 + (4 * (random_int(0, PHP_INT_MAX) % 3))), 'random_bytes');
+                    $serialized .= $this->serialize_object(['type' => 'bytes'], $this->random(15 + 4 * (random_int(0, PHP_INT_MAX) % 3)), 'random_bytes');
                     continue;
                 }
                 if ($current_argument['name'] === 'data' && isset($arguments['message'])) {
@@ -458,6 +438,10 @@ trait TL
                             }
                     }
                 }
+                if ($id = $this->constructors->find_by_predicate(lcfirst($current_argument['type']).'Empty')) {
+                    $serialized .= $id['id'];
+                    continue;
+                }
 
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['params_missing'], $current_argument['name']);
             }
@@ -470,7 +454,6 @@ trait TL
             if ($current_argument['type'] === 'DataJSON') {
                 $arguments[$current_argument['name']] = ['_' => 'dataJSON', 'data' => json_encode($arguments[$current_argument['name']])];
             }
-
             //\danog\MadelineProto\Logger::log(['Serializing '.$current_argument['name'].' of type '.$current_argument['type']);
             $serialized .= $this->serialize_object($current_argument, $arguments[$current_argument['name']], $current_argument['name'], $layer);
         }
@@ -506,7 +489,6 @@ trait TL
         } elseif (!is_resource($stream)) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['stream_handle_invalid']);
         }
-
         switch ($type['type']) {
             case 'Bool':
                 return $this->deserialize_bool(stream_get_contents($stream, 4));
@@ -552,10 +534,14 @@ trait TL
                     throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialize_not_str']);
                 }
 
-                return $type['type'] === 'bytes' ? (new Types\Bytes($x)) : $x;
+                return $type['type'] === 'bytes' ? new Types\Bytes($x) : $x;
             case 'Vector t':
                 $id = stream_get_contents($stream, 4);
                 $constructorData = $this->constructors->find_by_id($id);
+                if ($constructorData === false) {
+                    $constructorData = $this->methods->find_by_id($id);
+                    $constructorData['predicate'] = 'method_'.$constructorData['method'];
+                }
                 if ($constructorData === false) {
                     throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['type_extract_error_id'], $type['type'], bin2hex(strrev($id))));
                 }
@@ -590,7 +576,11 @@ trait TL
                 $id = stream_get_contents($stream, 4);
                 $constructorData = $this->constructors->find_by_id($id);
                 if ($constructorData === false) {
-                    throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['type_extract_error_id'], $type['type'], bin2hex(strrev($id))));
+                    $constructorData = $this->methods->find_by_id($id);
+                    if ($constructorData === false) {
+                        throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['type_extract_error_id'], $type['type'], bin2hex(strrev($id))));
+                    }
+                    $constructorData['predicate'] = 'method_'.$constructorData['method'];
                 }
             }
         }
@@ -608,8 +598,11 @@ trait TL
 
             return $this->deserialize($stream, $constructorData);
         }
-        if ($constructorData['type'] === 'Bool') {
-            return $constructorData['predicate'] === 'boolTrue';
+        if ($constructorData['predicate'] === 'boolTrue') {
+            return true;
+        }
+        if ($constructorData['predicate'] === 'boolFalse') {
+            return false;
         }
         $x = ['_' => $constructorData['predicate']];
         foreach ($constructorData['params'] as $arg) {
@@ -639,7 +632,6 @@ trait TL
             if (in_array($arg['name'], ['peer_tag', 'file_token', 'cdn_key', 'cdn_iv'])) {
                 $arg['type'] = 'string';
             }
-
             if ($x['_'] === 'rpc_result' && $arg['name'] === 'result' && isset($this->datacenter->sockets[$type['datacenter']]->new_outgoing[$x['req_msg_id']]['type']) && stripos($this->datacenter->sockets[$type['datacenter']]->new_outgoing[$x['req_msg_id']]['type'], '<') !== false) {
                 $arg['subtype'] = preg_replace(['|Vector[<]|', '|[>]|'], '', $this->datacenter->sockets[$type['datacenter']]->new_outgoing[$x['req_msg_id']]['type']);
             }
@@ -647,7 +639,6 @@ trait TL
                 $arg['datacenter'] = $type['datacenter'];
             }
             $x[$arg['name']] = $this->deserialize($stream, $arg);
-
             if ($arg['name'] === 'random_bytes') {
                 if (strlen($x[$arg['name']]) < 15) {
                     throw new \danog\MadelineProto\SecurityException(\danog\MadelineProto\Lang::$current_lang['rand_bytes_too_small']);
@@ -656,13 +647,13 @@ trait TL
                 }
             }
         }
-        if (isset($x['flags'])) { // I don't think we need this anymore
+        if (isset($x['flags'])) {
+            // I don't think we need this anymore
             unset($x['flags']);
         }
         if ($x['_'] === 'dataJSON') {
             return json_decode($x['data'], true);
         }
-
         if ($x['_'] === 'message' && isset($x['reply_markup']['rows'])) {
             foreach ($x['reply_markup']['rows'] as $key => $row) {
                 foreach ($row['buttons'] as $bkey => $button) {

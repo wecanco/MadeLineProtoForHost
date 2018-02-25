@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -58,7 +59,6 @@ trait MsgIdHandler
                     \danog\MadelineProto\Logger::log(['WARNING: Given message id ('.$new_message_id.') is lower than or equal to the current limit ('.$key.'). Consider syncing your date.'], \danog\MadelineProto\Logger::WARNING);
                 }
             }
-
             if (count($this->datacenter->sockets[$aargs['datacenter']]->incoming_messages) > $this->settings['msg_array_limit']['incoming']) {
                 reset($this->datacenter->sockets[$aargs['datacenter']]->incoming_messages);
                 $key = key($this->datacenter->sockets[$aargs['datacenter']]->incoming_messages);

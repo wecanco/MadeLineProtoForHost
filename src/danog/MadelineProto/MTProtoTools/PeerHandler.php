@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -66,7 +67,6 @@ trait PeerHandler
                             \danog\MadelineProto\Logger::log([$e->getMessage()], \danog\MadelineProto\Logger::WARNING);
                         }
                     }
-
                 case 'channelEmpty':
                     break;
                 case 'channel':
@@ -162,22 +162,18 @@ trait PeerHandler
                 case 'peerUser':
                     $id = $id['user_id'];
                     break;
-
                 case 'chat':
                 case 'chatFull':
                     $id = -$id['id'];
                     break;
-
-                    case 'inputPeerChat':
+                case 'inputPeerChat':
                 case 'peerChat':
                     $id = -$id['chat_id'];
                     break;
-
                 case 'channel':
                 case 'channelFull':
                     $id = $this->to_supergroup($id['id']);
                     break;
-
                 case 'inputPeerChannel':
                 case 'inputChannel':
                 case 'peerChannel':
@@ -190,19 +186,18 @@ trait PeerHandler
         }
         if (is_string($id) && strpos($id, '#') !== false) {
             if (preg_match('/^channel#/', $id)) {
-                $id = $this->to_supergroup(preg_replace('|\D+|', '', $id));
+                $id = $this->to_supergroup(preg_replace('|\\D+|', '', $id));
             }
             if (preg_match('/^chat#/', $id)) {
-                $id = preg_replace('|\D+|', '-', $id);
+                $id = preg_replace('|\\D+|', '-', $id);
             }
             if (preg_match('/^user#/', $id)) {
-                $id = preg_replace('|\D+|', '', $id);
+                $id = preg_replace('|\\D+|', '', $id);
             }
         }
-
         if (is_numeric($id)) {
             if (is_string($id)) {
-                $id = \danog\MadelineProto\Logger::$bigint ? ((float) $id) : ((int) $id);
+                $id = \danog\MadelineProto\Logger::$bigint ? (float) $id : (int) $id;
             }
             if (!isset($this->chats[$id]) && $id < 0 && !preg_match('/^-100/', $id)) {
                 $this->method_call('messages.getFullChat', ['chat_id' => -$id], ['datacenter' => $this->datacenter->curdc]);
@@ -211,12 +206,11 @@ trait PeerHandler
                 return $this->gen_all($this->chats[$id]);
             }
             if (!isset($this->settings['pwr']['requests']) || $this->settings['pwr']['requests'] === true) {
-                $dbres = json_decode(@file_get_contents('https://id.pwrtelegram.xyz/db/getusername?id='.$id, false, stream_context_create(['http' => [
-                        'timeout' => 2,
-                    ],
-                ])), true);
+                $dbres = json_decode(@file_get_contents('https://id.pwrtelegram.xyz/db/getusername?id='.$id, false, stream_context_create(['http' => ['timeout' => 2]])), true);
                 if (isset($dbres['ok']) && $dbres['ok']) {
-                    return $this->get_info('@'.$dbres['result']);
+                    $this->resolve_username('@'.$dbres['result']);
+
+                    return $this->get_info($id, false);
                 }
             }
 
@@ -278,7 +272,6 @@ trait PeerHandler
             case 'channelForbidden':
                 throw new \danog\MadelineProto\Exception('Chat forbidden');
                 break;
-
             default:
                 throw new \danog\MadelineProto\Exception('Invalid constructor given '.var_export($constructor, true));
                 break;
@@ -301,17 +294,15 @@ trait PeerHandler
         switch ($partial['type']) {
             case 'user':
             case 'bot':
-            $full = $this->method_call('users.getFullUser', ['id' => $partial['InputUser']], ['datacenter' => $this->datacenter->curdc]);
-            break;
-
+                $full = $this->method_call('users.getFullUser', ['id' => $partial['InputUser']], ['datacenter' => $this->datacenter->curdc]);
+                break;
             case 'chat':
-            $full = $this->method_call('messages.getFullChat', $partial, ['datacenter' => $this->datacenter->curdc])['full_chat'];
-            break;
-
+                $full = $this->method_call('messages.getFullChat', $partial, ['datacenter' => $this->datacenter->curdc])['full_chat'];
+                break;
             case 'channel':
             case 'supergroup':
-            $full = $this->method_call('channels.getFullChannel', ['channel' => $partial['InputChannel']], ['datacenter' => $this->datacenter->curdc])['full_chat'];
-            break;
+                $full = $this->method_call('channels.getFullChannel', ['channel' => $partial['InputChannel']], ['datacenter' => $this->datacenter->curdc])['full_chat'];
+                break;
         }
         $res = [];
         $res['full'] = $full;
@@ -352,16 +343,16 @@ trait PeerHandler
                     $res['photo'] = $this->photosize_to_botapi(end($full['full']['profile_photo']['sizes']), []);
                 }
                 /*$bio = '';
-                if ($full['type'] === 'user' && isset($res['username']) && !isset($res['about']) && $fullfetch) {
-                    if (preg_match('/meta property="og:description" content=".+/', file_get_contents('https://telegram.me/'.$res['username']), $biores)) {
-                        $bio = html_entity_decode(preg_replace_callback('/(&#[0-9]+;)/', function ($m) {
-                            return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
-                        }, str_replace(['meta property="og:description" content="', '">'], '', $biores[0])));
-                    }
-                    if ($bio != '' && $bio != 'You can contact @'.$res['username'].' right away.') {
-                        $res['about'] = $bio;
-                    }
-                }*/
+                  if ($full['type'] === 'user' && isset($res['username']) && !isset($res['about']) && $fullfetch) {
+                      if (preg_match('/meta property="og:description" content=".+/', file_get_contents('https://telegram.me/'.$res['username']), $biores)) {
+                          $bio = html_entity_decode(preg_replace_callback('/(&#[0-9]+;)/', function ($m) {
+                              return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
+                          }, str_replace(['meta property="og:description" content="', '">'], '', $biores[0])));
+                      }
+                      if ($bio != '' && $bio != 'You can contact @'.$res['username'].' right away.') {
+                          $res['about'] = $bio;
+                      }
+                  }*/
                 break;
             case 'chat':
                 foreach (['title', 'participants_count', 'admin', 'admins_enabled'] as $key) {
@@ -372,7 +363,6 @@ trait PeerHandler
                 if (isset($res['admins_enabled'])) {
                     $res['all_members_are_administrators'] = $res['admins_enabled'];
                 }
-
                 if (isset($full['full']['chat_photo']['sizes'])) {
                     $res['photo'] = $this->photosize_to_botapi(end($full['full']['chat_photo']['sizes']), []);
                 }
@@ -395,7 +385,6 @@ trait PeerHandler
                         $res[$key] = $full['full'][$key];
                     }
                 }
-
                 if (isset($full['full']['chat_photo']['sizes'])) {
                     $res['photo'] = $this->photosize_to_botapi(end($full['full']['chat_photo']['sizes']), []);
                 }
@@ -437,16 +426,14 @@ trait PeerHandler
                 }
                 switch ($participant['_']) {
                     case 'chatParticipant':
-                    $newres['role'] = 'user';
-                    break;
-
+                        $newres['role'] = 'user';
+                        break;
                     case 'chatParticipantAdmin':
-                    $newres['role'] = 'admin';
-                    break;
-
+                        $newres['role'] = 'admin';
+                        break;
                     case 'chatParticipantCreator':
-                    $newres['role'] = 'creator';
-                    break;
+                        $newres['role'] = 'creator';
+                        break;
                 }
                 $res['participants'][$key] = $newres;
             }
@@ -486,36 +473,30 @@ trait PeerHandler
                         }
                         switch ($participant['_']) {
                             case 'channelParticipantSelf':
-                            $newres['role'] = 'user';
-                            if (isset($newres['admin_rights'])) {
-                                $newres['admin_rights'] = $full['Chat']['admin_rights'];
-                            }
-                            if (isset($newres['banned_rights'])) {
-                                $newres['banned_rights'] = $full['Chat']['banned_rights'];
-                            }
-                            break;
-
+                                $newres['role'] = 'user';
+                                if (isset($newres['admin_rights'])) {
+                                    $newres['admin_rights'] = $full['Chat']['admin_rights'];
+                                }
+                                if (isset($newres['banned_rights'])) {
+                                    $newres['banned_rights'] = $full['Chat']['banned_rights'];
+                                }
+                                break;
                             case 'channelParticipant':
-                            $newres['role'] = 'user';
-                            break;
-
+                                $newres['role'] = 'user';
+                                break;
                             case 'channelParticipantCreator':
-                            $newres['role'] = 'creator';
-                            break;
-
+                                $newres['role'] = 'creator';
+                                break;
                             case 'channelParticipantAdmin':
-                            $newres['role'] = 'admin';
-                            break;
-
+                                $newres['role'] = 'admin';
+                                break;
                             case 'channelParticipantBanned':
-                            $newres['role'] = 'banned';
-                            break;
-
+                                $newres['role'] = 'banned';
+                                break;
                         }
                         $res['participants'][$participant['user_id']] = $newres;
                     }
                     $gres = $this->method_call('channels.getParticipants', ['channel' => $full['InputChannel'], 'filter' => ['_' => $filter, 'q' => ''], 'offset' => $offset += $limit, 'limit' => $limit, 'hash' => 0], ['datacenter' => $this->datacenter->curdc]);
-
                     if (empty($gres['participants'])) {
                         break;
                     }
@@ -535,7 +516,8 @@ trait PeerHandler
 
     public function store_db($res, $force = false)
     {
-        if (!isset($this->settings['pwr']) || $this->settings['pwr']['pwr'] === false || (isset($this->settings['connection_settings'][$this->datacenter->curdc]) ? $this->settings['connection_settings'][$this->datacenter->curdc] : $this->settings['connection_settings']['all'])['test_mode']) {
+        $settings = isset($this->settings['connection_settings'][$this->datacenter->curdc]) ? $this->settings['connection_settings'][$this->datacenter->curdc] : $this->settings['connection_settings']['all'];
+        if (!isset($this->settings['pwr']) || $this->settings['pwr']['pwr'] === false || $settings['test_mode']) {
             /*
             try {
                 if (isset($res['username'])) {
@@ -576,12 +558,16 @@ trait PeerHandler
 
     public function resolve_username($username)
     {
-        $res = $this->method_call('contacts.resolveUsername', ['username' => str_replace('@', '', $username)], ['datacenter' => $this->datacenter->curdc]);
+        try {
+            $res = $this->method_call('contacts.resolveUsername', ['username' => str_replace('@', '', $username)], ['datacenter' => $this->datacenter->curdc]);
+        } catch (\danog\MadelineProto\RPCErrorException $e) {
+            return false;
+        }
         if ($res['_'] === 'contacts.resolvedPeer') {
             return $res;
         }
 
-        throw new \danog\MadelineProto\Exception('resolve_username returned an unexpected constructor: '.var_export($res, true));
+        return false;
     }
 
     public function to_supergroup($id)

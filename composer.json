@@ -2,7 +2,7 @@
     "name": "danog/madelineproto",
     "description": "PHP implementation of telegram's MTProto protocol.",
     "type": "project",
-    "license": "AGPL-3.0",
+    "license": "AGPL-3.0-only",
     "homepage": "https://daniil.it/MadelineProto",
     "keywords": ["telegram", "mtproto", "protocol", "bytes", "messenger", "client", "PHP", "video", "stickers", "audio", "files", "GB"],
     "conflict": {
@@ -12,7 +12,7 @@
         "php": ">=5.6.0",
         "danog/primemodule": "dev-master",
         "danog/magicalserializer": "dev-master",
-        "phpseclib/phpseclib": "dev-master#273ad17",
+        "phpseclib/phpseclib": "dev-master#27370df",
         "vlucas/phpdotenv": "^2.4",
         "erusev/parsedown": "^1.6",
         "rollbar/rollbar": "dev-master",
@@ -24,7 +24,8 @@
         "phpdocumentor/reflection-docblock": "^3.1"
     },
     "suggest": {
-        "ext-libtgvoip": "Install the php-libtgvoip extension to make phone calls (https:/github.com/danog/php-libtgvoip)"
+        "ext-libtgvoip": "Install the php-libtgvoip extension to make phone calls (https:/github.com/danog/php-libtgvoip)",
+        "ext-sockets": "Install the socket extension to speed up MadelineProto"
     },
     "authors": [
         {
@@ -37,14 +38,14 @@
             "danog\\MadelineProto\\": "src/"
         },
         "files": [
+            "src/BigIntegor.php",
             "src/Socket.php",
             "src/Collectable.php",
             "src/Threaded.php",
             "src/Volatile.php",
             "src/Thread.php",
             "src/Worker.php",
-            "src/Pool.php",
-            "src/BigIntegor.php"
+            "src/Pool.php"
         ]
     }
 }

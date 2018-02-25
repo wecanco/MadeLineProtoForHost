@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -30,12 +31,10 @@ class TLMethod
     {
         $this->by_id[$json_dict['id']] = ['method' => $json_dict['method'], 'type' => $json_dict['type'], 'params' => $json_dict['params']];
         $this->by_method[$json_dict['method']] = $json_dict['id'];
-
         $namespace = explode('.', $json_dict['method']);
         if (isset($namespace[1])) {
             $this->method_namespace[] = [$namespace[0] => $namespace[1]];
         }
-
         $this->parse_params($json_dict['id']);
     }
 

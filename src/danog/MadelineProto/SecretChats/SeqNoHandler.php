@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -49,19 +50,21 @@ trait SeqNoHandler
                 if (($message['decrypted_message']['out_seq_no'] - $this->secret_chats[$chat_id]['in_seq_no_x']) / 2 !== $C) {
                     $this->discard_secret_chat($chat_id);
 
-                    throw new \danog\MadelineProto\SecurityException('out_seq_no hole: should be '.$C.', is '.(($message['decrypted_message']['out_seq_no'] - $this->secret_chats[$chat_id]['in_seq_no_x']) / 2));
+                    throw new \danog\MadelineProto\SecurityException('out_seq_no hole: should be '.$C.', is '.($message['decrypted_message']['out_seq_no'] - $this->secret_chats[$chat_id]['in_seq_no_x']) / 2);
                 } else {
                     $C++;
                 }
             }
         }
         //var_dump($C, $seqno);
-        if ($seqno < $C) { // <= C
+        if ($seqno < $C) {
+            // <= C
             \danog\MadelineProto\Logger::log(['WARNING: dropping repeated message with seqno '.$seqno]);
 
             return false;
         }
-        if ($seqno > $C) { // > C+1
+        if ($seqno > $C) {
+            // > C+1
             $this->discard_secret_chat($chat_id);
 
             throw new \danog\MadelineProto\SecurityException('WARNING: out_seq_no gap detected ('.$seqno.' > '.$C.')!');
@@ -72,11 +75,11 @@ trait SeqNoHandler
 
     public function generate_secret_in_seq_no($chat)
     {
-        return $this->secret_chats[$chat]['layer'] > 8 ? ($this->secret_chats[$chat]['in_seq_no'] * 2) + $this->secret_chats[$chat]['in_seq_no_x'] : -1;
+        return $this->secret_chats[$chat]['layer'] > 8 ? $this->secret_chats[$chat]['in_seq_no'] * 2 + $this->secret_chats[$chat]['in_seq_no_x'] : -1;
     }
 
     public function generate_secret_out_seq_no($chat)
     {
-        return $this->secret_chats[$chat]['layer'] > 8 ? ($this->secret_chats[$chat]['out_seq_no'] * 2) + $this->secret_chats[$chat]['out_seq_no_x'] : -1;
+        return $this->secret_chats[$chat]['layer'] > 8 ? $this->secret_chats[$chat]['out_seq_no'] * 2 + $this->secret_chats[$chat]['out_seq_no_x'] : -1;
     }
 }

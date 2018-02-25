@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -41,11 +42,8 @@ class SocketReader extends \Threaded implements \Collectable
     public function run()
     {
         require __DIR__.'/../../../../vendor/autoload.php';
-
         $handler_pool = new \Pool($this->API->settings['threading']['handler_workers']);
-
         $this->ready = true;
-
         while ($this->API->run_workers) {
             try {
                 $this->API->datacenter->sockets[$this->current]->reading = true;
@@ -67,12 +65,12 @@ class SocketReader extends \Threaded implements \Collectable
 
     public $garbage = false;
 
-    public function setGarbage():void
+    public function setGarbage()
     {
         $this->garbage = true;
     }
 
-    public function isGarbage():bool
+    public function isGarbage()
     {
         return $this->garbage;
     }

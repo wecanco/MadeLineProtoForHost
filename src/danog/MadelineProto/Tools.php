@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -30,7 +30,7 @@ trait Tools
     {
         $resto = $a % $b;
 
-        return $resto < 0 ? ($resto + abs($b)) : $resto;
+        return $resto < 0 ? $resto + abs($b) : $resto;
     }
 
     public function array_cast_recursive($array, $force = false)
@@ -86,10 +86,10 @@ trait Tools
         if ($value > 9223372036854775807) {
             throw new TL\Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['value_bigger_than_9223372036854775807'], $value));
         }
-        if ($value < -9223372036854775808) {
+        if ($value < -9.223372036854776E+18) {
             throw new TL\Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['value_smaller_than_9223372036854775808'], $value));
         }
-        $res = \danog\MadelineProto\Logger::$bigint ? ($this->pack_signed_int($value)."\0\0\0\0") : (\danog\MadelineProto\Logger::$BIG_ENDIAN ? strrev(pack('q', $value)) : pack('q', $value));
+        $res = \danog\MadelineProto\Logger::$bigint ? $this->pack_signed_int($value)."\0\0\0\0" : (\danog\MadelineProto\Logger::$BIG_ENDIAN ? strrev(pack('q', $value)) : pack('q', $value));
 
         return $res;
     }

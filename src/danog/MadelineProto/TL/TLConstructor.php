@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -17,15 +18,14 @@ class TLConstructor
     use \danog\Serializable;
     use \danog\MadelineProto\Tools;
     use TLParams;
-
     public $by_id = [];
     public $by_predicate_and_layer = [];
     public $layers = [];
+
     //public $type = [];
     //public $params = [];
     //public $layer = [];
     //public $key = 0;
-
     public function __sleep()
     {
         return ['by_predicate_and_layer', 'by_id', 'layers'];
@@ -33,8 +33,8 @@ class TLConstructor
 
     public function add($json_dict, $scheme_type)
     {
-        $predicate = (string) ((($scheme_type === 'mtproto' && $json_dict['predicate'] === 'message') ? 'MT' : '').$json_dict['predicate']);
-        $this->by_id[$json_dict['id']] = ['predicate' => $predicate, 'params' => $json_dict['params'], 'type' => (($scheme_type === 'mtproto' && $json_dict['type'] === 'Message') ? 'MT' : '').$json_dict['type']];
+        $predicate = (string) (($scheme_type === 'mtproto' && $json_dict['predicate'] === 'message' ? 'MT' : '').$json_dict['predicate']);
+        $this->by_id[$json_dict['id']] = ['predicate' => $predicate, 'params' => $json_dict['params'], 'type' => ($scheme_type === 'mtproto' && $json_dict['type'] === 'Message' ? 'MT' : '').$json_dict['type']];
         if ($scheme_type === 'secret') {
             $this->by_id[$json_dict['id']]['layer'] = $json_dict['layer'];
             $this->layers[$json_dict['layer']] = $json_dict['layer'];
@@ -42,7 +42,7 @@ class TLConstructor
         } else {
             $json_dict['layer'] = '';
         }
-        $this->by_predicate_and_layer[$json_dict['predicate'].$json_dict['layer']] = $json_dict['id'];
+        $this->by_predicate_and_layer[$predicate.$json_dict['layer']] = $json_dict['id'];
         $this->parse_params($json_dict['id'], $scheme_type === 'mtproto');
     }
 

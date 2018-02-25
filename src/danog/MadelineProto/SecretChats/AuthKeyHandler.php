@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -68,7 +69,6 @@ trait AuthKeyHandler
         $this->temp_requested_secret_chats[$res['id']] = $a;
         $this->handle_pending_updates();
         $this->get_updates_difference();
-
         \danog\MadelineProto\Logger::log(['Secret chat '.$res['id'].' requested successfully!'], \danog\MadelineProto\Logger::NOTICE);
 
         return $res['id'];
@@ -154,7 +154,6 @@ trait AuthKeyHandler
         $this->check_G($params['g_a'], $dh_config['p']);
         $key = ['auth_key' => str_pad($params['g_a']->powMod($b, $dh_config['p'])->toBytes(), 256, chr(0), \STR_PAD_LEFT)];
         $key['fingerprint'] = substr(sha1($key['auth_key'], true), -8);
-
         $key['visualization_orig'] = $this->secret_chats[$chat]['key']['visualization_orig'];
         $key['visualization_46'] = substr(hash('sha256', $key['auth_key'], true), 20);
         $this->temp_rekeyed_secret_chats[$params['exchange_id']] = $key;
@@ -193,7 +192,6 @@ trait AuthKeyHandler
         $this->secret_chats[$chat]['key'] = $key;
         $this->secret_chats[$chat]['ttr'] = 100;
         $this->secret_chats[$chat]['updated'] = time();
-
         $this->handle_pending_updates();
         $this->get_updates_difference();
     }

@@ -1,6 +1,7 @@
 <?php
+
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -30,14 +31,12 @@ trait Constructors
             $data = $this->constructors->by_id[$id];
             if (isset($got[$id])) {
                 $data['layer'] = '';
-                var_dump($data);
             }
             $got[$id] = '';
-
             /*
-            if (preg_match('/%/', $type)) {
-                $type = $this->constructors->find_by_type(str_replace('%', '', $type))['predicate'];
-            }*/
+                        if (preg_match('/%/', $type)) {
+                            $type = $this->constructors->find_by_type(str_replace('%', '', $type))['predicate'];
+                        }*/
             $layer = isset($data['layer']) && $data['layer'] !== '' ? '_'.$data['layer'] : '';
             $type = str_replace(['.', '<', '>'], ['_', '_of_', ''], $data['type']);
             $php_type = preg_replace('/.*_of_/', '', $type);
@@ -59,10 +58,8 @@ trait Constructors
                     $param['type'] = 'DecryptedMessage';
                 }
                 $type_or_subtype = isset($param['subtype']) ? 'subtype' : 'type';
-                $type_or_bare_type = (ctype_upper($this->end(explode('.', $param[$type_or_subtype]))[0]) || in_array($param[$type_or_subtype], ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512'])) ? 'types' : 'constructors';
-
+                $type_or_bare_type = ctype_upper($this->end(explode('.', $param[$type_or_subtype]))[0]) || in_array($param[$type_or_subtype], ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512']) ? 'types' : 'constructors';
                 $param[$type_or_subtype] = str_replace(['.', 'true', 'false'], ['_', 'Bool', 'Bool'], $param[$type_or_subtype]);
-
                 if (preg_match('/%/', $param[$type_or_subtype])) {
                     $param[$type_or_subtype] = $this->constructors->find_by_type(str_replace('%', '', $param[$type_or_subtype]))['predicate'];
                 }
@@ -71,10 +68,10 @@ trait Constructors
                 }
                 $params .= "'".$param['name']."' => ";
                 $param[$type_or_subtype] = '['.$this->escape($param[$type_or_subtype]).'](../'.$type_or_bare_type.'/'.$param[$type_or_subtype].'.md)';
-                $params .= (isset($param['subtype']) ? '\['.$param[$type_or_subtype].'\]' : $param[$type_or_subtype]).', ';
+                $params .= (isset($param['subtype']) ? '\\['.$param[$type_or_subtype].'\\]' : $param[$type_or_subtype]).', ';
             }
-            $md_constructor = str_replace('_', '\_', $constructor.$layer);
-            $this->docs_constructors[$constructor] = '[$'.$md_constructor.'](../constructors/'.$php_constructor.$layer.'.md) = \['.$params.'\];<a name="'.$constructor.$layer.'"></a>  
+            $md_constructor = str_replace('_', '\\_', $constructor.$layer);
+            $this->docs_constructors[$constructor] = '[$'.$md_constructor.'](../constructors/'.$php_constructor.$layer.'.md) = \\['.$params.'\\];<a name="'.$constructor.$layer.'"></a>  
 
 ';
             $table = empty($data['params']) ? '' : '### Attributes:
@@ -105,25 +102,23 @@ trait Constructors
                 $ptype = str_replace('.', '_', $param[isset($param['subtype']) ? 'subtype' : 'type']);
                 //$type_or_bare_type = 'types';
                 /*if (isset($param['subtype'])) {
-                    if ($param['type'] === 'vector') {
-                        $type_or_bare_type = 'constructors';
-                    }
-                }*/
+                      if ($param['type'] === 'vector') {
+                          $type_or_bare_type = 'constructors';
+                      }
+                  }*/
                 if (preg_match('/%/', $ptype)) {
                     $ptype = $this->constructors->find_by_type(str_replace('%', '', $ptype))['predicate'];
                 }
-                $type_or_bare_type = ((ctype_upper($this->end(explode('_', $ptype))[0]) || in_array($ptype, ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512'])) && $ptype !== 'MTmessage') ? 'types' : 'constructors';
-
+                $type_or_bare_type = (ctype_upper($this->end(explode('_', $ptype))[0]) || in_array($ptype, ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int53', 'int', 'long', 'int128', 'int256', 'int512'])) && $ptype !== 'MTmessage' ? 'types' : 'constructors';
                 if (substr($ptype, -1) === '>') {
                     $ptype = substr($ptype, 0, -1);
                 }
-
                 switch ($ptype) {
                     case 'true':
                     case 'false':
                         $ptype = 'Bool';
                 }
-                $table .= '|'.str_replace('_', '\_', $param['name']).'|'.(isset($param['subtype']) ? 'Array of ' : '').'['.str_replace('_', '\_', $ptype).'](../'.$type_or_bare_type.'/'.$ptype.'.md) | '.(isset($param['pow']) ? 'Optional' : 'Yes').'|';
+                $table .= '|'.str_replace('_', '\\_', $param['name']).'|'.(isset($param['subtype']) ? 'Array of ' : '').'['.str_replace('_', '\\_', $ptype).'](../'.$type_or_bare_type.'/'.$ptype.'.md) | '.(isset($param['pow']) || $this->constructors->find_by_predicate(lcfirst($param['type']).'Empty') ? 'Optional' : 'Yes').'|';
                 if (isset($this->td_descriptions['constructors'][$data['predicate']]['params'][$param['name']])) {
                     $table .= $this->td_descriptions['constructors'][$data['predicate']]['params'][$param['name']].'|';
                 }
@@ -131,9 +126,9 @@ trait Constructors
                 $pptype = in_array($ptype, ['string', 'bytes']) ? "'".$ptype."'" : $ptype;
                 $ppptype = in_array($ptype, ['string', 'bytes']) ? '"'.$ptype.'"' : $ptype;
                 $params .= ", '".$param['name']."' => ";
-                $params .= (isset($param['subtype']) ? '['.$pptype.']' : $pptype);
+                $params .= isset($param['subtype']) ? '['.$pptype.']' : $pptype;
                 $lua_params .= ', '.$param['name'].'=';
-                $lua_params .= (isset($param['subtype']) ? '{'.$pptype.'}' : $pptype);
+                $lua_params .= isset($param['subtype']) ? '{'.$pptype.'}' : $pptype;
                 $pwr_params .= ', "'.$param['name'].'": '.(isset($param['subtype']) ? '['.$ppptype.']' : $ppptype);
                 if ($param['name'] === 'reply_markup') {
                     $hasreplymarkup = true;
@@ -142,12 +137,12 @@ trait Constructors
             $params = "['_' => '".$data['predicate']."'".$params.']';
             $lua_params = "{_='".$data['predicate']."'".$lua_params.'}';
             $pwr_params = '{"_": "'.$data['predicate'].'"'.$pwr_params.'}';
-            $description = isset($this->td_descriptions['constructors'][$data['predicate']]) ? $this->td_descriptions['constructors'][$data['predicate']]['description'] : ($constructor.' attributes, type and example');
+            $description = isset($this->td_descriptions['constructors'][$data['predicate']]) ? $this->td_descriptions['constructors'][$data['predicate']]['description'] : $constructor.' attributes, type and example';
             $header = '---
 title: '.$data['predicate'].'
 description: '.$description.'
 ---
-## Constructor: '.str_replace('_', '\_', $data['predicate'].$layer).'  
+## Constructor: '.str_replace('_', '\\_', $data['predicate'].$layer).'  
 [Back to constructors index](index.md)
 
 
@@ -160,7 +155,7 @@ description: '.$description.'
             if (isset($this->td_descriptions['constructors'][$data['predicate']])) {
                 $header .= $this->td_descriptions['constructors'][$data['predicate']]['description'].PHP_EOL.PHP_EOL;
             }
-            $type = '### Type: ['.str_replace('_', '\_', $php_type).'](../types/'.$php_type.'.md)
+            $type = '### Type: ['.str_replace('_', '\\_', $php_type).'](../types/'.$php_type.'.md)
 
 
 ';
@@ -189,7 +184,6 @@ Or, if you\'re into Lua:
 
 
 ';
-
                 if ($hasreplymarkup) {
                     $example .= '
 ## Usage of reply_markup
@@ -252,6 +246,7 @@ description: List of constructors
 ---
 # Constructors  
 [Back to API documentation index](..)
+
 '.implode('', $this->docs_constructors));
     }
 }
