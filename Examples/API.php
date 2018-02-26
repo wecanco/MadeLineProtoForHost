@@ -6,14 +6,17 @@
 	
 		
 	// برای یافت خطاها
+	
 	ini_set('display_errors', 0);
 	ini_set('display_startup_errors', 0);
-	error_reporting(E_ALL);
-	
+	error_reporting(E_NOTICE);
 	header('Content-Type: application/json');
 	if(isset($_REQUEST['method']) && isset($_REQUEST['parms']) && isset($_REQUEST['phone'])){
 		$ShowLog=false;
 		require_once('UserLogin.php'); 
+		ini_set('display_errors', 0);
+		ini_set('display_startup_errors', 0);
+		error_reporting(E_NOTICE);
 		$method = $_REQUEST['method'];
 		$key = $phones[0]['number'];
 		//$MadelineProto[$key]->settings['updates']['handle_updates'] = false;
@@ -56,6 +59,11 @@
 					}
 					$res = $MadelineProto[$key]->get_dialogs($bool);
 				break;
+				
+				case "getadminlog":
+					$res = $MadelineProto[$key]->channels->getAdminLog($parms);
+				break;
+				
 				
 				default:
 					$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);
