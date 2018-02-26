@@ -4,13 +4,21 @@
 		/Examples/API.php?phone=+989357973301&method=messages.getPeerDialogs&parms={"peers":["@WeCanGP"]}
 	*/
 	
+		
+	// برای یافت خطاها
+	ini_set('display_errors', 0);
+	ini_set('display_startup_errors', 0);
+	error_reporting(E_ALL);
+	
 	header('Content-Type: application/json');
 	if(isset($_REQUEST['method']) && isset($_REQUEST['parms']) && isset($_REQUEST['phone'])){
 		$ShowLog=false;
 		require_once('UserLogin.php'); 
 		$method = $_REQUEST['method'];
 		$key = $phones[0]['number'];
-		$MadelineProto[$key]->settings['updates']['handle_updates'] = false;
+		//$MadelineProto[$key]->settings['updates']['handle_updates'] = false;
+		//$MadelineProto[$key]->settings['updates']['fullfetch'] = false;
+		
 		$curdc = $MadelineProto[$key]->API->datacenter->curdc;
 		//$curdc = 4;
 		$parms = json_decode($_REQUEST['parms'],true);
@@ -20,6 +28,26 @@
 					$MadelineProto[$key]->settings['updates']['handle_updates'] = true;
 					$res = $MadelineProto[$key]->API->get_updates($parms);
 				break;
+				
+				case "get_full_info":
+					$res = $MadelineProto[$key]->get_full_info($parms['id']);
+				break;
+				
+				case "get_info":
+					$res = $MadelineProto[$key]->get_info($parms['id']);
+				break;
+				
+				
+				
+				case "get_pwr_chat":
+					$res = $MadelineProto[$key]->get_pwr_chat($parms['id'],$parms['fullfetch']);
+				break;
+				
+				case "getchannelmembers":
+					$res = $MadelineProto[$key]->get_pwr_chat('-1001049295266',true);
+				break;
+				
+				
 				
 				case "get_dialogs":
 					$bool = false;

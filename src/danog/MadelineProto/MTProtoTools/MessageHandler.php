@@ -72,7 +72,11 @@ trait MessageHandler
     {
         if ($this->datacenter->sockets[$datacenter]->must_open) {
             \danog\MadelineProto\Logger::log(['Trying to read from closed socket, sending initial ping']);
-            $this->method_call('ping', ['ping_id' => 0], ['datacenter' => $datacenter]);
+            if ($this->is_http($datacenter)) {
+                $this->method_call('http_wait', ['max_wait' => 500, 'wait_after' => 150, 'max_delay' => 500], ['datacenter' => $datacenter]);
+            } else {
+                $this->method_call('ping', ['ping_id' => 0], ['datacenter' => $datacenter]);
+            }
         }
         $payload = $this->datacenter->sockets[$datacenter]->read_message();
         if (strlen($payload) === 4) {
@@ -129,7 +133,6 @@ trait MessageHandler
             throw new \danog\MadelineProto\SecurityException('Got unknown auth_key id');
         }
         $deserialized = $this->deserialize($message_data, ['type' => '', 'datacenter' => $datacenter]);
-        //var_dump($deserialized);
         $this->datacenter->sockets[$datacenter]->incoming_messages[$message_id]['content'] = $deserialized;
         $this->datacenter->sockets[$datacenter]->incoming_messages[$message_id]['response'] = -1;
         $this->datacenter->sockets[$datacenter]->new_incoming[$message_id] = $message_id;
