@@ -16,7 +16,6 @@ namespace danog;
 
 class PrimeModule
 {
-    // 	Uses https://github.com/LonamiWebs/Telethon/blob/master/telethon/crypto/factorizator.py, thank you so freaking much!
     public static function native_single($what)
     {
         if (!is_int($what)) {
@@ -68,26 +67,14 @@ class PrimeModule
         return min($p, $g);
     }
 
-    private static function gcd($a, $b)
+    public static function native($what)
     {
-        if ($a == $b) {
-            return $a;
-        }
-        while ($b > 0) {
-            list($a, $b) = [$b, self::posmod($a, $b)];
+        $res = [self::native_single($what)];
+        while (array_product($res) !== $what) {
+            $res[] = self::native_single($what / array_product($res));
         }
 
-        return $a;
-    }
-
-    private static function posmod($a, $b)
-    {
-        $resto = $a % $b;
-        if ($resto < 0) {
-            $resto += abs($b);
-        }
-
-        return $resto;
+        return $res;
     }
 
     public static function python_single($what)
@@ -111,6 +98,19 @@ class PrimeModule
         return false;
     }
 
+    public static function python($what)
+    {
+        $res = [self::python_single($what)];
+        if ($res[0] === false) {
+            return false;
+        }
+        while (array_product($res) !== $what) {
+            $res[] = self::python_single($what / array_product($res));
+        }
+
+        return $res;
+    }
+
     public static function python_single_alt($what)
     {
         if (function_exists('shell_exec')) {
@@ -130,6 +130,19 @@ class PrimeModule
         }
 
         return false;
+    }
+
+    public static function python_alt($what)
+    {
+        $res = [self::python_single_alt($what)];
+        if ($res[0] === false) {
+            return false;
+        }
+        while (array_product($res) !== $what) {
+            $res[] = self::python_single_alt($what / array_product($res));
+        }
+
+        return $res;
     }
 
     public static function wolfram_single($what)
@@ -176,11 +189,11 @@ class PrimeModule
         return false;
     }
 
-    public static function native($what)
+    public static function wolfram($what)
     {
-        $res = [self::native_single($what)];
+        $res = [self::wolfram_single($what)];
         while (array_product($res) !== $what) {
-            $res[] = self::native_single($what / array_product($res));
+            $res[] = self::wolfram_single($what / array_product($res));
         }
 
         return $res;
@@ -191,6 +204,7 @@ class PrimeModule
         if (!extension_loaded('primemodule')) {
             return false;
         }
+
         try {
             return factorize($what);
         } catch (\Exception $e) {
@@ -211,27 +225,30 @@ class PrimeModule
         return $res;
     }
 
-    public static function python_alt($what)
+    public static function auto_single($what)
     {
-        $res = [self::python_single_alt($what)];
-        if ($res[0] === false) {
-            return false;
+        $res = self::native_single_cpp($what);
+        if ($res !== false) {
+            return $res;
         }
-        while (array_product($res) !== $what) {
-            $res[] = self::python_single_alt($what / array_product($res));
+        $res = self::python_single_alt($what);
+        if ($res !== false) {
+            return $res;
+        }
+        $res = self::python_single($what);
+        if ($res !== false) {
+            return $res;
+        }
+        $res = self::native_single((int) $what);
+        if ($res !== false) {
+            return $res;
+        }
+        $res = self::wolfram_single($what);
+        if ($res !== false) {
+            return $res;
         }
 
-        return $res;
-    }
-
-    public static function wolfram($what)
-    {
-        $res = [self::wolfram_single($what)];
-        while (array_product($res) !== $what) {
-            $res[] = self::wolfram_single($what / array_product($res));
-        }
-
-        return $res;
+        return false;
     }
 
     public static function auto($what)
@@ -260,30 +277,26 @@ class PrimeModule
         return false;
     }
 
-    public static function auto_single($what)
+    private static function gcd($a, $b)
     {
-        $res = self::native_single_cpp($what);
-        if ($res !== false) {
-            return $res;
+        if ($a == $b) {
+            return $a;
         }
-        $res = self::python_single_alt($what);
-        if ($res !== false) {
-            return $res;
-        }
-        $res = self::python_single($what);
-        if ($res !== false) {
-            return $res;
-        }
-        $res = self::native_single((int) $what);
-        if ($res !== false) {
-            return $res;
-        }
-        $res = self::wolfram_single($what);
-        if ($res !== false) {
-            return $res;
+        while ($b > 0) {
+            list($a, $b) = [$b, self::posmod($a, $b)];
         }
 
-        return false;
+        return $a;
+    }
+
+    private static function posmod($a, $b)
+    {
+        $resto = $a % $b;
+        if ($resto < 0) {
+            $resto += abs($b);
+        }
+
+        return $resto;
     }
 
     private function primesbelow($N)

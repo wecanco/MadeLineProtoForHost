@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "fed16571e907878977200fc09260107c",
+    "content-hash": "d4df783f219029a634512a5e6961fd03",
     "packages": [
         {
             "name": "danog/magicalserializer",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/danog/MagicalSerializer.git",
-                "reference": "fe4f6dc437d5b90c401d9148444fb0c39da28537"
+                "reference": "87b6ed05a86021e9364f31133089bb83980d5e24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danog/MagicalSerializer/zipball/fe4f6dc437d5b90c401d9148444fb0c39da28537",
-                "reference": "fe4f6dc437d5b90c401d9148444fb0c39da28537",
+                "url": "https://api.github.com/repos/danog/MagicalSerializer/zipball/87b6ed05a86021e9364f31133089bb83980d5e24",
+                "reference": "87b6ed05a86021e9364f31133089bb83980d5e24",
                 "shasum": ""
             },
             "type": "library",
@@ -28,7 +28,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "AGPLV3"
+                "AGPL-3.0-only"
             ],
             "authors": [
                 {
@@ -45,7 +45,7 @@
                 "threading",
                 "volatile"
             ],
-            "time": "2017-08-03T13:14:56+00:00"
+            "time": "2018-02-20T10:35:49+00:00"
         },
         {
             "name": "danog/primemodule",
@@ -53,12 +53,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/danog/PrimeModule.git",
-                "reference": "837ca7270c2e54bc2f185ddf799aca2213b008d8"
+                "reference": "091b8243d77b6d2e35445de50c3c280ba2f1e1ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danog/PrimeModule/zipball/837ca7270c2e54bc2f185ddf799aca2213b008d8",
-                "reference": "837ca7270c2e54bc2f185ddf799aca2213b008d8",
+                "url": "https://api.github.com/repos/danog/PrimeModule/zipball/091b8243d77b6d2e35445de50c3c280ba2f1e1ae",
+                "reference": "091b8243d77b6d2e35445de50c3c280ba2f1e1ae",
                 "shasum": ""
             },
             "suggest": {
@@ -81,7 +81,7 @@
                 }
             ],
             "description": "Prime module capable of doing prime factorization of huge numbers very quickly.\"",
-            "time": "2017-05-25T14:51:31+00:00"
+            "time": "2017-12-22T13:36:22+00:00"
         },
         {
             "name": "erusev/parsedown",
@@ -127,6 +127,84 @@
                 "parser"
             ],
             "time": "2017-11-14T20:44:03+00:00"
+        },
+        {
+            "name": "monolog/monolog",
+            "version": "1.23.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Seldaek/monolog.git",
+                "reference": "fd8c787753b3a2ad11bc60c063cff1358a32a3b4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/fd8c787753b3a2ad11bc60c063cff1358a32a3b4",
+                "reference": "fd8c787753b3a2ad11bc60c063cff1358a32a3b4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0",
+                "psr/log": "~1.0"
+            },
+            "provide": {
+                "psr/log-implementation": "1.0.0"
+            },
+            "require-dev": {
+                "aws/aws-sdk-php": "^2.4.9 || ^3.0",
+                "doctrine/couchdb": "~1.0@dev",
+                "graylog2/gelf-php": "~1.0",
+                "jakub-onderka/php-parallel-lint": "0.9",
+                "php-amqplib/php-amqplib": "~2.4",
+                "php-console/php-console": "^3.1.3",
+                "phpunit/phpunit": "~4.5",
+                "phpunit/phpunit-mock-objects": "2.3.0",
+                "ruflin/elastica": ">=0.90 <3.0",
+                "sentry/sentry": "^0.13",
+                "swiftmailer/swiftmailer": "^5.3|^6.0"
+            },
+            "suggest": {
+                "aws/aws-sdk-php": "Allow sending log messages to AWS services like DynamoDB",
+                "doctrine/couchdb": "Allow sending log messages to a CouchDB server",
+                "ext-amqp": "Allow sending log messages to an AMQP server (1.0+ required)",
+                "ext-mongo": "Allow sending log messages to a MongoDB server",
+                "graylog2/gelf-php": "Allow sending log messages to a GrayLog2 server",
+                "mongodb/mongodb": "Allow sending log messages to a MongoDB server via PHP Driver",
+                "php-amqplib/php-amqplib": "Allow sending log messages to an AMQP server using php-amqplib",
+                "php-console/php-console": "Allow sending log messages to Google Chrome",
+                "rollbar/rollbar": "Allow sending log messages to Rollbar",
+                "ruflin/elastica": "Allow sending log messages to an Elastic Search server",
+                "sentry/sentry": "Allow sending log messages to a Sentry server"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Monolog\\": "src/Monolog"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be",
+                    "homepage": "http://seld.be"
+                }
+            ],
+            "description": "Sends your logs to files, sockets, inboxes, databases and various web services",
+            "homepage": "http://github.com/Seldaek/monolog",
+            "keywords": [
+                "log",
+                "logging",
+                "psr-3"
+            ],
+            "time": "2017-06-19T01:22:40+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -244,12 +322,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "273ad17"
+                "reference": "27370df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/273ad17",
-                "reference": "273ad17",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/27370df",
+                "reference": "27370df",
                 "shasum": ""
             },
             "require": {
@@ -259,7 +337,7 @@
             },
             "require-dev": {
                 "phing/phing": "~2.7",
-                "phpunit/phpunit": "~4.0",
+                "phpunit/phpunit": "^4.8.35|^5.7|^6.0",
                 "sami/sami": "~2.0",
                 "squizlabs/php_codesniffer": "~2.0"
             },
@@ -330,7 +408,7 @@
                 "x.509",
                 "x509"
             ],
-            "time": "2017-11-29T11:31:09+00:00"
+            "time": "2018-02-24T03:41:14+00:00"
         },
         {
             "name": "psr/log",
@@ -381,20 +459,21 @@
         },
         {
             "name": "rollbar/rollbar",
-            "version": "v1.3.5",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rollbar/rollbar-php.git",
-                "reference": "d6f2efcb64d19af55d88174868c3066380c899e7"
+                "reference": "d8c725b8bbd62c761e2ca4ebd2204e555aba595a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rollbar/rollbar-php/zipball/d6f2efcb64d19af55d88174868c3066380c899e7",
-                "reference": "d6f2efcb64d19af55d88174868c3066380c899e7",
+                "url": "https://api.github.com/repos/rollbar/rollbar-php/zipball/d8c725b8bbd62c761e2ca4ebd2204e555aba595a",
+                "reference": "d8c725b8bbd62c761e2ca4ebd2204e555aba595a",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
+                "monolog/monolog": "*",
                 "psr/log": "^1.0.1"
             },
             "require-dev": {
@@ -436,7 +515,7 @@
                 "logging",
                 "monitoring"
             ],
-            "time": "2017-11-14T09:34:30+00:00"
+            "time": "2018-02-25T06:45:54+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
@@ -638,16 +717,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozart/assert.git",
-                "reference": "2db61e59ff05fe5126d152bd0655c9ea113e550f"
+                "reference": "0df1908962e7a3071564e857d86874dad1ef204a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/2db61e59ff05fe5126d152bd0655c9ea113e550f",
-                "reference": "2db61e59ff05fe5126d152bd0655c9ea113e550f",
+                "url": "https://api.github.com/repos/webmozart/assert/zipball/0df1908962e7a3071564e857d86874dad1ef204a",
+                "reference": "0df1908962e7a3071564e857d86874dad1ef204a",
                 "shasum": ""
             },
             "require": {
@@ -684,7 +763,7 @@
                 "check",
                 "validate"
             ],
-            "time": "2016-11-23T20:04:58+00:00"
+            "time": "2018-01-29T19:49:41+00:00"
         }
     ],
     "aliases": [],
@@ -692,7 +771,8 @@
     "stability-flags": {
         "danog/primemodule": 20,
         "danog/magicalserializer": 20,
-        "phpseclib/phpseclib": 20
+        "phpseclib/phpseclib": 20,
+        "rollbar/rollbar": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

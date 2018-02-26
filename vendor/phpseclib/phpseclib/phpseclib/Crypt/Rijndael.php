@@ -604,6 +604,7 @@ class Rijndael extends BlockCipher
     /**
      * Performs S-Box substitutions
      *
+     * @return array
      * @access private
      * @param int $word
      */
@@ -718,7 +719,7 @@ class Rijndael extends BlockCipher
      * @access private
      * @return array &$tables
      */
-    private function &getInvTables()
+    public function &getInvTables()
     {
         static $tables;
         if (empty($tables)) {

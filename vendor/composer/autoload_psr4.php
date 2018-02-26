@@ -12,5 +12,6 @@ return array(
     'Rollbar\\' => array($vendorDir . '/rollbar/rollbar/src'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'ParagonIE\\ConstantTime\\' => array($vendorDir . '/paragonie/constant_time_encoding/src'),
+    'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Dotenv\\' => array($vendorDir . '/vlucas/phpdotenv/src'),
 );

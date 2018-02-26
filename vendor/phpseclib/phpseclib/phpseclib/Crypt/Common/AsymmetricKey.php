@@ -180,6 +180,7 @@ abstract class AsymmetricKey
     /**
      * Tests engine validity
      *
+     * @return boolean
      * @access public
      * @param int $val
      */
@@ -254,14 +255,15 @@ abstract class AsymmetricKey
     /**
      * Load Plugins
      *
-     * @params $format
      * @access private
+     * @param $format
      */
     private static function loadPlugins($format)
     {
         if (!isset(self::$plugins[static::ALGORITHM][$format])) {
             self::$plugins[static::ALGORITHM][$format] = [];
-            foreach (glob(__DIR__ . '/../' . static::ALGORITHM . '/' . $format . '/*.php') as $file) {
+            foreach (new \DirectoryIterator(__DIR__ . '/../' . static::ALGORITHM . '/' . $format . '/') as $file) {
+                if ($file->getExtension() !== 'php') continue;
                 $name = pathinfo($file, PATHINFO_FILENAME);
                 $type = 'phpseclib\Crypt\\' . static::ALGORITHM . '\\' . $format . '\\' . $name;
                 self::$plugins[static::ALGORITHM][$format][strtolower($name)] = $type;
@@ -539,7 +541,7 @@ abstract class AsymmetricKey
      * @see self::createKey()
      * @see self::load()
      * @access public
-     * @param string $password
+     * @param string|boolean $password
      */
     public function setPassword($password = false)
     {

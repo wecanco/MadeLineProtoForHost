@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MagicalSerializer.
 MagicalSerializer is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -31,7 +31,9 @@ trait Serializable
 
             return;
         }
-        if (method_exists($this, '___construct')) {
+        if (method_exists($this, '__magic_construct')) {
+            $this->__magic_construct(...$params);
+        } elseif (method_exists($this, '___construct')) {
             $this->___construct(...$params);
         }
     }

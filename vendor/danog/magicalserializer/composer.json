@@ -2,7 +2,7 @@
     "name": "danog/magicalserializer",
     "description": "Serialize Volatile, Threaded or any other internal PHP class!",
     "type": "library",
-    "license": "AGPLV3",
+    "license": "AGPL-3.0-only",
     "homepage": "https://daniil.it/MagicalSerializer",
     "keywords": ["pthreads", "volatile", "serialize", "threading", "serializable"],
     "authors": [

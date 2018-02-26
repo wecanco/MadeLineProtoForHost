@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     '5255c38a0faeba867671b61dfda6d864' => $vendorDir . '/paragonie/random_compat/lib/random.php',
     'decc78cc4436b1292c6c0d151b19445c' => $vendorDir . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
+    'efa3b80c61fb35e374f529ec349af098' => $baseDir . '/src/BigIntegor.php',
     '7c6952916da927c1fa7fc73e564a99dc' => $baseDir . '/src/Socket.php',
     '9f641fdaff2d9330ca6de95bb6458e68' => $baseDir . '/src/Collectable.php',
     'f30e18abdb782bea448c5103598410f9' => $baseDir . '/src/Threaded.php',
@@ -15,5 +16,4 @@ return array(
     'ee8b9dc0d1b22a255490d056f08b1a94' => $baseDir . '/src/Thread.php',
     '8071b591748c33081e1801a04d20062f' => $baseDir . '/src/Worker.php',
     '3f836cae0440334cb5210fceace41b10' => $baseDir . '/src/Pool.php',
-    'efa3b80c61fb35e374f529ec349af098' => $baseDir . '/src/BigIntegor.php',
 );
