@@ -17,10 +17,16 @@
 	$GPListF = ".GroupsList";
 	$FaqF = ".faqs";
 	$RemindsF = ".reminds";
+	$CheckOnlineSitesFile = ".checkOnlineSites";
 	$InlineMode = false;
 	$Serialize = true;
 	$SentMSGs=[];
 	$Splitor = "|";
+	
+	
+	if(!file_exists($ACsListF)){
+		file_put_contents($ACsListF,"{}");
+	}
 	
 	
 	if(!file_exists($FaqF)){
@@ -33,13 +39,16 @@
 	if(!file_exists($RemindsF)){
 		file_put_contents($RemindsF,"{}");
 	}
+	if(!file_exists($CheckOnlineSitesFile)){
+		file_put_contents($CheckOnlineSitesFile,"{}");
+	}
 	
 	if(sizeof($phones) > 0){
 		if(file_exists($ACsListF)){
 			$phoneF = file_get_contents($ACsListF);
-			$phonesF = explode("\n",$phoneF);
+			$phonesF = json_decode($phoneF,true);
 			foreach($phonesF as $phone){
-				$phone = trim($phone);
+				$phone = trim($phone['number']);
 				if($phone != "" && trim($phones[0]['number']) != $phone){
 					$j = sizeof($phones);
 					$phones[$j]['number']= $phone;
@@ -67,15 +76,22 @@
 	
 	
 	while(true){
-		foreach($phones as $phone){
-			$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine ---------- $BreakLine";
-			$offset= -1;
+		foreach($phones as $pk => $phone){
+			if(!$phone['active']){
+				 continue;
+			}
+			
+			$offset= 0;
 			if(isset($phone['last_update_id'])){
-				$offset = $phone['last_update_id'] - 10;
+				$offset = ($phone['last_update_id']);
 			}else{
 				$phone['last_update_id'] = $offset;
 			}
-			
+
+			$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine offset:".$offset." $BreakLine ".$phone['last_update_id']." $BreakLine ---------- $BreakLine";
+
+			echo $tracee;
+
 			$ClearedPhone = str_replace(array("+","-","(",")"),"",$phone['number']);
 			$stopBotFile = "_stop_bot_".$ClearedPhone;
 			if(file_exists('_stop_bots')){
@@ -85,9 +101,7 @@
 				$phone['active'] = false;
 				$phone['current'] = false;
 			}
-			if(!$phone['active']){
-				 continue;
-			}
+			
 			
 			
 			$SentMSGsF = '.SentMSGs_'.$ClearedPhone;
@@ -108,7 +122,8 @@
 			if(sizeof($updates) > 0){
 				foreach($updates as $key => $val){
 					$update = $updates[$key];
-					$phone['last_update_id'] = intval($update['update_id']);
+					$phone['last_update_id'] = ($update['update_id']) + 1;
+					$phones[$pk]['last_update_id'] = $update['update_id'] + 1;
 					$UpType = $update['update']['_'];
 					if(($UpType != 'updateNewMessage' && 
 					$UpType != 'updateNewChannelMessage')){
@@ -135,10 +150,40 @@
 				}
 			}
 			
+			
+			$CheckOnlineSites = json_decode(file_get_contents($CheckOnlineSitesFile),true);
+			if(count($CheckOnlineSites) > 0){
+				foreach($CheckOnlineSites as $key => $site){
+					
+					if(checkOnline($site['url'])){ 
+						
+					}else{
+					
+						if( !isset($site['lastcheck']) ||
+							( (intval($site['lastcheck'] + (60 * 3))) < time() ) 
+							){
+							try{
+								$checkonlineText = "🚨 وبسایت ".$site['url']." دان شد! ";
+								$CheckOnlineSites[$key]['lastcheck'] = time();
+								file_put_contents($CheckOnlineSitesFile,json_encode($CheckOnlineSites));
+								
+								$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $site['chat_id'], 'message' => $checkonlineText, 'parse_mode' => 'HTML' ]);
+							}catch(Exception $e){
+							}
+						}
+						
+					}
+					
+				}
+			}
+			
+			
+			
 			if(sizeof($updates) > 0){
 			foreach($updates as $update){
 				$ExistCase = false;
-				$phone['last_update_id'] = $update['update_id'];
+				$phone['last_update_id'] = $update['update_id'] + 1;
+				$phones[$pk]['last_update_id'] = $update['update_id'] + 1;
 				echo $phone['last_update_id'].", ";
 				
 				$out=0;
@@ -222,7 +267,7 @@
 								continue;
 							}	
 							
-							if(!in_array($uniq,$SentMSGs[$phone['number']]) && $peer !=''){
+							if((!in_array($uniq,$SentMSGs[$phone['number']])) && ($peer !='') ){
 								$SentMSGs[$phone['number']][]=$uniq;
 								file_put_contents($SentMSGsF,implode("\n",$SentMSGs[$phone['number']]));
 								
@@ -977,6 +1022,7 @@ $trans
 			\danog\MadelineProto\Serialization::serialize($sessionFile, $MadelineProto[$phone['number']]);
 		}
 		file_put_contents($RemindsF,json_encode($Reminds));
+		file_put_contents($ACsListF,json_encode($phones));
 	}
 	
 }
