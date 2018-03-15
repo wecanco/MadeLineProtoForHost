@@ -88,9 +88,9 @@
 				$phone['last_update_id'] = $offset;
 			}
 
-			$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine offset:".$offset." $BreakLine ".$phone['last_update_id']." $BreakLine ---------- $BreakLine";
+			//$tracee = "$BreakLine اکانات: ".$phone['number']."$BreakLine وضعیت: ".$phone['active']."$BreakLine offset:".$offset." $BreakLine ".$phone['last_update_id']." $BreakLine ---------- $BreakLine";
 
-			echo $tracee;
+			//echo $tracee;
 
 			$ClearedPhone = str_replace(array("+","-","(",")"),"",$phone['number']);
 			$stopBotFile = "_stop_bot_".$ClearedPhone;
@@ -407,6 +407,23 @@ $trans
 										$ExistCase = true;
 										//if($from_id != "" && in_array($from_id,$Admins)){
 										$link = $messageTXT;
+										
+										if(isset($update['update']['message']['reply_to_msg_id'])){
+											$repID = $update['update']['message']['reply_to_msg_id'];
+											if(intval($peer) < 0){
+												$RepMessage = $MadelineProto[$phone['number']]->channels->getMessages(['channel' =>$peer , 'id' => [$repID] ]);
+											}else{
+												$RepMessage = $MadelineProto[$phone['number']]->messages->getMessages(['id' => [$repID] ]);
+											}
+											if(isset($RepMessage['messages'][0]['media'])){
+												$media = $RepMessage['messages'][0]['media'];
+												if(isset($media['photo'])){
+													$photo = $media['photo'];
+													$file_type='jpg';
+												}
+											}
+										}
+										
 										$file='temp/img_'.time().'.'.$file_type;
 										if($media ==""){
 											break;
@@ -444,6 +461,79 @@ $trans
 										//}
 									break;
 									
+									case "/profile2sticker":
+										$ExistCase = true;
+										$user_id = 0;
+										//if($from_id != "" && in_array($from_id,$Admins)){
+										$link = $messageTXT;
+										
+										if(isset($update['update']['message']['reply_to_msg_id'])){
+											$repID = $update['update']['message']['reply_to_msg_id'];
+											if(intval($peer) < 0){
+												$RepMessage = $MadelineProto[$phone['number']]->channels->getMessages(['channel' =>$peer , 'id' => [$repID] ]);
+											}else{
+												$RepMessage = $MadelineProto[$phone['number']]->messages->getMessages(['id' => [$repID] ]);
+											}
+											if(isset($RepMessage['messages'][0]['from_id'])){
+												$user_id =$RepMessage['messages'][0]['from_id'];
+											}
+										}
+										
+										if(intval($user_id)==0){
+											break;
+										}
+										
+										$parms['user_id'] =$user_id;
+										$parms['offset'] = 0;
+										$parms['max_id'] = 0;
+										$parms['limit'] = 1;
+										
+										$res = $MadelineProto[$phone['number']]->photos->getUserPhotos($parms);
+										$counter=0;
+										foreach($res['photos'] as $photo){
+											$id = $photo['id'];
+											$access_hash = $photo['access_hash'];
+											$counter++;
+											
+											if(isset($req[2])){
+												$peer = trim($req[2]);
+											}
+											
+											$file='temp/img_'.time().'.'.$file_type;
+											$res = $MadelineProto[$phone['number']]->download_to_file($photo, $file);
+											
+											$image=  imagecreatefromjpeg($file);
+											ob_start();
+											imagejpeg($image,NULL,100);
+											
+											$cont=  ob_get_contents();
+											ob_end_clean();
+											imagedestroy($image);
+											$content =  imagecreatefromstring($cont);
+											$stick = 'st_'.time().'.webp';
+											$fullPath = 'temp/'.$stick;
+											imagewebp($content,$fullPath);
+											imagedestroy($content);
+											
+											$inputFile = $MadelineProto[$phone['number']]->upload($fullPath);
+											$caption='';
+											$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($fullPath), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $stick]]];
+											
+											$p = ['peer' => $peer, 'media' => $inputMedia];
+											$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
+											unlink($file);
+											unlink($fullPath);
+										
+											break;
+										}
+										
+										
+										
+										
+										
+										//}
+									break;
+									
 									case "/attack":
 										$ExistCase = true;
 										if($from_id != "" && in_array($from_id,$Admins)){
@@ -472,6 +562,9 @@ $trans
 										$ExistCase = true;
 										$site = $messageTXT;
 										$site = explode($Splitor,$site.$Splitor);
+										if(!isset($site[1])){
+											break;
+										}
 										$type=strtolower(trim($site[1]));
 										if($type==""){
 											$type="desktop";
@@ -481,7 +574,7 @@ $trans
 										$sitename = parse_url($site);
 										$sitename = $sitename['host'];
 										$site = urlencode($site);
-										$url ="https://www.googleapis.com/pagespeedonline/v3beta1/optimizeContents?key=AIzaSyAwlPiPJIkTejgqqH01v9DmtPoPeOPXDUQ&url=".$site."%2F&strategy=".$type."=&rule=AvoidLandingPageRedirects&rule=EnableGzipCompression&rule=LeverageBrowserCaching&rule=MainResourceServerResponseTime&rule=MinifyCss&rule=MinifyHTML&rule=MinifyJavaScript&rule=MinimizeRenderBlockingResources&rule=OptimizeImages&rule=PrioritizeVisibleContent&rule=AvoidPlugins&rule=ConfigureViewport&rule=SizeContentToViewport&rule=SizeTapTargetsAppropriately&rule=UseLegibleFontSizes";
+										$url ="https://www.googleapis.com/pagespeedonline/v3beta1/optimizeContents?key=AIzaSyDFZQFiY2afLjK6TpoDR_iXIY7Cv4VYaLY&url=".$site."%2F&strategy=".$type."&rule=AvoidLandingPageRedirects&rule=EnableGzipCompression&rule=LeverageBrowserCaching&rule=MainResourceServerResponseTime&rule=MinifyCss&rule=MinifyHTML&rule=MinifyJavaScript&rule=MinimizeRenderBlockingResources&rule=OptimizeImages&rule=PrioritizeVisibleContent&rule=AvoidPlugins&rule=ConfigureViewport&rule=SizeContentToViewport&rule=SizeTapTargetsAppropriately&rule=UseLegibleFontSizes";
 										
 										$dir="temp/";
 										$fileName=$sitename."_".$type."_".time().".zip";
@@ -620,6 +713,9 @@ $trans
 										$ExistCase = true;
 										$web = $messageTXT;
 										$web = explode($Splitor,$web.$Splitor);
+										if(!isset($web[1])){
+											break;
+										}
 										$name = trim($web[1]);
 										$web= trim($web[0]);
 										if($web !=""){
