@@ -53,12 +53,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/danog/PrimeModule.git",
-                "reference": "091b8243d77b6d2e35445de50c3c280ba2f1e1ae"
+                "reference": "a18918c4092d6d8696521b05a59a3cdb5cdc061e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/danog/PrimeModule/zipball/091b8243d77b6d2e35445de50c3c280ba2f1e1ae",
-                "reference": "091b8243d77b6d2e35445de50c3c280ba2f1e1ae",
+                "url": "https://api.github.com/repos/danog/PrimeModule/zipball/a18918c4092d6d8696521b05a59a3cdb5cdc061e",
+                "reference": "a18918c4092d6d8696521b05a59a3cdb5cdc061e",
                 "shasum": ""
             },
             "suggest": {
@@ -72,7 +72,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "AGLPV3"
+                "AGPL-3.0-only"
             ],
             "authors": [
                 {
@@ -81,23 +81,24 @@
                 }
             ],
             "description": "Prime module capable of doing prime factorization of huge numbers very quickly.\"",
-            "time": "2017-12-22T13:36:22+00:00"
+            "time": "2018-03-21T10:47:51+00:00"
         },
         {
             "name": "erusev/parsedown",
-            "version": "1.6.4",
+            "version": "1.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/erusev/parsedown.git",
-                "reference": "fbe3fe878f4fe69048bb8a52783a09802004f548"
+                "reference": "92e9c27ba0e74b8b028b111d1b6f956a15c01fc1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/erusev/parsedown/zipball/fbe3fe878f4fe69048bb8a52783a09802004f548",
-                "reference": "fbe3fe878f4fe69048bb8a52783a09802004f548",
+                "url": "https://api.github.com/repos/erusev/parsedown/zipball/92e9c27ba0e74b8b028b111d1b6f956a15c01fc1",
+                "reference": "92e9c27ba0e74b8b028b111d1b6f956a15c01fc1",
                 "shasum": ""
             },
             "require": {
+                "ext-mbstring": "*",
                 "php": ">=5.3.0"
             },
             "require-dev": {
@@ -126,7 +127,7 @@
                 "markdown",
                 "parser"
             ],
-            "time": "2017-11-14T20:44:03+00:00"
+            "time": "2018-03-08T01:11:30+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -208,24 +209,25 @@
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "d96e63b79a7135a65659ba5b1cb02826172bfedd"
+                "reference": "6111a38faf6fdebc14e36652d22036f379ba58d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/d96e63b79a7135a65659ba5b1cb02826172bfedd",
-                "reference": "d96e63b79a7135a65659ba5b1cb02826172bfedd",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/6111a38faf6fdebc14e36652d22036f379ba58d3",
+                "reference": "6111a38faf6fdebc14e36652d22036f379ba58d3",
                 "shasum": ""
             },
             "require": {
                 "php": "^5.3|^7"
             },
             "require-dev": {
-                "paragonie/random_compat": "^1.4|^2.0",
-                "phpunit/phpunit": "4.*|5.*"
+                "paragonie/random_compat": "^1|^2",
+                "phpunit/phpunit": "4.*|5.*",
+                "vimeo/psalm": "^1"
             },
             "type": "library",
             "autoload": {
@@ -266,7 +268,7 @@
                 "hex2bin",
                 "rfc4648"
             ],
-            "time": "2016-06-13T01:00:24+00:00"
+            "time": "2018-03-10T19:46:06+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -463,23 +465,23 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/rollbar/rollbar-php.git",
-                "reference": "d8c725b8bbd62c761e2ca4ebd2204e555aba595a"
+                "reference": "335aecc86d5ba7bf3d5bb998e2f9f1b23936f13c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rollbar/rollbar-php/zipball/d8c725b8bbd62c761e2ca4ebd2204e555aba595a",
-                "reference": "d8c725b8bbd62c761e2ca4ebd2204e555aba595a",
+                "url": "https://api.github.com/repos/rollbar/rollbar-php/zipball/335aecc86d5ba7bf3d5bb998e2f9f1b23936f13c",
+                "reference": "335aecc86d5ba7bf3d5bb998e2f9f1b23936f13c",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
-                "monolog/monolog": "*",
+                "monolog/monolog": "^1.23",
                 "psr/log": "^1.0.1"
             },
             "require-dev": {
                 "codeclimate/php-test-reporter": "dev-master",
                 "mockery/mockery": "0.9.*",
-                "monolog/monolog": "^1.12.0",
+                "monolog/monolog": "^1.23",
                 "packfire/php5.3-compat": "*",
                 "phpmd/phpmd": "@stable",
                 "phpunit/phpunit": "4.8.*",
@@ -515,7 +517,7 @@
                 "logging",
                 "monitoring"
             ],
-            "time": "2018-02-25T06:45:54+00:00"
+            "time": "2018-03-24T02:29:06+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

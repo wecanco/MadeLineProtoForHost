@@ -94,8 +94,8 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
             ),
             'danog\\' => 
             array (
-                0 => __DIR__ . '/..' . '/danog/primemodule/lib',
-                1 => __DIR__ . '/..' . '/danog/magicalserializer/src',
+                0 => __DIR__ . '/..' . '/danog/magicalserializer/src',
+                1 => __DIR__ . '/..' . '/danog/primemodule/lib',
             ),
         ),
         'P' => 

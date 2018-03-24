@@ -110,6 +110,7 @@ fclose($tg);
 foreach ($medium as $type => $total) {
     echo $type.': total time '.$total.', medium time '.($total / $tot).PHP_EOL;
 }
+
 echo PHP_EOL.'------------------- SMALL MULTIPLE FACTOR TESTS -------------------'.PHP_EOL;
 $GLOBALS['medium'] = ['python' => 0, 'python_alt' => 0, 'wolfram' => 0, 'native' => 0, 'native_cpp' => 0];
 

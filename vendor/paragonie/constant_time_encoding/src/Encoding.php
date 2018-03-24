@@ -2,7 +2,7 @@
 namespace ParagonIE\ConstantTime;
 
 /**
- *  Copyright (c) 2016 Paragon Initiative Enterprises.
+ *  Copyright (c) 2016 - 2017 Paragon Initiative Enterprises.
  *  Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,8 +33,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 encoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32Encode($str)
     {
@@ -44,8 +45,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 encoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32EncodeUpper($str)
     {
@@ -55,8 +57,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 decoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32Decode($str)
     {
@@ -66,8 +69,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 decoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32DecodeUpper($str)
     {
@@ -77,8 +81,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 encoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32HexEncode($str)
     {
@@ -89,8 +94,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 encoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32HexEncodeUpper($str)
     {
@@ -100,8 +106,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 decoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32HexDecode($str)
     {
@@ -111,8 +118,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 decoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base32HexDecodeUpper($str)
     {
@@ -122,8 +130,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base64 encoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base64Encode($str)
     {
@@ -133,8 +142,9 @@ abstract class Encoding
     /**
      * RFC 4648 Base32 decoding
      *
-     * @param $str
+     * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public static function base64Decode($str)
     {
@@ -145,8 +155,9 @@ abstract class Encoding
      * Encode into Base64
      *
      * Base64 character set "./[A-Z][a-z][0-9]"
-     * @param $src
+     * @param string $src
      * @return string
+     * @throws \TypeError
      */
     public static function base64EncodeDotSlash($src)
     {
@@ -158,9 +169,10 @@ abstract class Encoding
      *
      * Base64 character set "./[A-Z][a-z][0-9]"
      *
-     * @param $src
-     * @return bool|string
+     * @param string $src
+     * @return string
      * @throws \RangeException
+     * @throws \TypeError
      */
     public static function base64DecodeDotSlash($src)
     {
@@ -171,8 +183,9 @@ abstract class Encoding
      * Encode into Base64
      *
      * Base64 character set "[.-9][A-Z][a-z]" or "./[0-9][A-Z][a-z]"
-     * @param $src
+     * @param string $src
      * @return string
+     * @throws \TypeError
      */
     public static function base64EncodeDotSlashOrdered($src)
     {
@@ -184,9 +197,10 @@ abstract class Encoding
      *
      * Base64 character set "[.-9][A-Z][a-z]" or "./[0-9][A-Z][a-z]"
      *
-     * @param $src
-     * @return bool|string
+     * @param string $src
+     * @return string
      * @throws \RangeException
+     * @throws \TypeError
      */
     public static function base64DecodeDotSlashOrdered($src)
     {
@@ -199,6 +213,7 @@ abstract class Encoding
      *
      * @param string $bin_string (raw binary)
      * @return string
+     * @throws \TypeError
      */
     public static function hexEncode($bin_string)
     {
@@ -224,6 +239,7 @@ abstract class Encoding
      *
      * @param string $bin_string (raw binary)
      * @return string
+     * @throws \TypeError
      */
     public static function hexEncodeUpper($bin_string)
     {

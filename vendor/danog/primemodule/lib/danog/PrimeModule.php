@@ -1,7 +1,7 @@
 <?php
 
 /*
-opyright 2016-2017 Daniil Gentili
+Copyright 2016-2018 Daniil Gentili
 (https://daniil.it)
 This file is part of MadelineProto.
 MadelineProto is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -80,9 +80,14 @@ class PrimeModule
     public static function python_single($what)
     {
         if (function_exists('shell_exec')) {
-            $res = shell_exec('timeout 10 python '.__DIR__.'/prime.py '.$what);
-            if ($res == '' || is_null($res)) {
-                return false;
+            $res = trim(shell_exec('timeout 10 python '.__DIR__.'/prime.py '.$what.' 2>&1'));
+            if ($res == '' || is_null($res) || !is_numeric($res)) {
+                copy(__DIR__.'/prime.py', getcwd().'/.prime.py');
+                $res = trim(shell_exec('timeout 10 python '.getcwd().'/.prime.py '.$what.' 2>&1'));
+                unlink(getcwd().'/.prime.py');
+                if ($res == '' || is_null($res) || !is_numeric($res)) {
+                    return false;
+                }
             }
             $newval = intval($res);
             if (is_int($newval)) {
@@ -114,9 +119,14 @@ class PrimeModule
     public static function python_single_alt($what)
     {
         if (function_exists('shell_exec')) {
-            $res = shell_exec('python '.__DIR__.'/alt_prime.py '.$what);
-            if ($res == '' || is_null($res)) {
-                return false;
+            $res = trim(shell_exec('python '.__DIR__.'/alt_prime.py '.$what.' 2>&1'));
+            if ($res == '' || is_null($res) || !is_numeric($res)) {
+                copy(__DIR__.'/alt_prime.py', getcwd().'/.alt_prime.py');
+                $res = trim(shell_exec('python '.getcwd().'/.alt_prime.py '.$what.' 2>&1'));
+                unlink(getcwd().'/.alt_prime.py');
+                if ($res == '' || is_null($res) || !is_numeric($res)) {
+                    return false;
+                }
             }
             $newval = intval($res);
             if (is_int($newval)) {
@@ -215,11 +225,14 @@ class PrimeModule
     public static function native_cpp($what)
     {
         $res = [self::native_single_cpp($what)];
-        if ($res[0] === false) {
+        if ($res[0] == false) {
             return false;
         }
-        while (array_product($res) !== $what) {
-            $res[] = self::native_single_cpp($what / array_product($res));
+        while (($product = array_product($res)) !== $what) {
+            if ($product == 0) {
+                return false;
+            }
+            $res[] = self::native_single_cpp($what / $product);
         }
 
         return $res;

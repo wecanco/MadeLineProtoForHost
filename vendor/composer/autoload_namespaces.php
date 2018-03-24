@@ -7,6 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'danog\\MadelineProto\\' => array($baseDir . '/src'),
-    'danog\\' => array($vendorDir . '/danog/primemodule/lib', $vendorDir . '/danog/magicalserializer/src'),
+    'danog\\' => array($vendorDir . '/danog/magicalserializer/src', $vendorDir . '/danog/primemodule/lib'),
     'Parsedown' => array($vendorDir . '/erusev/parsedown'),
 );

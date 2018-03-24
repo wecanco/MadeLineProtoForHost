@@ -2,7 +2,7 @@
 namespace ParagonIE\ConstantTime;
 
 /**
- *  Copyright (c) 2016 Paragon Initiative Enterprises.
+ *  Copyright (c) 2016 - 2017 Paragon Initiative Enterprises.
  *  Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,6 +40,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base64Encode($str)
     {
@@ -53,6 +54,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base64Decode($str)
     {
@@ -66,6 +68,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base64UrlSafeEncode($str)
     {
@@ -79,6 +82,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base64UrlSafeDecode($str)
     {
@@ -92,6 +96,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base32Encode($str)
     {
@@ -105,6 +110,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base32Decode($str)
     {
@@ -118,6 +124,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base32HexEncode($str)
     {
@@ -131,6 +138,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base32HexDecode($str)
     {
@@ -144,6 +152,7 @@ abstract class RFC4648
      *
      * @param string $str
      * @return string
+     * @throws \TypeError
      */
     public function base16Encode($str)
     {
