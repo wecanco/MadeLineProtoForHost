@@ -16,34 +16,36 @@ namespace danog\MadelineProto;
 class API extends APIFactory
 {
     use \danog\Serializable;
+    use \danog\MadelineProto\Wrappers\ApiStart;
+    use \danog\MadelineProto\Wrappers\ApiTemplates;
     public $session;
     public $serialized = 0;
+    public $API;
+    public $getting_api_id = false;
+    public $my_telegram_org_wrapper;
 
-    public function __magic_construct($params = [])
+    public function __magic_construct($params = [], $settings = [])
     {
         set_error_handler(['\\danog\\MadelineProto\\Exception', 'ExceptionErrorHandler']);
-        set_exception_handler(['\\danog\\MadelineProto\\Serialization', 'serialize_all']);
         if (is_string($params)) {
             $realpaths = Serialization::realpaths($params);
+            $this->session = $realpaths['file'];
+
             if (file_exists($realpaths['file'])) {
-                $this->session = $realpaths['file'];
                 if (!file_exists($realpaths['lockfile'])) {
                     touch($realpaths['lockfile']);
                     clearstatcache();
                 }
                 $realpaths['lockfile'] = fopen($realpaths['lockfile'], 'r');
-                \danog\MadelineProto\Logger::log(['Waiting for shared lock of serialization lockfile...']);
+                \danog\MadelineProto\Logger::log('Waiting for shared lock of serialization lockfile...');
                 flock($realpaths['lockfile'], LOCK_SH);
+                \danog\MadelineProto\Logger::log('Shared lock acquired, deserializing...');
 
                 try {
-                    $unserialized = file_get_contents($realpaths['file']);
+                    $tounserialize = file_get_contents($realpaths['file']);
                 } finally {
                     flock($realpaths['lockfile'], LOCK_UN);
                     fclose($realpaths['lockfile']);
-                }
-                $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $unserialized);
-                foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
-                    class_exists('\\danog\\MadelineProto\\'.$class);
                 }
                 class_exists('\\Volatile');
                 \danog\MadelineProto\Logger::class_exists();
@@ -51,61 +53,72 @@ class API extends APIFactory
                 try {
                     $unserialized = unserialize($tounserialize);
                 } catch (\danog\MadelineProto\Bug74586Exception $e) {
+                    $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $tounserialize);
+                    foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
+                        class_exists('\\danog\\MadelineProto\\'.$class);
+                    }
                     $unserialized = \danog\Serialization::unserialize($tounserialize);
                 } catch (\danog\MadelineProto\Exception $e) {
-                    Logger::log([(string) $e], Logger::ERROR);
+                    $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $tounserialize);
+                    foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
+                        class_exists('\\danog\\MadelineProto\\'.$class);
+                    }
+                    Logger::log((string) $e, Logger::ERROR);
                     if (strpos($e->getMessage(), "Erroneous data format for unserializing 'phpseclib\\Math\\BigInteger'") === 0) {
-                        $tounserialize = str_replace('phpseclib\\Math\\BigInteger', 'phpseclib\\Math\\BigIntegor', $unserialized);
+                        $tounserialize = str_replace('phpseclib\\Math\\BigInteger', 'phpseclib\\Math\\BigIntegor', $tounserialize);
                     }
                     $unserialized = \danog\Serialization::unserialize($tounserialize);
                 }
                 if ($unserialized instanceof \danog\PlaceHolder) {
                     $unserialized = \danog\Serialization::unserialize($tounserialize);
                 }
-            } else {
-                throw new Exception(\danog\MadelineProto\Lang::$current_lang['file_not_exist']);
-            }
-            if ($unserialized === false) {
-                throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialization_error']);
-            }
-            if (isset($unserialized->API)) {
-                $this->API = $unserialized->API;
-                $this->APIFactory();
-            }
+                if ($unserialized === false) {
+                    throw new Exception(\danog\MadelineProto\Lang::$current_lang['deserialization_error']);
+                }
+                $this->web_api_template = $unserialized->web_api_template;
+                $this->my_telegram_org_wrapper = $unserialized->my_telegram_org_wrapper;
+                $this->getting_api_id = $unserialized->getting_api_id;
 
-            return;
+                if (isset($unserialized->API)) {
+                    $this->API = $unserialized->API;
+                    $this->APIFactory();
+
+                    return;
+                }
+            }
+            $params = $settings;
+        }
+        if (!isset($params['app_info']['api_id']) || !$params['app_info']['api_id']) {
+            $app = $this->api_start();
+            $params['app_info']['api_id'] = $app['api_id'];
+            $params['app_info']['api_hash'] = $app['api_hash'];
         }
         $this->API = new MTProto($params);
-        \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['apifactory_start']], Logger::VERBOSE);
+        \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['apifactory_start'], Logger::VERBOSE);
         $this->APIFactory();
-        \danog\MadelineProto\Logger::log(['Ping...'], Logger::ULTRA_VERBOSE);
+        \danog\MadelineProto\Logger::log('Ping...', Logger::ULTRA_VERBOSE);
         $pong = $this->ping(['ping_id' => 3]);
-        \danog\MadelineProto\Logger::log(['Pong: '.$pong['ping_id']], Logger::ULTRA_VERBOSE);
-        //\danog\MadelineProto\Logger::log(['Getting future salts...'], Logger::ULTRA_VERBOSE);
-        //$this->future_salts = $this->get_future_salts(['num' => 3]);
-        \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['madelineproto_ready']], Logger::NOTICE);
+        \danog\MadelineProto\Logger::log('Pong: '.$pong['ping_id'], Logger::ULTRA_VERBOSE);
+        \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['madelineproto_ready'], Logger::NOTICE);
     }
 
     public function __wakeup()
     {
-        //if (method_exists($this->API, 'wakeup')) $this->API = $this->API->wakeup();
         $this->APIFactory();
     }
 
     public function __destruct()
     {
-        if (\danog\MadelineProto\Logger::$has_thread && is_object(\Thread::getCurrentThread())) {
+        if (\danog\MadelineProto\Logger::$has_thread && is_object(\Thread::getCurrentThread()) || Logger::is_fork()) {
             return;
         }
-        if (!is_null($this->session)) {
-            $this->serialize($this->session);
-        }
+        $this->serialize();
         restore_error_handler();
     }
 
     public function __sleep()
     {
-        return ['API'];
+        return ['API', 'web_api_template', 'getting_api_id', 'my_telegram_org_wrapper'];
     }
 
     public function &__get($name)
@@ -122,7 +135,16 @@ class API extends APIFactory
     public function __set($name, $value)
     {
         if ($name === 'settings') {
-            return $this->API->__construct($value);
+            if (Logger::is_fork() && !Logger::$processed_fork) {
+                \danog\MadelineProto\Logger::log('Detected fork');
+                $this->API->reset_session();
+                foreach ($this->API->datacenter->sockets as $datacenter) {
+                    $datacenter->close_and_reopen();
+                }
+                Logger::$processed_fork = true;
+            }
+
+            return $this->API->__construct(array_replace_recursive($this->API->settings, $value));
         }
 
         return $this->API->storage[$name] = $value;
@@ -140,8 +162,11 @@ class API extends APIFactory
 
     public function APIFactory()
     {
-        foreach ($this->API->get_method_namespaces() as $namespace) {
-            $this->{$namespace} = new APIFactory($namespace, $this->API);
+        if ($this->API) {
+            foreach ($this->API->get_method_namespaces() as $namespace) {
+                $this->{$namespace} = new APIFactory($namespace, $this->API);
+            }
+            $this->API->wrapper = $this;
         }
     }
 
@@ -150,7 +175,10 @@ class API extends APIFactory
         if ($params === '') {
             $params = $this->session;
         }
-        Logger::log([\danog\MadelineProto\Lang::$current_lang['serializing_madelineproto']]);
+        Logger::log(\danog\MadelineProto\Lang::$current_lang['serializing_madelineproto']);
+        if (is_null($this->session)) {
+            return;
+        }
 
         return Serialization::serialize($params, $this);
     }

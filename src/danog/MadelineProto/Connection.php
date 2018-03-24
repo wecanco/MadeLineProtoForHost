@@ -47,7 +47,8 @@ class Connection
     public $object_queue = [];
     public $ack_queue = [];
     public $i = [];
-    public $must_open = false;
+    public $must_open = true;
+    public $last_recv = 0;
 
     public function __magic_construct($proxy, $extra, $ip, $port, $protocol, $timeout, $ipv6)
     {
@@ -151,8 +152,17 @@ class Connection
                     $proxy = '\\FSocket';
                 }
                 $this->sock = new $proxy($ipv6 ? \AF_INET6 : \AF_INET, \SOCK_STREAM, strpos($this->protocol, 'https') === 0 ? PHP_INT_MAX : getprotobyname('tcp'));
-                if ($has_proxy && $this->extra !== []) {
-                    $this->sock->setExtra($this->extra);
+                if ($has_proxy) {
+                    if ($this->extra !== []) {
+                        $this->sock->setExtra($this->extra);
+                    }/*
+                    if ($this->protocol === 'http') {
+                        $this->parsed['path'] = $this->parsed['scheme'].'://'.$this->parsed['host'].
+                        $this->parsed['path'];
+                        $port = 80;
+                    } elseif ($this->protocol === 'https') {
+                        $port = 443;
+                    }*/
                 }
                 $this->sock->setOption(\SOL_SOCKET, \SO_RCVTIMEO, $timeout);
                 $this->sock->setOption(\SOL_SOCKET, \SO_SNDTIMEO, $timeout);
@@ -165,7 +175,6 @@ class Connection
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
-                break;
         }
     }
 
@@ -187,13 +196,13 @@ class Connection
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
-                break;
         }
     }
 
     public function close_and_reopen()
     {
         $this->__destruct();
+        \danog\MadelineProto\Logger::log('Reopening...', \danog\MadelineProto\Logger::ULTRA_VERBOSE);
         $this->must_open = true;
     }
 
@@ -209,15 +218,10 @@ class Connection
             throw new Bug74586Exception();
         }
         $this->time_delta = 0;
-        //$this->__construct($this->proxy, $this->extra, $this->ip, $this->port, $this->protocol, $this->timeout, $this->ipv6);
     }
 
     public function write($what, $length = null)
     {
-        if ($this->must_open) {
-            $this->__construct($this->proxy, $this->extra, $this->ip, $this->port, $this->protocol, $this->timeout, $this->ipv6);
-            $this->must_open = false;
-        }
         if ($length !== null) {
             $what = substr($what, 0, $length);
         } else {
@@ -238,18 +242,16 @@ class Connection
                 }
 
                 return $wrote;
-                break;
             case 'udp':
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
-                break;
             default:
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
-                break;
         }
     }
 
     public function read($length)
     {
+        //\danog\MadelineProto\Logger::log("Asked to read $length", \danog\MadelineProto\Logger::ULTRA_VERBOSE);
         switch ($this->protocol) {
             case 'obfuscated2':
                 $packet = '';
@@ -258,11 +260,6 @@ class Connection
                     if ($packet === false || strlen($packet) === 0) {
                         throw new \danog\MadelineProto\NothingInTheSocketException(\danog\MadelineProto\Lang::$current_lang['nothing_in_socket']);
                     }
-                }
-                if (strlen($packet) !== $length) {
-                    $this->close_and_reopen();
-
-                    throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['wrong_length_read'], $length, strlen($packet)));
                 }
 
                 return @$this->obfuscated['decryption']->encrypt($packet);
@@ -278,18 +275,12 @@ class Connection
                         throw new \danog\MadelineProto\NothingInTheSocketException(\danog\MadelineProto\Lang::$current_lang['nothing_in_socket']);
                     }
                 }
-                if (strlen($packet) !== $length) {
-                    $this->close_and_reopen();
-
-                    throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['wrong_length_read'], $length, strlen($packet)));
-                }
 
                 return $packet;
             case 'udp':
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
-                break;
         }
     }
 
@@ -321,9 +312,10 @@ class Connection
             case 'https':
                 $response = $this->read_http_payload();
                 if ($response['code'] !== 200) {
-                    Logger::log([$response['body']]);
+                    Logger::log($response['body']);
 
-                    throw new Exception($response['description'], $response['code']);
+                    return $this->pack_signed_int(-$response['code']);
+                    //throw new Exception($response['description'], $response['code']);
                 }
                 $close = $response['protocol'] === 'HTTP/1.0';
                 if (isset($response['headers']['connection'])) {
@@ -336,11 +328,17 @@ class Connection
                 return $response['body'];
             case 'udp':
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
+            default:
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
         }
     }
 
     public function send_message($message)
     {
+        if ($this->must_open) {
+            $this->__construct($this->proxy, $this->extra, $this->ip, $this->port, $this->protocol, $this->timeout, $this->ipv6);
+            $this->must_open = false;
+        }
         switch ($this->protocol) {
             case 'tcp_full':
                 $this->out_seq_no++;
@@ -363,12 +361,12 @@ class Connection
                 break;
             case 'http':
             case 'https':
-                $this->write('POST '.$this->parsed['path']." HTTP/1.1\r\nHost: ".$this->parsed['host'].':'.$this->port."\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: keep-alive\r\nKeep-Alive: timeout=100000, max=10000000\r\nContent-Length: ".strlen($message)."\r\n\r\n".$message);
+                $this->write('POST '.$this->parsed['path']." HTTP/1.1\r\nHost: ".$this->parsed['host'].':'.$this->port."\r\n".$this->sock->getProxyHeaders()."Content-Type: application/x-www-form-urlencoded\r\nConnection: keep-alive\r\nKeep-Alive: timeout=100000, max=10000000\r\nContent-Length: ".strlen($message)."\r\n\r\n".$message);
                 break;
             case 'udp':
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_not_implemented']);
             default:
-                break;
+                throw new Exception(\danog\MadelineProto\Lang::$current_lang['protocol_invalid']);
         }
     }
 

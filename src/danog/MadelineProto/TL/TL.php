@@ -24,15 +24,15 @@ trait TL
 
     public function construct_tl($files)
     {
-        \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['TL_loading']], \danog\MadelineProto\Logger::VERBOSE);
+        \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['TL_loading'], \danog\MadelineProto\Logger::VERBOSE);
         $this->constructors = new TLConstructor();
         $this->methods = new TLMethod();
         $this->td_constructors = new TLConstructor();
         $this->td_methods = new TLMethod();
         $this->td_descriptions = ['types' => [], 'constructors' => [], 'methods' => []];
         foreach ($files as $scheme_type => $file) {
-            \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['file_parsing'], basename($file))], \danog\MadelineProto\Logger::VERBOSE);
-            $filec = file_get_contents($file);
+            \danog\MadelineProto\Logger::log(sprintf(\danog\MadelineProto\Lang::$current_lang['file_parsing'], basename($file)), \danog\MadelineProto\Logger::VERBOSE);
+            $filec = file_get_contents(\danog\MadelineProto\Absolute::absolute($file));
             $TL_dict = json_decode($filec, true);
             if ($TL_dict === null) {
                 $TL_dict = ['methods' => [], 'constructors' => []];
@@ -85,14 +85,14 @@ trait TL
                         $type = 'constructors';
                         continue;
                     }
-                    if (preg_match('|^===\\d*===|', $line)) {
-                        $layer = (int) preg_replace('|\\D*|', '', $line);
+                    if (preg_match('|^===(\d*)===|', $line, $matches)) {
+                        $layer = (int) $matches[1];
                         continue;
                     }
-                    if (preg_match('/^vector#/', $line)) {
+                    if (strpos($line, 'vector#') === 0) {
                         continue;
                     }
-                    if (preg_match('/ \\?= /', $line)) {
+                    if (strpos($line, ' ?= ') !== false) {
                         continue;
                     }
                     $name = preg_replace(['/#.*/', '/\\s.*/'], '', $line);
@@ -101,10 +101,10 @@ trait TL
                     }
                     $clean = preg_replace(['/:bytes /', '/;/', '/#[a-f0-9]+ /', '/ [a-zA-Z0-9_]+\\:flags\\.[0-9]+\\?true/', '/[<]/', '/[>]/', '/  /', '/^ /', '/ $/', '/\\?bytes /', '/{/', '/}/'], [':string ', '', ' ', '', ' ', ' ', ' ', '', '', '?string ', '', ''], $line);
                     $id = hash('crc32b', $clean);
-                    if (preg_match('/^[^\\s]+#/', $line)) {
-                        $nid = str_pad(preg_replace(['/^[^#]+#/', '/\\s.+/'], '', $line), 8, '0', \STR_PAD_LEFT);
+                    if (preg_match('/^[^\s]+#([a-f0-9]*)/i', $line, $matches)) {
+                        $nid = str_pad($matches[1], 8, '0', \STR_PAD_LEFT);
                         if ($id !== $nid && $scheme_type !== 'botAPI') {
-                            \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['crc32_mismatch'], $id, $nid, $line)], \danog\MadelineProto\Logger::ERROR);
+                            \danog\MadelineProto\Logger::log(sprintf(\danog\MadelineProto\Lang::$current_lang['crc32_mismatch'], $id, $nid, $line), \danog\MadelineProto\Logger::ERROR);
                         }
                         $id = $nid;
                     }
@@ -144,14 +144,14 @@ trait TL
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['src_file_invalid'].$file);
             }
             $orig = $this->encrypted_layer;
-            \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['translating_obj']], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
+            \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['translating_obj'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
             foreach ($TL_dict['constructors'] as $elem) {
                 if ($scheme_type === 'secret') {
                     $this->encrypted_layer = max($this->encrypted_layer, $elem['layer']);
                 }
                 $this->{($scheme_type === 'td' ? 'td_' : '').'constructors'}->add($elem, $scheme_type);
             }
-            \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['translating_methods']], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
+            \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['translating_methods'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
             foreach ($TL_dict['methods'] as $elem) {
                 $this->{($scheme_type === 'td' ? 'td_' : '').'methods'}->add($elem);
                 if ($scheme_type === 'secret') {
@@ -332,10 +332,20 @@ trait TL
                 }
         }
         $auto = false;
-        if ((!is_array($object) || isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type']) && in_array($type['type'], ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer'])) {
+        if ($type['type'] === 'InputMessage' && !is_array($object)) {
+            $object = ['_' => 'inputMessageID', 'id' => $object];
+        }
+        if (in_array($type['type'], ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer']) && (!is_array($object) || isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type'])) {
             $object = $this->get_info($object);
             if (!isset($object[$type['type']])) {
                 throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['peer_not_in_db']);
+            }
+            $object = $object[$type['type']];
+        }
+        if (in_array($type['type'], ['InputMedia', 'InputDocument', 'InputPhoto']) && (!is_array($object) || isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type'])) {
+            $object = $this->get_file_info($object);
+            if (!isset($object[$type['type']])) {
+                throw new \danog\MadelineProto\Exception('Could not convert media object');
             }
             $object = $object[$type['type']];
         }
@@ -350,7 +360,7 @@ trait TL
         $predicate = $object['_'];
         $constructorData = $this->constructors->find_by_predicate($predicate, $layer);
         if ($constructorData === false) {
-            \danog\MadelineProto\Logger::log([$object], \danog\MadelineProto\Logger::FATAL_ERROR);
+            \danog\MadelineProto\Logger::log($object, \danog\MadelineProto\Logger::FATAL_ERROR);
 
             throw new Exception(sprintf(\danog\MadelineProto\Lang::$current_lang['type_extract_error'], $predicate));
         }
@@ -373,6 +383,37 @@ trait TL
 
     public function serialize_method($method, $arguments)
     {
+        if ($method === 'messages.importChatInvite' && isset($arguments['hash']) && preg_match('@(?:t|telegram)\.(?:me|dog)/(joinchat/)?([a-z0-9_-]*)@i', $arguments['hash'], $matches)) {
+            if ($matches[1] === '') {
+                $method = 'channels.joinChannel';
+                $arguments['channel'] = $matches[2];
+            } else {
+                $arguments['hash'] = $matches[2];
+            }
+        }
+        if ($method === 'messages.checkChatInvite' && isset($arguments['hash']) && preg_match('@(?:t|telegram)\.(?:me|dog)/joinchat/([a-z0-9_-]*)@i', $arguments['hash'], $matches)) {
+            $arguments['hash'] = $matches[1];
+        }
+        if ($method === 'channels.joinChannel' && isset($arguments['channel']) && preg_match('@(?:t|telegram)\.(?:me|dog)/(joinchat/)?([a-z0-9_-]*)@i', $arguments['channel'], $matches)) {
+            if ($matches[1] !== '') {
+                $method = 'messages.importChatInvite';
+                $arguments['hash'] = $matches[2];
+            }
+        }
+        if ($method === 'messages.sendEncryptedFile') {
+            if (isset($arguments['file'])) {
+                if (!is_array($arguments['file']) && $this->settings['upload']['allow_automatic_upload']) {
+                    $arguments['file'] = $this->upload_encrypted($arguments['file']);
+                }
+                if (isset($arguments['file']['key'])) {
+                    $arguments['message']['media']['key'] = $arguments['file']['key'];
+                }
+                if (isset($arguments['file']['iv'])) {
+                    $arguments['message']['media']['iv'] = $arguments['file']['iv'];
+                }
+            }
+        }
+
         $tl = $this->methods->find_by_method($method);
         if ($tl === false) {
             throw new Exception(\danog\MadelineProto\Lang::$current_lang['method_not_found'].$method);
@@ -410,7 +451,7 @@ trait TL
         foreach ($tl['params'] as $current_argument) {
             if (!isset($arguments[$current_argument['name']])) {
                 if (isset($current_argument['pow']) && (in_array($current_argument['type'], ['true', 'false']) || ($flags & $current_argument['pow']) === 0)) {
-                    //\danog\MadelineProto\Logger::log(['Skipping '.$current_argument['name'].' of type '.$current_argument['type']);
+                    //\danog\MadelineProto\Logger::log('Skipping '.$current_argument['name'].' of type '.$current_argument['type');
                     continue;
                 }
                 if ($current_argument['name'] === 'random_bytes') {
@@ -438,6 +479,14 @@ trait TL
                             }
                     }
                 }
+                if ($tl['type'] === 'InputMedia' && $current_argument['name'] === 'mime_type') {
+                    $serialized .= $this->serialize_object($current_argument, $arguments['file']['mime_type'], $current_argument['name'], $layer);
+                    continue;
+                }
+                if ($tl['type'] === 'DocumentAttribute' && in_array($current_argument['name'], ['w', 'h', 'duration'])) {
+                    $serialized .= pack('@4');
+                    continue;
+                }
                 if ($id = $this->constructors->find_by_predicate(lcfirst($current_argument['type']).'Empty')) {
                     $serialized .= $id['id'];
                     continue;
@@ -445,16 +494,24 @@ trait TL
 
                 throw new Exception(\danog\MadelineProto\Lang::$current_lang['params_missing'], $current_argument['name']);
             }
-            if (!is_array($arguments[$current_argument['name']]) && $current_argument['type'] === 'InputEncryptedChat') {
-                if (!isset($this->secret_chats[$arguments[$current_argument['name']]])) {
-                    throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['sec_peer_not_in_db']);
-                }
-                $arguments[$current_argument['name']] = $this->secret_chats[$arguments[$current_argument['name']]]['InputEncryptedChat'];
-            }
             if ($current_argument['type'] === 'DataJSON') {
                 $arguments[$current_argument['name']] = ['_' => 'dataJSON', 'data' => json_encode($arguments[$current_argument['name']])];
             }
-            //\danog\MadelineProto\Logger::log(['Serializing '.$current_argument['name'].' of type '.$current_argument['type']);
+            if (!is_array($arguments[$current_argument['name']]) && $current_argument['type'] === 'InputFile' && $this->settings['upload']['allow_automatic_upload']) {
+                $arguments[$current_argument['name']] = $this->upload($arguments[$current_argument['name']]);
+            }
+
+            if ($current_argument['type'] === 'InputEncryptedChat' && (!is_array($arguments[$current_argument['name']]) || isset($arguments[$current_argument['name']]['_']) && $this->constructors->find_by_predicate($arguments[$current_argument['name']]['_'])['type'] !== $current_argument['type'])) {
+                if (is_array($arguments[$current_argument['name']])) {
+                    $arguments[$current_argument['name']] = $this->get_info($arguments[$current_argument['name']])['InputEncryptedChat'];
+                } else {
+                    if (!isset($this->secret_chats[$arguments[$current_argument['name']]])) {
+                        throw new \danog\MadelineProto\Exception(\danog\MadelineProto\Lang::$current_lang['sec_peer_not_in_db']);
+                    }
+                    $arguments[$current_argument['name']] = $this->secret_chats[$arguments[$current_argument['name']]]['InputEncryptedChat'];
+                }
+            }
+            //\danog\MadelineProto\Logger::log('Serializing '.$current_argument['name'].' of type '.$current_argument['type');
             $serialized .= $this->serialize_object($current_argument, $arguments[$current_argument['name']], $current_argument['name'], $layer);
         }
 

@@ -32,9 +32,7 @@ class Serialization
 
     public static function realpaths($file)
     {
-        if ($file[0] !== '/') {
-            $file = getcwd().'/'.$file;
-        }
+        $file = Absolute::absolute($file);
 
         return ['file' => $file, 'lockfile' => $file.'.lock', 'tempfile' => $file.'.temp.session'];
     }
@@ -50,9 +48,16 @@ class Serialization
      */
     public static function serialize($filename, $instance, $force = false)
     {
+        if ($filename == '') {
+            throw new \danog\MadelineProto\Exception('Empty filename');
+        }
+
         if (isset($instance->API->setdem) && $instance->API->setdem) {
             $instance->API->setdem = false;
             $instance->API->__construct($instance->API->settings);
+        }
+        if ($instance->API === null && !$instance->getting_api_id) {
+            return false;
         }
         $instance->serialized = time();
         $realpaths = self::realpaths($filename);
@@ -61,8 +66,9 @@ class Serialization
             clearstatcache();
         }
         $realpaths['lockfile'] = fopen($realpaths['lockfile'], 'w');
-        \danog\MadelineProto\Logger::log(['Waiting for exclusive lock of serialization lockfile...']);
+        \danog\MadelineProto\Logger::log('Waiting for exclusive lock of serialization lockfile...');
         flock($realpaths['lockfile'], LOCK_EX);
+        \danog\MadelineProto\Logger::log('Lock acquired, serializing');
 
         try {
             $wrote = file_put_contents($realpaths['tempfile'], serialize($instance));
@@ -75,7 +81,7 @@ class Serialization
         return $wrote;
     }
 
-    /**
+    /*
      * Deserialize API class.
      *
      * @param string $filename
@@ -84,6 +90,7 @@ class Serialization
      *
      * @return API
      */
+    /*
     public static function deserialize($filename, $no_updates = false)
     {
         $realpaths = self::realpaths($filename);
@@ -93,28 +100,34 @@ class Serialization
                 clearstatcache();
             }
             $realpaths['lockfile'] = fopen($realpaths['lockfile'], 'r');
-            \danog\MadelineProto\Logger::log(['Waiting for shared lock of serialization lockfile...']);
+            \danog\MadelineProto\Logger::log('Waiting for shared lock of serialization lockfile...');
             flock($realpaths['lockfile'], LOCK_SH);
+            \danog\MadelineProto\Logger::log('Lock acquired, deserializing');
 
             try {
-                $unserialized = file_get_contents($realpaths['file']);
+                $tounserialize = file_get_contents($realpaths['file']);
             } finally {
                 flock($realpaths['lockfile'], LOCK_UN);
                 fclose($realpaths['lockfile']);
             }
-            $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $unserialized);
-            foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
-                class_exists('\\danog\\MadelineProto\\'.$class);
-            }
-            class_exists('\\Volatile');
             \danog\MadelineProto\Logger::class_exists();
 
             try {
                 $unserialized = unserialize($tounserialize);
             } catch (\danog\MadelineProto\Bug74586Exception $e) {
+                $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $unserialized);
+                foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
+                    class_exists('\\danog\\MadelineProto\\'.$class);
+                }
+                class_exists('\\Volatile');
                 $unserialized = \danog\Serialization::unserialize($tounserialize);
             } catch (\danog\MadelineProto\Exception $e) {
-                Logger::log([(string) $e], Logger::ERROR);
+                $tounserialize = str_replace('O:26:"danog\\MadelineProto\\Button":', 'O:35:"danog\\MadelineProto\\TL\\Types\\Button":', $unserialized);
+                foreach (['RSA', 'TL\\TLMethod', 'TL\\TLConstructor', 'MTProto', 'API', 'DataCenter', 'Connection', 'TL\\Types\\Button', 'TL\\Types\\Bytes', 'APIFactory'] as $class) {
+                    class_exists('\\danog\\MadelineProto\\'.$class);
+                }
+                class_exists('\\Volatile');
+                Logger::log((string) $e, Logger::ERROR);
                 if (strpos($e->getMessage(), "Erroneous data format for unserializing 'phpseclib\\Math\\BigInteger'") === 0) {
                     $tounserialize = str_replace('phpseclib\\Math\\BigInteger', 'phpseclib\\Math\\BigIntegor', $unserialized);
                 }
@@ -134,5 +147,5 @@ class Serialization
         }
 
         return $unserialized;
-    }
+    }*/
 }

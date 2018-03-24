@@ -48,22 +48,8 @@ trait ResponseHandler
         $only_updates = true;
         foreach ($this->datacenter->sockets[$datacenter]->new_incoming as $current_msg_id) {
             $unset = false;
-            \danog\MadelineProto\Logger::log(['Received '.$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['_'].'.'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
-            //\danog\MadelineProto\Logger::log([$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
-            if (\danog\MadelineProto\Logger::$has_thread && is_object(\Thread::getCurrentThread())) {
-                if (!$this->synchronized(function ($zis, $datacenter, $current_msg_id) {
-                    if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['handling'])) {
-                        return false;
-                    }
-                    $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['handling'] = true;
-
-                    return true;
-                }, $this, $datacenter, $current_msg_id)) {
-                    \danog\MadelineProto\Logger::log([base64_encode($current_msg_id).$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['_'].' is already being handled'], \danog\MadelineProto\Logger::VERBOSE);
-                    continue;
-                }
-                \danog\MadelineProto\Logger::log(['Handling '.base64_encode($current_msg_id).$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['_'].'.'], \danog\MadelineProto\Logger::VERBOSE);
-            }
+            \danog\MadelineProto\Logger::log((isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['from_container']) ? 'Inside of container, received ' : 'Received ').$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['_'].' from DC '.$datacenter, \danog\MadelineProto\Logger::ULTRA_VERBOSE);
+            //\danog\MadelineProto\Logger::log($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'], \danog\MadelineProto\Logger::ULTRA_VERBOSE);
             switch ($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['_']) {
                 case 'msgs_ack':
                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
@@ -81,6 +67,8 @@ trait ResponseHandler
                     // Acknowledge that I received the server's response
                     $this->ack_outgoing_message_id($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id'], $datacenter);
                     // Acknowledge that the server received my request
+                    //\danog\MadelineProto\Logger::log($this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id']]);
+                    //\danog\MadelineProto\Logger::log($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']);
                     $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id']]['response'] = $current_msg_id;
                     $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'] = $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['result'];
                     $this->check_in_seq_no($datacenter, $current_msg_id);
@@ -101,24 +89,27 @@ trait ResponseHandler
                     $only_updates = false;
                     $this->ack_outgoing_message_id($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['bad_msg_id'], $datacenter);
                     // Acknowledge that the server received my request
-                    $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['bad_msg_id']]['response'] = $current_msg_id;
+
+                    unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
+                    unset($this->datacenter->sockets[$datacenter]->new_outgoing[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['bad_msg_id']]);
 
                     switch ($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['error_code']) {
                             case 48:
                                 $this->datacenter->sockets[$datacenter]->temp_auth_key['server_salt'] = $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['new_server_salt'];
-                                break;
+
+                                throw new \danog\MadelineProto\Exception('Got bad message notification');
                             case 16:
                             case 17:
-                                \danog\MadelineProto\Logger::log(['Received bad_msg_notification: '.self::BAD_MSG_ERROR_CODES[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['error_code']]], \danog\MadelineProto\Logger::WARNING);
+                                \danog\MadelineProto\Logger::log('Received bad_msg_notification: '.self::BAD_MSG_ERROR_CODES[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['error_code']], \danog\MadelineProto\Logger::WARNING);
                                 $this->datacenter->sockets[$datacenter]->time_delta = (int) (new \phpseclib\Math\BigInteger(strrev($current_message_id), 256))->bitwise_rightShift(32)->subtract(new \phpseclib\Math\BigInteger(time()))->toString();
-                                \danog\MadelineProto\Logger::log(['Set time delta to '.$this->datacenter->sockets[$datacenter]->time_delta], \danog\MadelineProto\Logger::WARNING);
+                                \danog\MadelineProto\Logger::log('Set time delta to '.$this->datacenter->sockets[$datacenter]->time_delta, \danog\MadelineProto\Logger::WARNING);
                                 $this->reset_session();
                                 $this->datacenter->sockets[$datacenter]->temp_auth_key = null;
                                 $this->init_authorization();
-                                break;
+
+                                throw new \danog\MadelineProto\Exception('Got bad message notification');
                     }
-                    unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
-                    unset($this->datacenter->sockets[$datacenter]->new_outgoing[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['bad_msg_id']]);
+                    $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['bad_msg_id']]['response'] = $current_msg_id;
                     break;
                 case 'pong':
                     $this->check_in_seq_no($datacenter, $current_msg_id);
@@ -145,7 +136,7 @@ trait ResponseHandler
                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
                     foreach ($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['messages'] as $message) {
                         $this->check_message_id($message['msg_id'], ['outgoing' => false, 'datacenter' => $datacenter, 'container' => true]);
-                        $this->datacenter->sockets[$datacenter]->incoming_messages[$message['msg_id']] = ['seq_no' => $message['seqno'], 'content' => $message['body']];
+                        $this->datacenter->sockets[$datacenter]->incoming_messages[$message['msg_id']] = ['seq_no' => $message['seqno'], 'content' => $message['body'], 'from_container' => true];
                         $this->datacenter->sockets[$datacenter]->new_incoming[$message['msg_id']] = $message['msg_id'];
                         $this->handle_messages($datacenter);
                     }
@@ -173,7 +164,7 @@ trait ResponseHandler
                 case 'http_wait':
                     $this->check_in_seq_no($datacenter, $current_msg_id);
                     $only_updates = false;
-                    \danog\MadelineProto\Logger::log([$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']], \danog\MadelineProto\Logger::NOTICE);
+                    \danog\MadelineProto\Logger::log($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'], \danog\MadelineProto\Logger::NOTICE);
                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
                     $unset = true;
                     break;
@@ -206,7 +197,7 @@ trait ResponseHandler
                                 $status .= $description;
                             }
                         }
-                        \danog\MadelineProto\Logger::log([$status], \danog\MadelineProto\Logger::NOTICE);
+                        \danog\MadelineProto\Logger::log($status, \danog\MadelineProto\Logger::NOTICE);
                     }
                     break;
                 case 'msg_detailed_info':
@@ -216,6 +207,8 @@ trait ResponseHandler
                         if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id']])) {
                             $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['msg_id']]['response'] = $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id'];
                             unset($this->datacenter->sockets[$datacenter]->new_outgoing[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['msg_id']]);
+                        } else {
+                            $this->object_call('msg_resend_req', ['msg_ids' => [$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id']]], ['datacenter' => $datacenter]);
                         }
                     }
                 case 'msg_new_detailed_info':
@@ -223,6 +216,8 @@ trait ResponseHandler
                     $only_updates = false;
                     if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id']])) {
                         $this->ack_incoming_message_id($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id'], $datacenter);
+                    } else {
+                        $this->object_call('msg_resend_req', ['msg_ids' => [$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['answer_msg_id']]], ['datacenter' => $datacenter]);
                     }
                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
                     break;
@@ -264,6 +259,14 @@ trait ResponseHandler
                         case 'Updates':
                             unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
                             $unset = true;
+
+                            if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['users'])) {
+                                $this->add_users($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['users']);
+                            }
+                            if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chats'])) {
+                                $this->add_chats($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chats']);
+                            }
+
                             if (strpos($datacenter, 'cdn') === false) {
                                 $this->handle_updates($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']);
                             }
@@ -271,17 +274,17 @@ trait ResponseHandler
                             break;
                         default:
                             $only_updates = false;
-                            \danog\MadelineProto\Logger::log(['Trying to assign a response of type '.$response_type.' to its request...'], \danog\MadelineProto\Logger::VERBOSE);
+                            \danog\MadelineProto\Logger::log('Trying to assign a response of type '.$response_type.' to its request...', \danog\MadelineProto\Logger::VERBOSE);
                             foreach ($this->datacenter->sockets[$datacenter]->new_outgoing as $key => $expecting) {
-                                \danog\MadelineProto\Logger::log(['Does the request of return type '.$expecting['type'].' match?'], \danog\MadelineProto\Logger::VERBOSE);
+                                \danog\MadelineProto\Logger::log('Does the request of return type '.$expecting['type'].' match?', \danog\MadelineProto\Logger::VERBOSE);
                                 if ($response_type === $expecting['type']) {
-                                    \danog\MadelineProto\Logger::log(['Yes'], \danog\MadelineProto\Logger::VERBOSE);
+                                    \danog\MadelineProto\Logger::log('Yes', \danog\MadelineProto\Logger::VERBOSE);
                                     $this->datacenter->sockets[$datacenter]->outgoing_messages[$expecting['msg_id']]['response'] = $current_msg_id;
                                     unset($this->datacenter->sockets[$datacenter]->new_outgoing[$key]);
                                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
                                     break 2;
                                 }
-                                \danog\MadelineProto\Logger::log(['No'], \danog\MadelineProto\Logger::VERBOSE);
+                                \danog\MadelineProto\Logger::log('No', \danog\MadelineProto\Logger::VERBOSE);
                             }
 
                             throw new \danog\MadelineProto\ResponseException('Dunno how to handle '.PHP_EOL.var_export($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'], true));
@@ -294,6 +297,9 @@ trait ResponseHandler
             }
             if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chats'])) {
                 $this->add_chats($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chats']);
+            }
+            if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chat'])) {
+                $this->add_chats([$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['chat']]);
             }
             if (isset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['result']['users'])) {
                 $this->add_users($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['result']['users']);
@@ -316,10 +322,6 @@ trait ResponseHandler
         return $only_updates;
     }
 
-    public function handle_messages_threaded()
-    {
-    }
-
     public function handle_rpc_error($server_answer, &$aargs)
     {
         if (in_array($server_answer['error_message'], ['PERSISTENT_TIMESTAMP_EMPTY', 'PERSISTENT_TIMESTAMP_OUTDATED', 'PERSISTENT_TIMESTAMP_INVALID'])) {
@@ -337,6 +339,7 @@ trait ResponseHandler
                     case 'USER_DEACTIVATED':
                     case 'SESSION_REVOKED':
                     case 'SESSION_EXPIRED':
+                        \danog\MadelineProto\Logger::log($server_answer['error_message'], \danog\MadelineProto\Logger::FATAL_ERROR);
                         foreach ($this->datacenter->sockets as $socket) {
                             $socket->temp_auth_key = null;
                             $socket->auth_key = null;
@@ -345,23 +348,40 @@ trait ResponseHandler
                         $this->authorized = self::NOT_LOGGED_IN;
                         $this->authorization = null;
                         $this->init_authorization();
-                        // idk
+
                         throw new \danog\MadelineProto\RPCErrorException($server_answer['error_message'], $server_answer['error_code']);
                     case 'AUTH_KEY_UNREGISTERED':
                     case 'AUTH_KEY_INVALID':
                         if ($this->authorized !== self::LOGGED_IN) {
                             throw new \danog\MadelineProto\RPCErrorException($server_answer['error_message'], $server_answer['error_code']);
                         }
+                        \danog\MadelineProto\Logger::log('Auth key not registered, resetting temporary and permanent auth keys...', \danog\MadelineProto\Logger::ERROR);
+
                         $this->datacenter->sockets[$aargs['datacenter']]->temp_auth_key = null;
                         $this->datacenter->sockets[$aargs['datacenter']]->auth_key = null;
                         $this->datacenter->sockets[$aargs['datacenter']]->authorized = false;
+                        if ($this->authorized_dc === $aargs['datacenter'] && $this->authorized === self::LOGGED_IN) {
+                            \danog\MadelineProto\Logger::log('Permanent auth key was main authorized key, logging out...', \danog\MadelineProto\Logger::FATAL_ERROR);
+                            foreach ($this->datacenter->sockets as $socket) {
+                                $socket->temp_auth_key = null;
+                                $socket->auth_key = null;
+                                $socket->authorized = false;
+                            }
+                            $this->authorized = self::NOT_LOGGED_IN;
+                            $this->authorization = null;
+                            $this->init_authorization();
+
+                            throw new \danog\MadelineProto\RPCErrorException($server_answer['error_message'], $server_answer['error_code']);
+                        }
                         $this->init_authorization();
-                        // idk
+
                         throw new \danog\MadelineProto\Exception('I had to recreate the temporary authorization key');
                     case 'AUTH_KEY_PERM_EMPTY':
                         if ($this->authorized !== self::LOGGED_IN) {
                             throw new \danog\MadelineProto\RPCErrorException($server_answer['error_message'], $server_answer['error_code']);
                         }
+                        \danog\MadelineProto\Logger::log('Temporary auth key not bound, resetting temporary auth key...', \danog\MadelineProto\Logger::ERROR);
+
                         $this->datacenter->sockets[$aargs['datacenter']]->temp_auth_key = null;
                         $this->init_authorization();
                         // idk
@@ -371,7 +391,7 @@ trait ResponseHandler
                 $seconds = preg_replace('/[^0-9]+/', '', $server_answer['error_message']);
                 $limit = isset($aargs['FloodWaitLimit']) ? $aargs['FloodWaitLimit'] : $this->settings['flood_timeout']['wait_if_lt'];
                 if (is_numeric($seconds) && $seconds < $limit) {
-                    \danog\MadelineProto\Logger::log(['Flood, waiting '.$seconds.' seconds...'], \danog\MadelineProto\Logger::NOTICE);
+                    \danog\MadelineProto\Logger::log('Flood, waiting '.$seconds.' seconds...', \danog\MadelineProto\Logger::NOTICE);
                     sleep($seconds);
 
                     throw new \danog\MadelineProto\Exception('Re-executing query...');
@@ -388,10 +408,13 @@ trait ResponseHandler
             return false;
         }
         if (count($this->pending_updates)) {
-            \danog\MadelineProto\Logger::log(['Parsing pending updates...'], \danog\MadelineProto\Logger::VERBOSE);
-            foreach ($this->pending_updates as $key => $updates) {
-                unset($this->pending_updates[$key]);
-                $this->handle_updates($updates);
+            \danog\MadelineProto\Logger::log('Parsing pending updates...');
+            foreach (array_keys($this->pending_updates) as $key) {
+                if (isset($this->pending_updates[$key])) {
+                    $updates = $this->pending_updates[$key];
+                    unset($this->pending_updates[$key]);
+                    $this->handle_updates($updates);
+                }
             }
         }
     }
@@ -402,20 +425,24 @@ trait ResponseHandler
             return;
         }
         if ($this->postpone_updates) {
-            \danog\MadelineProto\Logger::log(['Postpone update handling'], \danog\MadelineProto\Logger::VERBOSE);
+            \danog\MadelineProto\Logger::log('Postpone update handling', \danog\MadelineProto\Logger::VERBOSE);
             $this->pending_updates[] = $updates;
 
             return false;
         }
         $this->handle_pending_updates();
-        \danog\MadelineProto\Logger::log(['Parsing updates received via the socket...'], \danog\MadelineProto\Logger::VERBOSE);
-        $opts = [];
-        foreach (['date', 'seq', 'seq_start'] as $key) {
-            if (isset($updates[$key])) {
-                $opts[$key] = $updates[$key];
+        \danog\MadelineProto\Logger::log('Parsing updates received via the socket...', \danog\MadelineProto\Logger::VERBOSE);
+
+        try {
+            $this->postpone_updates = true;
+
+            $opts = [];
+            foreach (['date', 'seq', 'seq_start'] as $key) {
+                if (isset($updates[$key])) {
+                    $opts[$key] = $updates[$key];
+                }
             }
-        }
-        switch ($updates['_']) {
+            switch ($updates['_']) {
             case 'updates':
             case 'updatesCombined':
                 foreach ($updates['updates'] as $update) {
@@ -430,13 +457,24 @@ trait ResponseHandler
                 $from_id = isset($updates['from_id']) ? $updates['from_id'] : ($updates['out'] ? $this->authorization['user']['id'] : $updates['user_id']);
                 $to_id = isset($updates['chat_id']) ? -$updates['chat_id'] : ($updates['out'] ? $updates['user_id'] : $this->authorization['user']['id']);
                 if (!$this->peer_isset($from_id) || !$this->peer_isset($to_id) || isset($updates['via_bot_id']) && !$this->peer_isset($updates['via_bot_id']) || isset($updates['entities']) && !$this->entities_peer_isset($updates['entities']) || isset($updates['fwd_from']) && !$this->fwd_peer_isset($updates['fwd_from'])) {
-                    \danog\MadelineProto\Logger::log(['getDifference: good - getting user for updateShortMessage'], \danog\MadelineProto\Logger::VERBOSE);
+                    \danog\MadelineProto\Logger::log('getDifference: good - getting user for updateShortMessage', \danog\MadelineProto\Logger::VERBOSE);
                     $this->get_updates_difference();
                 }
                 $message = $updates;
                 $message['_'] = 'message';
                 $message['from_id'] = $from_id;
-                $message['to_id'] = $this->get_info($to_id)['Peer'];
+
+                try {
+                    $message['to_id'] = $this->get_info($to_id)['Peer'];
+                } catch (\danog\MadelineProto\Exception $e) {
+                    \danog\MadelineProto\Logger::log('Still did not get user in database, postponing update', \danog\MadelineProto\Logger::ERROR);
+                    //$this->pending_updates[] = $updates;
+                    break;
+                } catch (\danog\MadelineProto\RPCErrorException $e) {
+                    \danog\MadelineProto\Logger::log('Still did not get user in database, postponing update', \danog\MadelineProto\Logger::ERROR);
+                    //$this->pending_updates[] = $updates;
+                    break;
+                }
                 $update = ['_' => 'updateNewMessage', 'message' => $message, 'pts' => $updates['pts'], 'pts_count' => $updates['pts_count']];
                 $this->handle_update($update, $opts);
                 break;
@@ -449,6 +487,9 @@ trait ResponseHandler
             default:
                 throw new \danog\MadelineProto\ResponseException('Unrecognized update received: '.var_export($updates, true));
                 break;
+        }
+        } finally {
+            $this->postpone_updates = false;
         }
     }
 }

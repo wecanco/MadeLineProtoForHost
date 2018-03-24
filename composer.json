@@ -10,13 +10,12 @@
     },
     "require": {
         "php": ">=5.6.0",
-        "danog/primemodule": "dev-master",
-        "danog/magicalserializer": "dev-master",
+        "danog/primemodule": "^1.0.3",
+        "danog/magicalserializer": "^1.0",
         "phpseclib/phpseclib": "dev-master#27370df",
         "vlucas/phpdotenv": "^2.4",
         "erusev/parsedown": "^1.6",
         "rollbar/rollbar": "dev-master",
-        "ext-mbstring": "*",
         "ext-curl": "*",
         "ext-xml": "*"
     },
@@ -45,7 +44,8 @@
             "src/Volatile.php",
             "src/Thread.php",
             "src/Worker.php",
-            "src/Pool.php"
+            "src/Pool.php",
+            "src/HttpProxy.php"
         ]
     }
 }

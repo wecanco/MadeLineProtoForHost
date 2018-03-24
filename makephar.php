@@ -25,13 +25,11 @@ $p->addFromString('.git/refs/heads/master', $argv[3]);
 
 $p->setStub('<?php
 $backtrace = debug_backtrace();
-if (basename($backtrace[0]["file"]) === "phar.php") {
+if (in_array(basename($backtrace[0]["file"]), ["madeline.php", "phar.php"])) {
     chdir(dirname($backtrace[1]["file"]));
     if (!isset($phar_debug)) file_put_contents($backtrace[0]["file"], file_get_contents("https://phar.madelineproto.xyz/phar.php?v=new"));
 }
-if ((new Phar(__FILE__))[".git/refs/heads/master"]->getContent() !== file_get_contents("https://phar.madelineproto.xyz/release?v=new") && !isset($phar_debug)) {
-    file_put_contents(__FILE__, file_get_contents("https://phar.madelineproto.xyz/madeline.phar?v=new"));
-}
+
 Phar::interceptFileFuncs(); 
 Phar::mapPhar("'.$argv[2].'"); 
 require_once "phar://'.$argv[2].'/vendor/autoload.php"; 

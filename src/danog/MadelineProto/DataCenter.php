@@ -36,23 +36,12 @@ class DataCenter
         $this->settings = $settings;
         foreach ($this->sockets as $key => $socket) {
             if ($socket instanceof Connection) {
-                \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['dc_con_stop'], $key)], \danog\MadelineProto\Logger::VERBOSE);
+                \danog\MadelineProto\Logger::log(sprintf(\danog\MadelineProto\Lang::$current_lang['dc_con_stop'], $key), \danog\MadelineProto\Logger::VERBOSE);
                 $socket->old = true;
                 $socket->__destruct();
             } else {
                 unset($this->sockets[$key]);
             }
-        }
-    }
-
-    public function dc_disconnect($dc_number)
-    {
-        if ($this->curdc === $dc_number) {
-            $this->curdc = 0;
-        }
-        if (isset($this->sockets[$dc_number])) {
-            \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['dc_con_stop'], $dc_number)], \danog\MadelineProto\Logger::VERBOSE);
-            unset($this->sockets[$dc_number]);
         }
     }
 
@@ -68,6 +57,8 @@ class DataCenter
             $ipv6 = $this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4';
             if (!isset($this->dclist[$test][$ipv6][$dc_number]['ip_address'])) {
                 unset($this->sockets[$dc_number]);
+
+                \danog\MadelineProto\Logger::log("No info for DC $dc_number", \danog\MadelineProto\Logger::ERROR);
 
                 return false;
             }
@@ -94,9 +85,9 @@ class DataCenter
                 }
                 $address = $this->settings[$dc_config_number]['protocol'].'://'.$address.'/api';
             }
-            \danog\MadelineProto\Logger::log([sprintf(\danog\MadelineProto\Lang::$current_lang['dc_con_test_start'], $dc_number, $test, $ipv6, $this->settings[$dc_config_number]['protocol'])], \danog\MadelineProto\Logger::VERBOSE);
+            \danog\MadelineProto\Logger::log(sprintf(\danog\MadelineProto\Lang::$current_lang['dc_con_test_start'], $dc_number, $test, $ipv6, $this->settings[$dc_config_number]['protocol']), \danog\MadelineProto\Logger::VERBOSE);
             foreach (array_unique([$port, 443, 80, 88]) as $port) {
-                \danog\MadelineProto\Logger::log(['Trying connection on port '.$port.'...'], \danog\MadelineProto\Logger::WARNING);
+                \danog\MadelineProto\Logger::log('Trying connection on port '.$port.'...', \danog\MadelineProto\Logger::WARNING);
 
                 try {
                     if (isset($this->sockets[$dc_number]->old)) {
@@ -105,7 +96,7 @@ class DataCenter
                     } else {
                         $this->sockets[$dc_number] = new Connection($this->settings[$dc_config_number]['proxy'], $this->settings[$dc_config_number]['proxy_extra'], $address, $port, $this->settings[$dc_config_number]['protocol'], $this->settings[$dc_config_number]['timeout'], $this->settings[$dc_config_number]['ipv6']);
                     }
-                    \danog\MadelineProto\Logger::log(['OK!'], \danog\MadelineProto\Logger::WARNING);
+                    \danog\MadelineProto\Logger::log('OK!', \danog\MadelineProto\Logger::WARNING);
 
                     return true;
                 } catch (\danog\MadelineProto\Exception $e) {
@@ -115,22 +106,32 @@ class DataCenter
             switch ($x) {
                 case 0:
                     $this->settings[$dc_config_number]['ipv6'] = !$this->settings[$dc_config_number]['ipv6'];
-                    \danog\MadelineProto\Logger::log(['Connection failed, retrying connection with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...'], \danog\MadelineProto\Logger::WARNING);
+                    \danog\MadelineProto\Logger::log('Connection failed, retrying connection with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...', \danog\MadelineProto\Logger::WARNING);
                     continue;
                 case 1:
                     $this->settings[$dc_config_number]['proxy'] = '\\Socket';
-                    \danog\MadelineProto\Logger::log(['Connection failed, retrying connection without the proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...'], \danog\MadelineProto\Logger::WARNING);
+                    \danog\MadelineProto\Logger::log('Connection failed, retrying connection without the proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...', \danog\MadelineProto\Logger::WARNING);
                     continue;
                 case 2:
                     $this->settings[$dc_config_number]['ipv6'] = !$this->settings[$dc_config_number]['ipv6'];
-                    \danog\MadelineProto\Logger::log(['Connection failed, retrying connection without the proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...'], \danog\MadelineProto\Logger::WARNING);
+                    \danog\MadelineProto\Logger::log('Connection failed, retrying connection without the proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...', \danog\MadelineProto\Logger::WARNING);
+                    continue;
+                case 3:
+                    $this->settings[$dc_config_number]['proxy'] = '\\HttpProxy';
+                    $this->settings[$dc_config_number]['proxy_extra'] = ['address' => 'localhost', 'port' => 80];
+                    $this->settings[$dc_config_number]['ipv6'] = !$this->settings[$dc_config_number]['ipv6'];
+                    \danog\MadelineProto\Logger::log('Connection failed, retrying connection with localhost HTTP proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...', \danog\MadelineProto\Logger::WARNING);
+                    continue;
+                case 4:
+                    $this->settings[$dc_config_number]['ipv6'] = !$this->settings[$dc_config_number]['ipv6'];
+                    \danog\MadelineProto\Logger::log('Connection failed, retrying connection with localhost HTTP proxy with '.($this->settings[$dc_config_number]['ipv6'] ? 'ipv6' : 'ipv4').'...', \danog\MadelineProto\Logger::WARNING);
                     continue;
                 default:
-                    return false;
+                    throw new \danog\MadelineProto\Exception("Could not connect to DC $dc_number");
             }
         } while (++$x);
 
-        return false;
+        throw new \danog\MadelineProto\Exception("Could not connect to DC $dc_number");
     }
 
     public function get_dcs($all = true)

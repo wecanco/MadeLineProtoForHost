@@ -28,7 +28,7 @@ trait DialogHandler
 
         try {
             while ($this->dialog_params['count'] < $res['count']) {
-                \danog\MadelineProto\Logger::log([\danog\MadelineProto\Lang::$current_lang['getting_dialogs']]);
+                \danog\MadelineProto\Logger::log(\danog\MadelineProto\Lang::$current_lang['getting_dialogs']);
                 $res = $this->method_call('messages.getDialogs', $this->dialog_params, ['datacenter' => $datacenter, 'FloodWaitLimit' => 100]);
                 foreach ($res['dialogs'] as $dialog) {
                     if (!in_array($dialog['peer'], $peers)) {
@@ -46,6 +46,7 @@ trait DialogHandler
         } finally {
             $this->postpone_updates = false;
             $this->updates_state['sync_loading'] = false;
+            $this->handle_pending_updates();
         }
 
         return $peers;

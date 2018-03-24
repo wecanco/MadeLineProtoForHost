@@ -28,7 +28,8 @@ trait Methods
         }
         mkdir('methods');
         $this->docs_methods = [];
-        \danog\MadelineProto\Logger::log(['Generating methods documentation...'], \danog\MadelineProto\Logger::NOTICE);
+        $this->human_docs_methods = [];
+        \danog\MadelineProto\Logger::log('Generating methods documentation...', \danog\MadelineProto\Logger::NOTICE);
         foreach ($this->methods->by_id as $id => $data) {
             $method = str_replace('.', '_', $data['method']);
             $php_method = str_replace('.', '->', $data['method']);
@@ -58,10 +59,22 @@ trait Methods
                 $param[$type_or_subtype] = '['.$this->escape($param[$type_or_subtype]).'](../'.$type_or_bare_type.'/'.$param[$type_or_subtype].'.md)';
                 $params .= "'".$param['name']."' => ".(isset($param['subtype']) ? '\\['.$param[$type_or_subtype].'\\]' : $param[$type_or_subtype]).', ';
             }
+            if (!isset($this->td_descriptions['methods'][$data['method']])) {
+                $this->add_to_lang('method_'.$data['method']);
+
+                if (\danog\MadelineProto\Lang::$lang['en']['method_'.$data['method']] !== '') {
+                    $this->td_descriptions['methods'][$data['method']]['description'] = \danog\MadelineProto\Lang::$lang['en']['method_'.$data['method']];
+                }
+            }
             $md_method = '['.$php_method.']('.$method.'.md)';
             $this->docs_methods[$method] = '$MadelineProto->'.$md_method.'(\\['.$params.'\\]) === [$'.str_replace('_', '\\_', $type).'](../types/'.$php_type.'.md)<a name="'.$method.'"></a>  
 
 ';
+            if (!isset(\danog\MadelineProto\MTProto::DISALLOWED_METHODS[$data['method']])) {
+                $this->human_docs_methods[$this->td_descriptions['methods'][$data['method']]['description'].': '.$data['method']] = '* <a href="'.$method.'.html" name="'.$method.'">'.$this->td_descriptions['methods'][$data['method']]['description'].': '.$data['method'].'</a>  
+
+';
+            }
             $params = '';
             $lua_params = '';
             $pwr_params = '';
@@ -71,8 +84,8 @@ trait Methods
 | Name     |    Type       | Required |
 |----------|---------------|----------|
 ';
-            if (isset($this->td_descriptions['methods'][$data['method']])) {
-                $table = '### Params:
+            if (isset($this->td_descriptions['methods'][$data['method']]) && !empty($data['params'])) {
+                $table = '### Parameters:
 
 | Name     |    Type       | Required | Description |
 |----------|---------------|----------|-------------|
@@ -98,8 +111,34 @@ trait Methods
                     case 'false':
                         $ptype = 'Bool';
                 }
+                $human_ptype = 'CLICK ME '.$ptype;
+                if (in_array($ptype, ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'Username, chat ID, Update, Message or '.$ptype;
+                }
+                if (in_array($ptype, ['InputMedia', 'InputPhoto', 'InputDocument']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'MessageMedia, Update, Message or '.$ptype;
+                }
+                if (in_array($ptype, ['InputMessage']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'Message ID or '.$ptype;
+                }
+                if (in_array($ptype, ['InputEncryptedChat']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'Secret chat ID, Update, EncryptedMessage or '.$ptype;
+                }
+                if (in_array($ptype, ['InputFile']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'File path or '.$ptype;
+                }
+                if (in_array($ptype, ['InputEncryptedFile']) && !isset($this->settings['td'])) {
+                    $human_ptype = 'File path or '.$ptype;
+                }
                 $type_or_bare_type = ctype_upper($this->end(explode('.', $param[$type_or_subtype]))[0]) || in_array($param[$type_or_subtype], ['!X', 'X', 'bytes', 'true', 'false', 'double', 'string', 'Bool', 'int', 'long', 'int128', 'int256', 'int512', 'int53']) ? 'types' : 'constructors';
-                $table .= '|'.str_replace('_', '\\_', $param['name']).'|'.(isset($param['subtype']) ? 'Array of ' : '').'['.str_replace('_', '\\_', $ptype).'](../'.$type_or_bare_type.'/'.$ptype.'.md) | '.(isset($param['pow']) || $this->constructors->find_by_predicate(lcfirst($param['type']).'Empty') ? 'Optional' : 'Yes').'|';
+                $table .= '|'.str_replace('_', '\\_', $param['name']).'|'.(isset($param['subtype']) ? 'Array of ' : '').'['.str_replace('_', '\\_', $human_ptype).'](../'.$type_or_bare_type.'/'.$ptype.'.md) | '.(isset($param['pow']) || $this->constructors->find_by_predicate(lcfirst($param['type']).'Empty') ? 'Optional' : 'Yes').'|';
+                if (!isset($this->td_descriptions['methods'][$data['method']]['params'][$param['name']])) {
+                    $this->add_to_lang('method_'.$data['method'].'_param_'.$param['name'].'_type_'.$param['type']);
+                    if (isset($this->td_descriptions['methods'][$data['method']]['description'])) {
+                        $this->td_descriptions['methods'][$data['method']]['params'][$param['name']] = \danog\MadelineProto\Lang::$lang['en']['method_'.$data['method'].'_param_'.$param['name'].'_type_'.$param['type']];
+                    }
+                }
+
                 if (isset($this->td_descriptions['methods'][$data['method']])) {
                     $table .= $this->td_descriptions['methods'][$data['method']]['params'][$param['name']].'|';
                 }
@@ -107,7 +146,7 @@ trait Methods
                 $pptype = in_array($ptype, ['string', 'bytes']) ? "'".$ptype."'" : $ptype;
                 $ppptype = in_array($ptype, ['string', 'bytes']) ? '"'.$ptype.'"' : $ptype;
                 $params .= "'".$param['name']."' => ";
-                $params .= (isset($param['subtype']) ? '['.$pptype.']' : $pptype).', ';
+                $params .= (isset($param['subtype']) ? '['.$pptype.', '.$pptype.']' : $pptype).', ';
                 $json_params .= '"'.$param['name'].'": '.(isset($param['subtype']) ? '['.$ppptype.']' : $ppptype).', ';
                 $pwr_params .= $param['name'].' - Json encoded '.(isset($param['subtype']) ? ' array of '.$ptype : $ptype)."\n\n";
                 $lua_params .= $param['name'].'=';
@@ -120,7 +159,7 @@ trait Methods
                 }
                 if ($param['name'] === 'entities') {
                     $hasentities = true;
-                    $table .= '|parse\\_mode| [string](../types/string.md) | Optional |
+                    $table .= '|parse\\_mode| [string](../types/string.md) | Optional |Whether to parse HTML or Markdown markup in the message|
 ';
                     $params .= "'parse_mode' => 'string', ";
                     $lua_params .= "parse_mode='string', ";
@@ -171,25 +210,22 @@ description: '.$description.'
                     }
                     $example .= "\n\n";
                 }
-                $example .= str_replace('[]', '', '### Example:
+                $example .= str_replace('[]', '', '### MadelineProto Example:
 
 
 ```
-$MadelineProto = new \\danog\\MadelineProto\\API();
-$MadelineProto->session = \'mySession.madeline\';
-'.($bot ? 'if (isset($token)) { // Login as a bot
-    $MadelineProto->bot_login($token);
+if (!file_exists(\'madeline.php\')) {
+    copy(\'https://phar.madelineproto.xyz/madeline.php\', \'madeline.php\');
 }
-' : '').'if (isset($number)) { // Login as a user
-    $MadelineProto->phone_login($number);
-    $code = readline(\'Enter the code you received: \'); // Or do this in two separate steps in an HTTP API
-    $MadelineProto->complete_phone_login($code);
-}
+include \'madeline.php\';
+
+$MadelineProto = new \danog\MadelineProto\API(\'session.madeline\');
+$MadelineProto->start();
 
 $'.$type.' = $MadelineProto->'.$php_method.'(['.$params.']);
 ```
 
-Or, if you\'re using the [PWRTelegram HTTP API](https://pwrtelegram.xyz):
+### [PWRTelegram HTTP API](https://pwrtelegram.xyz) example (NOT FOR MadelineProto):
 
 '.($bot ? '### As a bot:
 
@@ -273,23 +309,26 @@ MadelineProto supports all html entities supported by [html_entity_decode](http:
             }
             file_put_contents('methods/'.$method.'.md', $header.$table.$return.$example);
         }
-        \danog\MadelineProto\Logger::log(['Generating methods index...'], \danog\MadelineProto\Logger::NOTICE);
+        \danog\MadelineProto\Logger::log('Generating methods index...', \danog\MadelineProto\Logger::NOTICE);
         ksort($this->docs_methods);
+        ksort($this->human_docs_methods);
         $last_namespace = '';
         foreach ($this->docs_methods as $method => &$value) {
             $new_namespace = preg_replace('/_.*/', '', $method);
             $br = $new_namespace != $last_namespace ? '***
-<br><br>' : '';
+<br><br>
+' : '';
             $value = $br.$value;
             $last_namespace = $new_namespace;
         }
-        file_put_contents('methods/'.$this->index, '---
+        file_put_contents('methods/api_'.$this->index, '---
 title: Methods
 description: List of methods
 ---
 # Methods  
 [Back to API documentation index](..)
 
+[Go to the new description-version method index]('.$this->index.')
 
 $MadelineProto->[logout](https://docs.madelineproto.xyz/logout.html)();
 
@@ -313,6 +352,41 @@ $MadelineProto->[get_full_info](https://docs.madelineproto.xyz/get_full_info.htm
 $MadelineProto->[get_self](https://docs.madelineproto.xyz/get_self.html)();
 
 
+$MadelineProto->[request_call](https://docs.madelineproto.xyz/request_call.html)($id);
+
+$MadelineProto->[request_secret_chat](https://docs.madelineproto.xyz/request_secret_chat.html)($id);
+
 '.implode('', $this->docs_methods));
+
+        file_put_contents('methods/'.$this->index, '---
+title: Methods
+description: What do you want to do?
+---
+# What do you want to do?  
+[Go back to API documentation index](..)  
+
+[Go to the old code-version method index](api_'.$this->index.')  
+
+* [Logout](https://docs.madelineproto.xyz/logout.html)
+
+* [Login](https://docs.madelineproto.xyz/docs/LOGIN.html)
+
+* [Get all chats, broadcast a message to all chats](https://docs.madelineproto.xyz/docs/DIALOGS.html)
+
+* [Get the full participant list of a channel/group/supergroup](https://docs.madelineproto.xyz/get_pwr_chat.html)
+
+* [Get full info about a user/chat/supergroup/channel](https://docs.madelineproto.xyz/get_full_info.html)
+
+* [Get info about a user/chat/supergroup/channel](https://docs.madelineproto.xyz/get_info.html)
+
+* [Get info about the currently logged-in user](https://docs.madelineproto.xyz/get_self.html)
+
+* [Upload or download files up to 1.5 GB](https://docs.madelineproto.xyz/docs/FILES.html)
+
+* [Make a phone call and play a song](https://docs.madelineproto.xyz/docs/CALLS.html)
+
+* [Create a secret chat bot](https://docs.madelineproto.xyz/docs/SECRET_CHATS.html)
+
+'.implode('', $this->human_docs_methods));
     }
 }
