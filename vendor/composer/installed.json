@@ -435,49 +435,6 @@
         ]
     },
     {
-        "name": "danog/magicalserializer",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
-        "source": {
-            "type": "git",
-            "url": "https://github.com/danog/MagicalSerializer.git",
-            "reference": "87b6ed05a86021e9364f31133089bb83980d5e24"
-        },
-        "dist": {
-            "type": "zip",
-            "url": "https://api.github.com/repos/danog/MagicalSerializer/zipball/87b6ed05a86021e9364f31133089bb83980d5e24",
-            "reference": "87b6ed05a86021e9364f31133089bb83980d5e24",
-            "shasum": ""
-        },
-        "time": "2018-02-20T10:35:49+00:00",
-        "type": "library",
-        "installation-source": "source",
-        "autoload": {
-            "psr-0": {
-                "danog\\": "src/"
-            }
-        },
-        "notification-url": "https://packagist.org/downloads/",
-        "license": [
-            "AGPL-3.0-only"
-        ],
-        "authors": [
-            {
-                "name": "Daniil Gentili",
-                "email": "daniil@daniil.it"
-            }
-        ],
-        "description": "Serialize Volatile, Threaded or any other internal PHP class!",
-        "homepage": "https://daniil.it/MagicalSerializer",
-        "keywords": [
-            "pthreads",
-            "serializable",
-            "serialize",
-            "threading",
-            "volatile"
-        ]
-    },
-    {
         "name": "phpseclib/phpseclib",
         "version": "dev-master",
         "version_normalized": "9999999-dev",
@@ -750,8 +707,8 @@
     },
     {
         "name": "danog/primemodule",
-        "version": "dev-master",
-        "version_normalized": "9999999-dev",
+        "version": "1.0.3",
+        "version_normalized": "1.0.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/danog/PrimeModule.git",
@@ -785,5 +742,48 @@
             }
         ],
         "description": "Prime module capable of doing prime factorization of huge numbers very quickly.\""
+    },
+    {
+        "name": "danog/magicalserializer",
+        "version": "1.0",
+        "version_normalized": "1.0.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/danog/MagicalSerializer.git",
+            "reference": "87b6ed05a86021e9364f31133089bb83980d5e24"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/danog/MagicalSerializer/zipball/87b6ed05a86021e9364f31133089bb83980d5e24",
+            "reference": "87b6ed05a86021e9364f31133089bb83980d5e24",
+            "shasum": ""
+        },
+        "time": "2018-02-20T10:35:49+00:00",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "psr-0": {
+                "danog\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "AGPL-3.0-only"
+        ],
+        "authors": [
+            {
+                "name": "Daniil Gentili",
+                "email": "daniil@daniil.it"
+            }
+        ],
+        "description": "Serialize Volatile, Threaded or any other internal PHP class!",
+        "homepage": "https://daniil.it/MagicalSerializer",
+        "keywords": [
+            "pthreads",
+            "serializable",
+            "serialize",
+            "threading",
+            "volatile"
+        ]
     }
 ]

@@ -17,6 +17,7 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
         'ee8b9dc0d1b22a255490d056f08b1a94' => __DIR__ . '/../..' . '/src/Thread.php',
         '8071b591748c33081e1801a04d20062f' => __DIR__ . '/../..' . '/src/Worker.php',
         '3f836cae0440334cb5210fceace41b10' => __DIR__ . '/../..' . '/src/Pool.php',
+        'cc11d0fcc83d0417d122eeadfc2948fa' => __DIR__ . '/../..' . '/src/HttpProxy.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -94,8 +95,8 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
             ),
             'danog\\' => 
             array (
-                0 => __DIR__ . '/..' . '/danog/magicalserializer/src',
-                1 => __DIR__ . '/..' . '/danog/primemodule/lib',
+                0 => __DIR__ . '/..' . '/danog/primemodule/lib',
+                1 => __DIR__ . '/..' . '/danog/magicalserializer/src',
             ),
         ),
         'P' => 
