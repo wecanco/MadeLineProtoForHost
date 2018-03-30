@@ -102,7 +102,12 @@
 				$phone['current'] = false;
 			}
 			
-			
+			if(file_exists(".reset")){
+				$tmp_to = file_get_contents(".reset");
+				unlink(".reset");
+				$txt="✅ ربات مجدد راه اندازی شد.";
+				$MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $tmp_to, 'message' => $txt, 'parse_mode' => 'HTML' ]);
+			}
 			
 			$SentMSGsF = '.SentMSGs_'.$ClearedPhone;
 			if(!file_exists($SentMSGsF)){
@@ -969,6 +974,21 @@ $trans
 										}
 										
 										
+									break;
+									
+									case "/reset":
+										$text = "⏳ درحال اجرای مجدد ربات...";
+										file_put_contents(".reset",$peer);
+										file_put_contents('.ForceRun','yes');
+										$cmd = "#!/bin/sh
+ps aux | grep 'UserBot.php' | awk '{print $2}' | xargs kill
+cd ".getcwd()." 
+php UserBot.php ".$phone['number']."
+";
+										file_put_contents('reset.sh',$cmd); 
+										execInBackground("chmod 0755 ".getcwd()."/reset.sh");
+										execInBackground("cd ".getcwd()." & ./reset.sh");
+										exit();
 									break;
 									
 									

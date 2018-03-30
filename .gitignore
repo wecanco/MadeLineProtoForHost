@@ -4,6 +4,7 @@ UserBotPro.php
 __
 Examples/BotView/
 Examples/ChannelPostRob/
+Examples/ChannelMusicRob/
 Examples/inc/SocksProxy.php
 Examples/sessions/.session*
 Examples/.SentMSGs_*

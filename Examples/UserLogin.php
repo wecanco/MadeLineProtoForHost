@@ -38,10 +38,14 @@
 	}
 	
 	if($ProcessCount > 2){
-		echo "stop: ";
-		print_r($psRes);
-		//file_put_contents('LastRun2',date("Y-m-d H:i:s", time())."\n--------\n".implode("\n",$psRes));
-		exit();
+		if(file_exists('.ForceRun')){
+			unlink('.ForceRun');
+		}else{
+			echo "stop: ";
+			print_r($psRes);
+			//file_put_contents('LastRun2',date("Y-m-d H:i:s", time())."\n--------\n".implode("\n",$psRes));
+			exit();
+		}
 	}
 
 	$BreakLine = "<br>";

