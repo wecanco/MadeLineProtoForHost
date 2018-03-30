@@ -2,7 +2,16 @@
 <?php
 	//print_r($_SERVER);
 	require_once 'config.php'; // فایل کانفیگ
-	require_once $libPath.'vendor/autoload.php'; // فراخوانی لودر کتابخانه میدلاین
+	$phpversion = explode('.', phpversion());
+	if(intval($phpversion[0]) >= 7){
+		require_once $libPath.'vendor/autoload.php'; // فراخوانی لودر کتابخانه میدلاین
+	}else{
+		if (!file_exists($libPath.'madeline.php')) {
+			copy('https://phar.madelineproto.xyz/madeline.php', $libPath.'madeline.php');
+		}
+		include $libPath.'madeline.php';
+	}
+	
 	//require_once $libPath.'src/danog/MadelineProto/VoIP/php-libtgvoip.php';
 	
 	if(file_exists('inc/WeCanFunctions.php')){
