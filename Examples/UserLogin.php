@@ -120,41 +120,18 @@
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 				echo 'reading session file... ['.$sessionFile.']'. PHP_EOL .$BreakLine;
 			}
-			//RemoveProxies($sessionFile);
-			$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
+			//$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
+			$MadelineProto[$phones[0]['number']] = new \danog\MadelineProto\API($sessionFile, $settings);
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 				echo 'session file readed.'. PHP_EOL .$BreakLine;
 			}
+			$MadelineProto[$phones[0]['number']]->start();
 			if(!$RunInTerminal){
 				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 					echo '<a href="./UserBot.php">STOP BOT</a>'. PHP_EOL .$BreakLine;
 				}
 			}
-			// set proxy
-			//$MadelineProto[$phones[0]['number']]->settings['logger']['logger'] = $MySettings['logger']['logger'];
-			//$MadelineProto[$phones[0]['number']]->settings['connection_settings'] = $MySettings['connection_settings'];
-			//$MadelineProto[$phones[0]['number']]->settings['app_info'] = $MySettings['app_info'];
-			
-			// remove proxy
-			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy']);
-			//unset($MadelineProto[$phones[0]['number']]->settings['connection_settings']['all']['proxy_extra']);
-			//$MadelineProto[$phones[0]['number']]->updates->API->chats = [];
-			//$MadelineProto[$phones[0]['number']]->updates->API->full_chats = [];
-			//$MadelineProto[$phones[0]['number']]->updates->API->updates = [];
-			//$MadelineProto[$phones[0]['number']]->updates->API->constructors = null;
-			//$MadelineProto[$phones[0]['number']]->updates->API->methods = null;
-			//for($i=0; $i<sizeof($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets); $i++){
-				//$MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$i]->extra = [];
-				//$MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$i]->proxy = '\Socket';
-			//}
-			//foreach ($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets as $key => $socket) {
-				//print_r($MadelineProto[$phones[0]['number']]->updates->API->datacenter->sockets[$key]);
-				//exit();
-			//}
-			//$MadelineProto[$phones[0]['number']]->updates->API->phone->API = null;
-			//$MadelineProto[$phones[0]['number']]->updates->API->stickers->API = null;
-			
-			
+
 		} catch (\danog\MadelineProto\Exception $e) {
 			echo 'Error: '. PHP_EOL .$BreakLine;
 			var_dump($e->getMessage());
