@@ -12,182 +12,70 @@ If not, see <http://www.gnu.org/licenses/>.
 */
 set_include_path(get_include_path().':'.realpath(dirname(__FILE__).'/MadelineProto/'));
 
-require_once 'vendor/autoload.php';
+if (!file_exists(__DIR__.'/vendor/autoload.php')) {
+    echo 'You did not run composer update, using madeline.php'.PHP_EOL;
+    if (!file_exists('madeline.php')) {
+        copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
+    }
+    include 'madeline.php';
+} else {
+    require_once 'vendor/autoload.php';
+}
 if (file_exists('web_data.php')) {
     require_once 'web_data.php';
 }
 
 echo 'Deserializing MadelineProto from session.madeline...'.PHP_EOL;
-$MadelineProto = false;
 
-try {
-    $MadelineProto = new \danog\MadelineProto\API('session.madeline');
-} catch (\danog\MadelineProto\Exception $e) {
-    \danog\MadelineProto\Logger::log($e->getMessage());
-}
+$MadelineProto = new \danog\MadelineProto\API('session.madeline', ['secret_chats' => ['accept_chats' => false]]);
+$MadelineProto->start();
 
-if (file_exists('.env')) {
-    echo 'Loading .env...'.PHP_EOL;
-    $dotenv = new Dotenv\Dotenv(getcwd());
-    $dotenv->load();
-}
-if (getenv('TEST_SECRET_CHAT') == '') {
-    die('TEST_SECRET_CHAT is not defined in .env, please define it.'.PHP_EOL);
-}
-echo 'Loading settings...'.PHP_EOL;
-$settings = json_decode(getenv('MTPROTO_SETTINGS'), true) ?: [];
-
-if ($MadelineProto === false) {
-    echo 'Loading MadelineProto...'.PHP_EOL;
-    $MadelineProto = new \danog\MadelineProto\API($settings);
-    if (getenv('TRAVIS_COMMIT') == '') {
-        $sentCode = $MadelineProto->phone_login(readline('Enter your phone number: '));
-        \danog\MadelineProto\Logger::log($sentCode, \danog\MadelineProto\Logger::NOTICE);
-        echo 'Enter the code you received: ';
-        $code = fgets(STDIN, (isset($sentCode['type']['length']) ? $sentCode['type']['length'] : 5) + 1);
-        $authorization = $MadelineProto->complete_phone_login($code);
-        \danog\MadelineProto\Logger::log($authorization, \danog\MadelineProto\Logger::NOTICE);
-        if ($authorization['_'] === 'account.noPassword') {
-            throw new \danog\MadelineProto\Exception('2FA is enabled but no password is set!');
-        }
-        if ($authorization['_'] === 'account.password') {
-            \danog\MadelineProto\Logger::log('2FA is enabled', \danog\MadelineProto\Logger::NOTICE);
-            $authorization = $MadelineProto->complete_2fa_login(readline('Please enter your password (hint '.$authorization['hint'].'): '));
-        }
-        if ($authorization['_'] === 'account.needSignup') {
-            \danog\MadelineProto\Logger::log('Registering new user', \danog\MadelineProto\Logger::NOTICE);
-            $authorization = $MadelineProto->complete_signup(readline('Please enter your first name: '), readline('Please enter your last name (can be empty): '));
-        }
-
-        echo 'Serializing MadelineProto to session.madeline...'.PHP_EOL;
-        echo 'Wrote '.\danog\MadelineProto\Serialization::serialize('session.madeline', $MadelineProto).' bytes'.PHP_EOL;
-    } else {
-        $MadelineProto->bot_login(getenv('BOT_TOKEN'));
-    }
-}
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::ULTRA_VERBOSE);
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::VERBOSE);
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::NOTICE);
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::WARNING);
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::ERROR);
-\danog\MadelineProto\Logger::log('hey', \danog\MadelineProto\Logger::FATAL_ERROR);
-
-$message = (getenv('TRAVIS_COMMIT') == '') ? 'I iz works always (io laborare sembre) (yo lavorar siempre) (mi labori ĉiam) (я всегда работать) (Ik werkuh altijd) (Ngimbonga ngaso sonke isikhathi ukusebenza)' : ('Travis ci tests in progress: commit '.getenv('TRAVIS_COMMIT').', job '.getenv('TRAVIS_JOB_NUMBER').', PHP version: '.getenv('TRAVIS_PHP_VERSION'));
 if (!isset($MadelineProto->programmed_call)) {
     $MadelineProto->programmed_call = [];
 }
 $MadelineProto->session = 'session.madeline';
-                    $inputEncryptedFilePhoto = $MadelineProto->upload_encrypted('tests/faust.jpg', 'fausticorn.jpg'); // This gets an inputFile object with file name magic
-                    $inputEncryptedFileGif = $MadelineProto->upload_encrypted('tests/pony.mp4');
-                    $inputEncryptedFileSticker = $MadelineProto->upload_encrypted('tests/lel.webp');
-                    $inputEncryptedFileDocument = $MadelineProto->upload_encrypted('tests/60', 'magic'); // This gets an inputFile object with file name magic
-                    $inputEncryptedFileVideo = $MadelineProto->upload_encrypted('tests/swing.mp4');
-                    $inputEncryptedFileAudio = $MadelineProto->upload_encrypted('tests/mosconi.mp3');
 
-/*
-$m = new \danog\MadelineProto\API($settings);
-$m->import_authorization($MadelineProto->export_authorization());
-*/
+/*if (!isset($MadelineProto->inputEncryptedFilePhoto) && false) {
+    $MadelineProto->inputEncryptedFilePhoto = $MadelineProto->upload_encrypted('tests/faust.jpg', 'fausticorn.jpg'); // This gets an inputFile object with file name magic
+    $MadelineProto->inputEncryptedFileGif = $MadelineProto->upload_encrypted('tests/pony.mp4');
+    $MadelineProto->inputEncryptedFileSticker = $MadelineProto->upload_encrypted('tests/lel.webp');
+    $MadelineProto->inputEncryptedFileDocument = $MadelineProto->upload_encrypted('tests/60', 'magic'); // This gets an inputFile object with file name magic
+    $MadelineProto->inputEncryptedFileVideo = $MadelineProto->upload_encrypted('tests/swing.mp4');
+    $MadelineProto->inputEncryptedFileAudio = $MadelineProto->upload_encrypted('tests/mosconi.mp3');
+}*/
 
-$MadelineProto->serialize();
-$times = [];
-$calls = [];
-$users = [];
-$MadelineProto->get_updates(['offset' => -1]);
-    $offset = 0;
-    while (1) {
-        $updates = $MadelineProto->get_updates(['offset' => $offset, 'limit' => 5000, 'timeout' => 0]); // Just like in the bot API, you can specify an offset, a limit and a timeout
-        foreach ($MadelineProto->programmed_call as $key => $pair) {
-            list($user, $time) = $pair;
-            if ($time < time()) {
-                if (!isset($calls[$user])) {
-                    try {
-                        include 'songs.php';
-                        $call = $MadelineProto->request_call($user);
-                        $call->configuration['enable_NS'] = false;
-                        $call->configuration['enable_AGC'] = false;
-                        $call->configuration['enable_AEC'] = false;
-                        $call->configuration['shared_config'] = [
-                                'audio_init_bitrate' => 70 * 1000,
-                                'audio_max_bitrate'  => 100 * 1000,
-                                'audio_min_bitrate'  => 15 * 1000,
-                                //'audio_bitrate_step_decr' => 0,
-                                //'audio_bitrate_step_incr' => 2000,
-                            ];
-                        $call->parseConfig();
-                        $calls[$call->getOtherID()] = $call;
-                        $times[$call->getOtherID()] = [time(), $MadelineProto->messages->sendMessage(['peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($calls).PHP_EOL.PHP_EOL.$call->getDebugString()])['id']];
-                        $call->playOnHold($songs);
-                    } catch (\danog\MadelineProto\RPCErrorException $e) {
-                        echo $e;
-                    }
-                }
-                unset($MadelineProto->programmed_call[$key]);
-            }
-        }
-        foreach ($calls as $key => $call) {
-            if ($call->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
-                unset($calls[$key]);
-            } elseif (isset($times[$call->getOtherID()]) && $times[$call->getOtherID()][0] < time()) {
-                $times[$call->getOtherID()][0] += 30 + count($calls);
+class EventHandler extends \danog\MadelineProto\EventHandler
+{
+    private $times = [];
+    private $times_messages = [];
+    private $calls = [];
+    private $my_users = [];
 
-                try {
-                    $MadelineProto->messages->editMessage(['id' => $times[$call->getOtherID()][1], 'peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($calls).PHP_EOL.PHP_EOL.$call->getDebugString()]);
-                } catch (\danog\MadelineProto\RPCErrorException $e) {
-                    echo $e;
-                }
-            }
-        }
-        foreach ($updates as $update) {
-            \danog\MadelineProto\Logger::log($update);
-            $offset = $update['update_id'] + 1; // Just like in the bot API, the offset must be set to the last update_id
-            switch ($update['update']['_']) {
-                case 'updateNewEncryptedMessage':
-                    $secret = $update['update']['message']['chat_id'];
-                    $secret_media = [];
+    public function configureCall($call)
+    {
+        include 'songs.php';
+        $call->configuration['enable_NS'] = false;
+        $call->configuration['enable_AGC'] = false;
+        $call->configuration['enable_AEC'] = false;
+        $call->configuration['shared_config'] = [
+            'audio_init_bitrate'      => 100 * 1000,
+            'audio_max_bitrate'       => 100 * 1000,
+            'audio_min_bitrate'       => 10 * 1000,
+            'audio_congestion_window' => 4 * 1024,
+            //'audio_bitrate_step_decr' => 0,
+            //'audio_bitrate_step_incr' => 2000,
+        ];
+        $call->parseConfig();
+        $call->playOnHold($songs);
+    }
 
-                    // Photo uploaded as document, secret chat
-                    $secret_media['document_photo'] = ['peer' => $secret, 'file' => $inputEncryptedFilePhoto, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/faust.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/faust.jpg'), 'caption' => 'This file was uploaded using MadelineProto', 'key' => $inputEncryptedFilePhoto['key'], 'iv' => $inputEncryptedFilePhoto['iv'], 'file_name' => 'faust.jpg', 'size' => filesize('tests/faust.jpg'), 'attributes' => [['_' => 'documentAttributeImageSize', 'w' => 1280, 'h' => 914]]]]];
-
-                    // Photo, secret chat
-                    $secret_media['photo'] = ['peer' => $secret, 'file' => $inputEncryptedFilePhoto, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaPhoto', 'thumb' => file_get_contents('tests/faust.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'caption' => 'This file was uploaded using MadelineProto', 'key' => $inputEncryptedFilePhoto['key'], 'iv' => $inputEncryptedFilePhoto['iv'], 'size' => filesize('tests/faust.jpg'), 'w' => 1280, 'h' => 914]]];
-
-                    // GIF, secret chat
-                    $secret_media['gif'] = ['peer' => $secret, 'file' => $inputEncryptedFileGif, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/pony.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/pony.mp4'), 'caption' => 'test', 'key' => $inputEncryptedFileGif['key'], 'iv' => $inputEncryptedFileGif['iv'], 'file_name' => 'pony.mp4', 'size' => filesize('tests/faust.jpg'), 'attributes' => [['_' => 'documentAttributeAnimated']]]]];
-
-                    // Sticker, secret chat
-                    $secret_media['sticker'] = ['peer' => $secret, 'file' => $inputEncryptedFileSticker, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/lel.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/lel.webp'), 'caption' => 'test', 'key' => $inputEncryptedFileSticker['key'], 'iv' => $inputEncryptedFileSticker['iv'], 'file_name' => 'lel.webp', 'size' => filesize('tests/lel.webp'), 'attributes' => [['_' => 'documentAttributeSticker', 'alt' => 'LEL', 'stickerset' => ['_' => 'inputStickerSetEmpty']]]]]];
-
-                    // Document, secrey chat
-                    $secret_media['document'] = ['peer' => $secret, 'file' => $inputEncryptedFileDocument, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/faust.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => 'magic/magic', 'caption' => 'test', 'key' => $inputEncryptedFileDocument['key'], 'iv' => $inputEncryptedFileDocument['iv'], 'file_name' => 'magic.magic', 'size' => filesize('tests/60'), 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => 'fairy']]]]];
-
-                    // Video, secret chat
-                    $secret_media['video'] = ['peer' => $secret, 'file' => $inputEncryptedFileVideo, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/swing.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/swing.mp4'), 'caption' => 'test', 'key' => $inputEncryptedFileVideo['key'], 'iv' => $inputEncryptedFileVideo['iv'], 'file_name' => 'swing.mp4', 'size' => filesize('tests/swing.mp4'), 'attributes' => [['_' => 'documentAttributeVideo', 'duration' => 5, 'w' => 1280, 'h' => 720]]]]];
-
-                    // audio, secret chat
-                    $secret_media['audio'] = ['peer' => $secret, 'file' => $inputEncryptedFileAudio, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/faust.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/mosconi.mp3'), 'caption' => 'test', 'key' => $inputEncryptedFileAudio['key'], 'iv' => $inputEncryptedFileAudio['iv'], 'file_name' => 'mosconi.mp3', 'size' => filesize('tests/mosconi.mp3'), 'attributes' => [['_' => 'documentAttributeAudio', 'voice' => false, 'duration' => 1, 'title' => 'AH NON LO SO IO', 'performer' => 'IL DIO GERMANO MOSCONI']]]]];
-
-                    $secret_media['voice'] = ['peer' => $secret, 'file' => $inputEncryptedFileAudio, 'message' => ['_' => 'decryptedMessage', 'ttl' => 0, 'message' => '', 'media' => ['_' => 'decryptedMessageMediaDocument', 'thumb' => file_get_contents('tests/faust.preview.jpg'), 'thumb_w' => 90, 'thumb_h' => 90, 'mime_type' => mime_content_type('tests/mosconi.mp3'), 'caption' => 'test', 'key' => $inputEncryptedFileAudio['key'], 'iv' => $inputEncryptedFileAudio['iv'], 'file_name' => 'mosconi.mp3', 'size' => filesize('tests/mosconi.mp3'), 'attributes' => [['_' => 'documentAttributeAudio', 'voice' => true, 'duration' => 1, 'title' => 'AH NON LO SO IO', 'performer' => 'IL DIO GERMANO MOSCONI']]]]];
-
-                    foreach ($secret_media as $type => $smessage) {
-                        try {
-                            $type = $MadelineProto->messages->sendEncryptedFile($smessage);
-                        } catch (\danog\MadelineProto\RPCErrorException $e) {
-                        } catch (\danog\MadelineProto\Exception $e) {
-                        }
-                    }
-                    break;
-                case 'updateNewMessage':
-                    include 'songs.php';
-                    if ($update['update']['message']['out'] || $update['update']['message']['to_id']['_'] !== 'peerUser' || !isset($update['update']['message']['from_id'])) {
-                        continue;
-                    }
-
-                    try {
-                        if (!isset($users[$update['update']['message']['from_id']]) || isset($update['update']['message']['message']) && $update['update']['message']['message'] === '/start') {
-                            $users[$update['update']['message']['from_id']] = true;
-                            $update['update']['message']['message'] = '/call';
-                            $MadelineProto->messages->sendMessage(['peer' => $update['update']['message']['from_id'], 'message' => "Hi, I'm @magnaluna the webradio.
+    public function handleMessage($chat_id, $from_id, $message)
+    {
+        try {
+            if (!isset($this->my_users[$from_id]) || $message === '/start') {
+                $this->my_users[$from_id] = true;
+                $message = '/call';
+                $this->messages->sendMessage(['no_webpage' => true, 'peer' => $chat_id, 'message' => "Hi, I'm @magnaluna the webradio.
 
 Call _me_ to listen to some **awesome** music, or send /call to make _me_ call _you_ (don't forget to disable call privacy settings!).
 
@@ -202,78 +90,167 @@ Send /start to see this message again.
 I also provide advanced stats during calls!
 
 I'm a userbot powered by @MadelineProto, created by @danogentili.
-Propic art by @magnaluna on deviantart.", 'parse_mode' => 'Markdown']);
-                        }
-                        if (!isset($calls[$update['update']['message']['from_id']]) && isset($update['update']['message']['message']) && $update['update']['message']['message'] === '/call') {
-                            include 'songs.php';
-                            $call = $MadelineProto->request_call($update['update']['message']['from_id']);
-                            $call->configuration['enable_NS'] = false;
-                            $call->configuration['enable_AGC'] = false;
-                            $call->configuration['enable_AEC'] = false;
-                            $call->configuration['shared_config'] = [
-                                'audio_init_bitrate' => 70 * 1000,
-                                'audio_max_bitrate'  => 100 * 1000,
-                                'audio_min_bitrate'  => 15 * 1000,
-                                //'audio_bitrate_step_decr' => 0,
-                                //'audio_bitrate_step_incr' => 2000,
-                            ];
-                            $call->parseConfig();
-                            $call->playOnHold($songs);
-                            $calls[$call->getOtherID()] = $call;
-                            $times[$call->getOtherID()] = [time(), $MadelineProto->messages->sendMessage(['peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($calls).PHP_EOL.PHP_EOL.$call->getDebugString()])['id']];
-                        }
-                        if (isset($update['update']['message']['message']) && strpos($update['update']['message']['message'], '/program') === 0) {
-                            $time = strtotime(str_replace('/program ', '', $update['update']['message']['message']));
-                            if ($time === false) {
-                                $MadelineProto->messages->sendMessage(['peer' => $update['update']['message']['from_id'], 'message' => 'Invalid time provided']);
-                            } else {
-                                $MadelineProto->programmed_call[] = [$update['update']['message']['from_id'], $time];
-                                $MadelineProto->messages->sendMessage(['peer' => $update['update']['message']['from_id'], 'message' => 'OK']);
-                            }
-                        }
+
+Source code: https://github.com/danog/MadelineProto
+
+Propic art by @magnaluna on [deviantart](https://magnaluna.deviantart.com).", 'parse_mode' => 'Markdown']);
+            }
+            if (!isset($this->calls[$from_id]) && $message === '/call') {
+                $call = $this->request_call($from_id);
+                $this->configureCall($call);
+                $this->calls[$call->getOtherID()] = $call;
+                $this->times[$call->getOtherID()] = [time(), $this->messages->sendMessage(['peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($this->calls).PHP_EOL.PHP_EOL.$call->getDebugString()])['id']];
+            }
+            if (strpos($message, '/program') === 0) {
+                $time = strtotime(str_replace('/program ', '', $message));
+                if ($time === false) {
+                    $this->messages->sendMessage(['peer' => $chat_id, 'message' => 'Invalid time provided']);
+                } else {
+                    $this->programmed_call[] = [$from_id, $time];
+                    $this->messages->sendMessage(['peer' => $chat_id, 'message' => 'OK']);
+                }
+            }
+            if ($message === '/broadcast' && $from_id === 101374607) {
+                $time = time() + 100;
+                foreach ($this->get_dialogs() as $peer) {
+                    $this->times_messages[] = [$peer, $time, $message];
+                    if (isset($peer['user_id'])) {
+                        $this->programmed_call[] = [$peer['user_id'], $time];
+                        $time += 30;
+                    }
+                }
+            }
+        } catch (\danog\MadelineProto\RPCErrorException $e) {
+            try {
+                if ($e->rpc === 'USER_PRIVACY_RESTRICTED') {
+                    $e = 'Please disable call privacy settings to make me call you';
+                } elseif (strpos($e->rpc, 'FLOOD_WAIT_') === 0) {
+                    $t = str_replace('FLOOD_WAIT_', '', $e->rpc);
+                    $this->programmed_call[] = [$from_id, time() + 1 + $t];
+                    $e = "Too many people used the /call function. I'll call you back in $t seconds.\nYou can also call me right now.";
+                }
+                $this->messages->sendMessage(['peer' => $chat_id, 'message' => (string) $e]);
+            } catch (\danog\MadelineProto\RPCErrorException $e) {
+            }
+            echo $e;
+        } catch (\danog\MadelineProto\Exception $e) {
+            echo $e;
+        }
+    }
+
+    public function onUpdateNewMessage($update)
+    {
+        if ($update['message']['out'] || $update['message']['to_id']['_'] !== 'peerUser' || !isset($update['message']['from_id'])) {
+            return;
+        }
+        $chat_id = $from_id = $this->get_info($update)['bot_api_id'];
+        $message = isset($update['message']['message']) ? $update['message']['message'] : '';
+        $this->handleMessage($chat_id, $from_id, $message);
+    }
+
+    public function onUpdateNewEncryptedMessage($update)
+    {
+        return;
+        $chat_id = $this->get_info($update)['InputEncryptedChat'];
+        $from_id = $this->get_secret_chat($chat_id)['user_id'];
+        $message = isset($update['message']['decrypted_message']['message']) ? $update['message']['decrypted_message']['message'] : '';
+        $this->handleMessage($chat_id, $from_id, $message);
+    }
+
+    public function onUpdateEncryption($update)
+    {
+        return;
+
+        try {
+            if ($update['chat']['_'] !== 'encryptedChat') {
+                return;
+            }
+            $chat_id = $this->get_info($update)['InputEncryptedChat'];
+            $from_id = $this->get_secret_chat($chat_id)['user_id'];
+            $message = '';
+        } catch (\danog\MadelineProto\Exception $e) {
+            return;
+        }
+        $this->handleMessage($chat_id, $from_id, $message);
+    }
+
+    public function onUpdatePhoneCall($update)
+    {
+        if (is_object($update['phone_call']) && isset($update['phone_call']->madeline) && $update['phone_call']->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_INCOMING) {
+            $this->configureCall($update['phone_call']);
+            if ($update['phone_call']->accept() === false) {
+                echo 'DID NOT ACCEPT A CALL';
+            }
+            $this->calls[$update['phone_call']->getOtherID()] = $update['phone_call'];
+
+            try {
+                $this->times[$update['phone_call']->getOtherID()] = [time(), $this->messages->sendMessage(['peer' => $update['phone_call']->getOtherID(), 'message' => 'Total running calls: '.count($this->calls).PHP_EOL.PHP_EOL])['id']];
+            } catch (\danog\MadelineProto\RPCErrorException $e) {
+            }
+        }
+    }
+
+    public function onLoop()
+    {
+        foreach ($this->programmed_call as $key => $pair) {
+            list($user, $time) = $pair;
+            if ($time < time()) {
+                if (!isset($this->calls[$user])) {
+                    try {
+                        $call = $this->request_call($user);
+                        $this->configureCall($call);
+                        $this->calls[$call->getOtherID()] = $call;
+                        $this->times[$call->getOtherID()] = [time(), $this->messages->sendMessage(['peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($this->calls).PHP_EOL.PHP_EOL.$call->getDebugString()])['id']];
                     } catch (\danog\MadelineProto\RPCErrorException $e) {
                         try {
                             if ($e->rpc === 'USER_PRIVACY_RESTRICTED') {
                                 $e = 'Please disable call privacy settings to make me call you';
                             } elseif (strpos($e->rpc, 'FLOOD_WAIT_') === 0) {
                                 $t = str_replace('FLOOD_WAIT_', '', $e->rpc);
-                                $MadelineProto->programmed_call[] = [$update['update']['message']['from_id'], time() + 1 + $t];
-                                $e = "Too many people used the /call function. I'll call you back in $t seconds.\nYou can also call me right now.";
+                                $this->programmed_call[] = [$user, time() + 1 + $t];
+                                $e = "I'll call you back in $t seconds.\nYou can also call me right now.";
                             }
-                            $MadelineProto->messages->sendMessage(['peer' => $update['update']['message']['from_id'], 'message' => (string) $e]);
+                            $this->messages->sendMessage(['peer' => $user, 'message' => (string) $e]);
                         } catch (\danog\MadelineProto\RPCErrorException $e) {
                         }
-                        echo $e;
-                    } catch (\danog\MadelineProto\Exception $e) {
-                        echo $e;
                     }
-                    break;
-                case 'updatePhoneCall':
-                if (is_object($update['update']['phone_call']) && isset($update['update']['phone_call']->madeline) && $update['update']['phone_call']->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_INCOMING) {
-                    include 'songs.php';
-                    $update['update']['phone_call']->configuration['enable_NS'] = false;
-                    $update['update']['phone_call']->configuration['enable_AGC'] = false;
-                    $update['update']['phone_call']->configuration['enable_AEC'] = false;
-                    $update['update']['phone_call']->configuration['shared_config'] = [
-                        'audio_init_bitrate' => 70 * 1000,
-                        'audio_max_bitrate'  => 100 * 1000,
-                        'audio_min_bitrate'  => 15 * 1000,
-                        //'audio_bitrate_step_decr' => 0,
-                        //'audio_bitrate_step_incr' => 2000,
-                    ];
-                    $update['update']['phone_call']->parseConfig();
-                    if ($update['update']['phone_call']->accept() === false) {
-                        echo 'DID NOT ACCEPT A CALL';
-                    }
-                    $calls[$update['update']['phone_call']->getOtherID()] = $update['update']['phone_call'];
-
-                    try {
-                        $times[$update['update']['phone_call']->getOtherID()] = [time(), $MadelineProto->messages->sendMessage(['peer' => $update['update']['phone_call']->getOtherID(), 'message' => 'Total running calls: '.count($calls).PHP_EOL.PHP_EOL])['id']];
-                    } catch (\danog\MadelineProto\RPCErrorException $e) {
-                    }
-                    $update['update']['phone_call']->playOnHold($songs);
                 }
+                unset($this->programmed_call[$key]);
+            }
+            break;
+        }
+        foreach ($this->times_messages as $key => $pair) {
+            list($peer, $time, $message) = $pair;
+            if ($time < time()) {
+                try {
+                    $this->messages->sendMessage(['peer' => $peer, 'message' => $message]);
+                } catch (\danog\MadelineProto\RPCErrorException $e) {
+                    if (strpos($e->rpc, 'FLOOD_WAIT_') === 0) {
+                        $t = str_replace('FLOOD_WAIT_', '', $e->rpc);
+                        $this->times_messages[] = [$peer, time() + 1 + $t, $message];
+                    }
+                    echo $e;
+                }
+                unset($this->times_messages[$key]);
+            }
+            break;
+        }
+        \danog\MadelineProto\Logger::log(count($this->calls).' calls running!');
+        foreach ($this->calls as $key => $call) {
+            if ($call->getCallState() === \danog\MadelineProto\VoIP::CALL_STATE_ENDED) {
+                unset($this->calls[$key]);
+            } elseif (isset($this->times[$call->getOtherID()]) && $this->times[$call->getOtherID()][0] < time()) {
+                $this->times[$call->getOtherID()][0] += 30 + count($this->calls);
 
-           }
+                try {
+                    $this->messages->editMessage(['id' => $this->times[$call->getOtherID()][1], 'peer' => $call->getOtherID(), 'message' => 'Total running calls: '.count($this->calls).PHP_EOL.PHP_EOL.$call->getDebugString()]);
+                } catch (\danog\MadelineProto\RPCErrorException $e) {
+                    echo $e;
+                }
+            }
         }
     }
+}
+
+$MadelineProto->setEventHandler('\EventHandler');
+$MadelineProto->loop();
