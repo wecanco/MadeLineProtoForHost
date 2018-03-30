@@ -34,7 +34,7 @@
 		$psRes = ['error' => $e->getMessage()];
 	}
 	
-	$UserBotF = getcwd().'/UserBot.php';
+	$UserBotF = getcwd().'/Start.php';
 	$UserBotF = explode("/",$UserBotF);
 	unset($UserBotF[0]);
 	unset($UserBotF[1]);
@@ -137,7 +137,7 @@
 			$MadelineProto[$phones[0]['number']]->start();
 			if(!$RunInTerminal){
 				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
-					echo '<a href="./UserBot.php">STOP BOT</a>'. PHP_EOL .$BreakLine;
+					echo '<a href="./Start.php">STOP BOT</a>'. PHP_EOL .$BreakLine;
 				}
 			}
 

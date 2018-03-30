@@ -23,13 +23,13 @@
     unlink($stopBotFile);
 	include('config.php');
 	
-    $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/UserBot.php?phone=".urlencode($phone)." &> /dev/null";
+    $comm = "wget --timeout=6000 -qO- ".$MadelineURL."/Start.php?phone=".urlencode($phone)." &> /dev/null";
     $res = exec($comm);
 	file_put_contents('LastRunnedCronJob',date("Y-m-d H:i:s", time())."\n--------------\n".$res);
 
 	// نمونه کرون جاب:
 	//  */5 	* 	* 	* 	* 	wget -qO- http://tlbots.cf/_MadelineTest/Examples/StartUserBot.php?phone=+989357973301 &> /dev/null
-	//  * 	* 	* 	* 	* 	php -q /home2/tlbotscf/public_html/MadeLineProtoForHost/Examples/UserBot.php +989357973301 &> /dev/null
+	//  * 	* 	* 	* 	* 	php -q /home2/tlbotscf/public_html/MadeLineProtoForHost/Examples/Start.php +989357973301 &> /dev/null
 	
 		
 	// @WeCanGP | WeCan-Co.ir
