@@ -134,7 +134,7 @@
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 				echo 'session file readed.'. PHP_EOL .$BreakLine;
 			}
-			$MadelineProto[$phones[0]['number']]->start();
+			//$MadelineProto[$phones[0]['number']]->start();
 			if(!$RunInTerminal){
 				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 					echo '<a href="./Start.php">STOP BOT</a>'. PHP_EOL .$BreakLine;

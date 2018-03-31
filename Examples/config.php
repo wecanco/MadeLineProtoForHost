@@ -5,6 +5,7 @@
 	@ini_set('implicit_flush',1);
 	@ob_end_clean();
 	set_time_limit(0);
+	@ini_set('xdebug.max_nesting_level', 500);
 	
 	// برای یافت خطاها
 	ini_set('display_errors', 1);
