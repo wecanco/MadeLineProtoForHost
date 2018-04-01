@@ -490,7 +490,7 @@ $trans
 				}
 				
 				$localFile = 'temp/'.$name;
-				curl_dl($link,$localFile,6000);
+				curl_dl($link,$localFile,0);
 				$txt = "⏳ <b>درحال آپلود روی سرور تلگرام...</b> \n".$name."";
 				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 				$caption = '📌 '.$name.' | @WeCanGP';
@@ -693,18 +693,27 @@ $trans
 		break;
 		
 		case "/reset":
-			$text = "⏳ درحال اجرای مجدد ربات...";
-			file_put_contents(".reset",$peer);
-			file_put_contents('.ForceRun','yes');
-			$cmd = "#!/bin/sh
+			if(in_array($from_id,$Admins)){
+				$text = "⏳ درحال اجرای مجدد ربات...";
+				file_put_contents(".reset",$peer);
+				file_put_contents('.ForceRun','yes');
+				$cmd = "#!/bin/sh
 ps aux | grep 'Start.php' | awk '{print $2}' | xargs kill
 cd ".getcwd()." 
 php Start.php ".$phone['number']."
 ";
-			file_put_contents('reset.sh',$cmd); 
-			execInBackground("chmod 0755 ".getcwd()."/reset.sh");
-			execInBackground("cd ".getcwd()." & ./reset.sh");
-			exit();
+				file_put_contents('reset.sh',$cmd); 
+				execInBackground("chmod 0755 ".getcwd()."/reset.sh");
+				execInBackground("cd ".getcwd()." & ./reset.sh");
+				exit();
+			}
+		break;
+		
+		case "/delupdates":
+			if(in_array($from_id,$Admins)){
+				RemoveUpdates($sessionFile);
+				$text = "Session File Cleared!";
+			}
 		break;
 		
 		

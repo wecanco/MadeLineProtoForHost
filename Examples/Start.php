@@ -1,6 +1,4 @@
-#!/usr/bin/env php
 <?php
-	// ربات پاسخگو
 	//?phone=+989357973301
 	require_once('UserLogin.php'); // خواندن سشن
 	require_once('inc/GTranslator.php'); // کلاس ترجمه گوگل
@@ -19,7 +17,7 @@
 	$RemindsF = ".reminds";
 	$CheckOnlineSitesFile = ".checkOnlineSites";
 	$InlineMode = false;
-	$Serialize = true;
+	$Serialize = false;
 	$SentMSGs=[];
 	$Splitor = "|";
 	
@@ -61,7 +59,7 @@
 	
 	}
 	
-	echo "\nget bots...\n";
+	echo "$BreakLine get bots... $BreakLine";
 	$MadelineProtoBot = [];
 	foreach($Bots as $bkey => $bval){
 		if($Bots[$bkey]['active']){
@@ -117,13 +115,11 @@
 			$SentMSGs[$phone['number']]=explode("\n",file_get_contents($SentMSGsF));
 	
 			$sessionFile = $sessionsDir."/.session_".$ClearedPhone.""; // مسیر سشن
-			//$updates = $MadelineProto[$phone['number']]->get_updates(['offset' => $offset, 'limit' => 50]);
-			echo "\nset settings...\n";
+			echo "$BreakLine set settings... $BreakLine";
 			$MadelineProto[$phone['number']]->settings['updates']['handle_updates'] = true;
-			echo "\nget updates...\n";
+			echo "$BreakLine get updates...$BreakLine";
 			$updates = $MadelineProto[$phone['number']]->get_updates(['offset' => $offset, 'limit' => 50, 'timeout' => 0]);
-			//file_put_contents('updates_'.$ClearedPhone,json_encode($updates,JSON_PRETTY_PRINT));
-			
+
 			if(sizeof($updates) > 0){
 				foreach($updates as $key => $val){
 					$update = $updates[$key];

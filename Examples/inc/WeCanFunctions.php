@@ -38,6 +38,8 @@
 		curl_setopt($ch, CURLOPT_URL, $url);
 		//curl_setopt($ch, CURLOPT_POST, count($parms));
 		//curl_setopt($ch, CURLOPT_POSTFIELDS, $parms);
+		curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, 'dl_progress');
+		curl_setopt($ch, CURLOPT_NOPROGRESS, false); // needed to make progress function work	
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
@@ -115,3 +117,24 @@
 			//exec($cmd . " > ".time().".txt &");
 		}
 	}
+	
+	function dl_progress($resource,$download_size, $downloaded, $upload_size, $uploaded)
+	{
+		file_put_contents('dl',json_encode($resource));
+		echo $downloaded;
+		//if($download_size > 0)
+		//	 echo $downloaded / $download_size  * 100;
+		//ob_flush();
+		//flush();
+		//sleep(1);
+	}
+	
+	function RemoveUpdates($sessionFile){
+		$sess = file_get_contents($sessionFile);
+		$madeline = unserialize($sess);
+		$madeline->API->updates = [];
+		$madeline->updates->API->chats = [];
+		$madeline->updates->API->full_chats = [];
+		\danog\MadelineProto\Serialization::serialize($sessionFile, $madeline);
+	}
+

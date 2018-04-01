@@ -5,7 +5,9 @@
 	@ini_set('implicit_flush',1);
 	@ob_end_clean();
 	set_time_limit(0);
-	@ini_set('xdebug.max_nesting_level', 500);
+	
+	@ini_set('xdebug.max_nesting_level', 5000);
+	@ini_set('register_argc_argv', 'On On');
 	
 	// برای یافت خطاها
 	ini_set('display_errors', 1);
@@ -39,6 +41,12 @@
 	[
 		'logger' => [
 			'logger' => 0
+		],
+		'updates' => [
+			'handle_updates' => true,
+			'handle_old_updates' => false,
+			'getdifference_interval' => -1,
+			'callback' => "updates",
 		],
 		/*
 		'connection_settings' => [

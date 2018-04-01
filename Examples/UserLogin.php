@@ -1,6 +1,4 @@
-#!/usr/bin/env php
 <?php
-	//print_r($_SERVER);
 	require_once 'config.php'; // فایل کانفیگ
 	$phpversion = explode('.', phpversion());
 	if(intval($phpversion[0]) >= 7){
@@ -17,9 +15,11 @@
 	if(file_exists('inc/WeCanFunctions.php')){
 		require_once('inc/WeCanFunctions.php'); // توابع کاربردی
 	}
+	/*
 	if(file_exists('inc/SocksProxy.php')){
 		require_once('inc/SocksProxy.php'); // پروکسی
 	}
+	*/
 	
 	if(!file_exists($sessionsDir)){
 		mkdir($sessionsDir);
@@ -34,11 +34,12 @@
 		$psRes = ['error' => $e->getMessage()];
 	}
 	
-	$UserBotF = getcwd().'/Start.php';
-	$UserBotF = explode("/",$UserBotF);
-	unset($UserBotF[0]);
-	unset($UserBotF[1]);
-	$UserBotF = implode("/",$UserBotF);
+	$UserBotF = 'Start.php';
+	//$UserBotF = getcwd().'/Start.php';
+	//$UserBotF = explode("/",$UserBotF);
+	//unset($UserBotF[0]);
+	//unset($UserBotF[1]);
+	//$UserBotF = implode("/",$UserBotF);
 	$ProcessCount=0;
 	foreach($psRes as $processLine){
 		if((strpos($processLine, $UserBotF) !== false)){
@@ -46,13 +47,12 @@
 		}
 	}
 	
-	if($ProcessCount > 2){
+	if($ProcessCount > 1){
 		if(file_exists('.ForceRun')){
 			unlink('.ForceRun');
 		}else{
 			echo "stop: ";
 			print_r($psRes);
-			//file_put_contents('LastRun2',date("Y-m-d H:i:s", time())."\n--------\n".implode("\n",$psRes));
 			exit();
 		}
 	}
@@ -62,6 +62,10 @@
 		isset($_SERVER['SHELL']) || 
 		(isset($_SERVER['ComSpec']) && strpos(strtolower($_SERVER['ComSpec']), 'cmd.exe') !== false ) ){
 		$RunInTerminal = true;
+	}
+	
+	if(!isset($argv) && isset($_SERVER['argv'])){
+		$argv = $_SERVER['argv'];
 	}
 	
 	if($RunInTerminal){
@@ -130,11 +134,12 @@
 				echo 'reading session file... ['.$sessionFile.']'. PHP_EOL .$BreakLine;
 			}
 			//$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
+			//RemoveUpdates($sessionFile);
 			$MadelineProto[$phones[0]['number']] = new \danog\MadelineProto\API($sessionFile, $settings);
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 				echo 'session file readed.'. PHP_EOL .$BreakLine;
 			}
-			//$MadelineProto[$phones[0]['number']]->start();
+
 			if(!$RunInTerminal){
 				if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 					echo '<a href="./Start.php">STOP BOT</a>'. PHP_EOL .$BreakLine;
