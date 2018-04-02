@@ -36,10 +36,10 @@
 	
 
 
-
 	$BreakLine = "<br>";
 	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || 
 		isset($_SERVER['SHELL']) || 
+		(isset($_SERVER['_']) &&  strpos(strtolower($_SERVER['_']), 'php') !== false ) || 
 		(isset($_SERVER['ComSpec']) && strpos(strtolower($_SERVER['ComSpec']), 'cmd.exe') !== false ) ){
 		$RunInTerminal = true;
 	}
@@ -49,6 +49,14 @@
 	}
 	
 	if($RunInTerminal){
+		$tmp_RP = "";
+		
+		if(isset($_REQUEST) && sizeof($_REQUEST) >= 2){
+			$tmp_RP = array_slice($_REQUEST,1,1,true);
+			//$tmp_RP = end($tmp_RP);
+			//print_r($tmp_RP);
+			$tmp_RP = key($tmp_RP);
+		}
 		if(isset($argv[1])){
 			if(trim($argv[1]) !=""){
 				$_GET['phone'] = $argv[1];
@@ -63,6 +71,8 @@
 					$_GET['pass'] = $argv[3];
 				}
 			}
+		}else if(is_numeric($tmp_RP) && strlen($tmp_RP."") > 7 ){
+			$_GET['phone'] = "+".$tmp_RP;
 		}else{
 			$_GET['phone'] = readline('Shomare Hamrahe Khod Ra Vared Namaed: (Phone Number) ');
 		}
@@ -80,7 +90,7 @@
 			';
 		}
 	}
-	
+
 	global $phones;
 	$phones=array();
 	if(isset($_GET['phone'])){
@@ -104,15 +114,14 @@
 	$wclearedPhone = str_replace(array("+","-","(",")"),"",$phones[0]['number']);
 	$sessionFile = $sessionsDir."/.session_".$wclearedPhone.""; // مسیر سشن
 	
-	
 	// dont run multi process from same number
 	$UserBotF = 'Start.php';
 	$UserBotD = rtrim(getcwd(),'/');
 	$ProcessCount=0;
 	foreach($psRes as $processLine){
-		if((strpos($processLine, $UserBotF) !== false) && 
+		if( (strpos($processLine, $UserBotF) !== false) && 
 			//(strpos($processLine, $UserBotD) !== false) &&
-			(strpos($processLine, $wclearedPhone) !== false)
+			(strpos($processLine, "+".$wclearedPhone) !== false)
 				){
 			$ProcessCount++;
 		}

