@@ -34,29 +34,8 @@
 		$psRes = ['error' => $e->getMessage()];
 	}
 	
-	$UserBotF = 'Start.php';
-	$UserBotD = rtrim(getcwd(),'/');
-	//$UserBotF = getcwd().'/Start.php';
-	//$UserBotF = explode("/",$UserBotF);
-	//unset($UserBotF[0]);
-	//unset($UserBotF[1]);
-	//$UserBotF = implode("/",$UserBotF);
-	$ProcessCount=0;
-	foreach($psRes as $processLine){
-		if((strpos($processLine, $UserBotF) !== false) && (strpos($processLine, $UserBotD) !== false)){
-			$ProcessCount++;
-		}
-	}
-	
-	if($ProcessCount > 1){
-		if(file_exists('.ForceRun')){
-			unlink('.ForceRun');
-		}else{
-			echo "stop: ";
-			print_r($psRes);
-			exit();
-		}
-	}
+
+
 
 	$BreakLine = "<br>";
 	if( (isset($_SERVER['SESSIONNAME']) && strpos(strtolower($_SERVER['SESSIONNAME']), 'console') !== false) || 
@@ -122,8 +101,33 @@
 	//$MySettings = $settings_proxy;
 
 	$phones[0]['number'] = str_replace(array(" ","(",")"),"",$phones[0]['number']); // شماره موبایلی که با آن لاگین میشوید
-	$sessionFile = $sessionsDir."/.session_".str_replace(array("+","-","(",")"),"",$phones[0]['number']).""; // مسیر سشن
-
+	$wclearedPhone = str_replace(array("+","-","(",")"),"",$phones[0]['number']);
+	$sessionFile = $sessionsDir."/.session_".$wclearedPhone.""; // مسیر سشن
+	
+	
+	// dont run multi process from same number
+	$UserBotF = 'Start.php';
+	$UserBotD = rtrim(getcwd(),'/');
+	$ProcessCount=0;
+	foreach($psRes as $processLine){
+		if((strpos($processLine, $UserBotF) !== false) && 
+			//(strpos($processLine, $UserBotD) !== false) &&
+			(strpos($processLine, $wclearedPhone) !== false)
+				){
+			$ProcessCount++;
+		}
+	}
+	
+	if($ProcessCount > 1){
+		if(file_exists('.ForceRun')){
+			unlink('.ForceRun');
+		}else{
+			echo "stop: ";
+			print_r($psRes);
+			exit();
+		}
+	}
+	
 	$MadelineProto[$phones[0]['number']] = false;
 	if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 		echo "loading...". PHP_EOL .$BreakLine;
