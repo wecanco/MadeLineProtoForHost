@@ -122,7 +122,7 @@
 		if(file_exists('.ForceRun')){
 			unlink('.ForceRun');
 		}else{
-			echo "stop: ";
+			echo " [Stoped] ===> Bot is Running: ".$BreakLine;
 			print_r($psRes);
 			exit();
 		}
