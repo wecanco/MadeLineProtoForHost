@@ -35,6 +35,7 @@
 	}
 	
 	$UserBotF = 'Start.php';
+	$UserBotD = rtrim(getcwd(),'/');
 	//$UserBotF = getcwd().'/Start.php';
 	//$UserBotF = explode("/",$UserBotF);
 	//unset($UserBotF[0]);
@@ -42,7 +43,7 @@
 	//$UserBotF = implode("/",$UserBotF);
 	$ProcessCount=0;
 	foreach($psRes as $processLine){
-		if((strpos($processLine, $UserBotF) !== false)){
+		if((strpos($processLine, $UserBotF) !== false) && (strpos($processLine, $UserBotD) !== false)){
 			$ProcessCount++;
 		}
 	}
