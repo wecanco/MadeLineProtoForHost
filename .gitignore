@@ -5,6 +5,7 @@ __
 Examples/BotView/
 Examples/ChannelPostRob/
 Examples/ChannelMusicRob/
+Examples/ChannelAddFakeMember/
 Examples/inc/SocksProxy.php
 Examples/sessions/.session*
 Examples/.SentMSGs_*

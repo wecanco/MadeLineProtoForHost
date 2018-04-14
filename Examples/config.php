@@ -101,7 +101,42 @@
 		'app_info' => [
 				'device_model' => 'WeCan ROBOT',
 				'system_version' => ''.rand(1,10),
-				'app_version' => 'Proxy',
+				'app_version' => 'Socks Proxy',
+				'lang_code' => 'fa',
+				'api_id' => 6,
+				'api_hash' => 'eb06d4abfb49dc3eeb1aeb98ae0f581e'
+		],
+
+
+	];
+	
+	$settings_http_proxy = 
+	[
+		'logger' => [
+			'logger' => 0
+		],
+		
+		'connection_settings' => [
+            'all' => [
+                    'protocol' => 'tcp_full',
+                    'test_mode' => false,
+                    //'ipv6' => '',
+                    'timeout' => 2,
+                    'proxy' => '\HttpProxy',
+                    'proxy_extra' => [
+							'address' => '212.49.115.67',
+							'port' => 8080
+                    ],
+
+                ],
+
+            'default_dc' => 4
+        ],
+
+		'app_info' => [
+				'device_model' => 'WeCan ROBOT',
+				'system_version' => ''.rand(1,10),
+				'app_version' => 'Http Proxy',
 				'lang_code' => 'fa',
 				'api_id' => 6,
 				'api_hash' => 'eb06d4abfb49dc3eeb1aeb98ae0f581e'

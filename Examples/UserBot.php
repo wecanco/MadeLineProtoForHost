@@ -174,7 +174,7 @@ $trans
 			$caption='';
 			$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($fullPath), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $stick]]];
 			
-			$p = ['peer' => $peer, 'media' => $inputMedia];
+			$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 			$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 			unlink($file);
 			unlink($fullPath);
@@ -240,7 +240,7 @@ $trans
 				$caption='';
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($fullPath), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $stick]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($file);
 				unlink($fullPath);
@@ -307,7 +307,7 @@ $trans
 				$inputFile = $MadelineProto[$phone['number']]->upload($fullPath);
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($fullPath), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $fileName]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 			}else{
 				$text = "👨🏻‍💻 سایت (".$sitename.") نیاز به بهینه سازی ندارد ☺️";
@@ -424,7 +424,7 @@ $trans
 
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($localFile);
 			}
@@ -455,7 +455,7 @@ $trans
 
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($localFile);
 			}
@@ -500,7 +500,7 @@ $trans
 				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($localFile);
 				
@@ -551,7 +551,7 @@ $trans
 				
 				$InputMedia = ['_' => 'inputMediaPhoto', 'id' => ['_' => 'inputPhoto', 'id' => $id, 'access_hash' => $access_hash], 'caption' => 'عکس شماره '.$counter.' پروفایل '.$parms['user_id'].'  |  گروه وی کن @WeCanGP'];
 				
-				$p = ['peer' => $peer, 'media' => $InputMedia];			
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];			
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				sleep(3);
 			}
@@ -559,6 +559,7 @@ $trans
 		break;
 			
 		case "/getchannelmessages":
+		case "/getmessages":
 			$ExistCase = true;
 			$parms_a = explode($Splitor,$messageTXT.$Splitor.$Splitor);
 			$parms=[];
@@ -568,17 +569,29 @@ $trans
 			$parname=[];
 			if($parms['id'][0]=='all'){
 				$parms['id']=null;
-				$ids=array();
-				for($i=0; $i<2000;$i++){
-					$ids[]=$i;
-				}
-				$parms['id']=$ids;
+				$offset = -1;
+				for($i=0; $i<10;$i++){
+					try{
+						$wres = $MadelineProto[$phone['number']]->messages->getHistory(['peer' => $parms['channel'], 'offset_id' => $offset, 'offset_date' => 0, 'add_offset' => 0, 'limit' => 1000, 'max_id' => 99999999, 'min_id' => 0, 'hash' => 0, ]);
+						$offset = end($wres['messages'])['id'] + 1;
+						$res['messages'][] = $wres['messages'];
+						$res['messages'] = array_merge($res['messages'], $wres['messages']);
+						if(!isset($wres['messages']) || (isset($wres['messages']) && sizeof($wres['messages']) <= 0)){
+							break;
+						}
+						sleep(1);
+					}catch(Exception $e){
+						$res[] = json_encode($e);
+					}
+				}				
+				
 				$parname[]="all";
 			}else{
 				$parname = $parms['id'];
+				$res = $MadelineProto[$phone['number']]->channels->getMessages($parms);
 			}
 			
-			$res = $MadelineProto[$phone['number']]->channels->getMessages($parms);
+			
 			$msgs = json_encode($res,JSON_PRETTY_PRINT);
 			$filename = 'channel_Messages_'.str_replace("@","",$parms['channel'])."_".implode(",",$parname).".txt";
 			$file = 'temp/'.$filename;
@@ -592,7 +605,7 @@ $trans
 			$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($file), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $filename]]];
 			
 			
-			$p = ['peer' => $peer, 'media' => $inputMedia];
+			$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 			$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 			unlink($file);										
 			
@@ -684,7 +697,7 @@ $trans
 
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 				
-				$p = ['peer' => $peer, 'media' => $inputMedia];
+				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($localFile);
 			}

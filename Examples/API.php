@@ -64,6 +64,50 @@
 					$res = $MadelineProto[$key]->channels->getAdminLog($parms);
 				break;
 				
+				case "renamefile":
+					if(isset($parms['bot']) && isset($parms['file'])){
+						$botToken = $parms ['bot'];
+						$file = $parms['file'];
+						$fileTypes = ['document','video','audio','photo','voice'];
+						$User = $MadelineProto[$key]->get_self();
+						$Bot = file_get_contents('https://api.telegram.org/bot'.trim($botToken).'/getme');
+						$Bot = json_decode($Bot,true);
+						if(!$Bot['ok']){
+							echo '{"error":"bot token not valid."}';
+							exit();
+						}
+						$Bot = ['result'];
+						$UserID = $User['id'];
+						foreach($fileTypes as $fileType){
+							$wfile = file_get_contents('https://api.telegram.org/bot'.trim($botToken).'/send'.$fileType.'?chat_id='.$UserID.'&'.$fileType.'='.$file);
+							$wfile = json_decode($wfile,true);
+							if($wfile['ok']){
+								break;
+							}
+						}
+						$mPD = $MadelineProto[$key]->messages->getPeerDialogs(['peers' => [$Bot['id']]]);
+						$MMID = $mPD['dialogs'][0]['top_message'];
+						$RepMessage = $MadelineProto[$key]->messages->getMessages(['id' => [$MMID] ]);
+						$media = trim($RepMessage['messages'][0]['media']);
+						$tmpdir = "temp/";
+						$preName = $tmpdir."".time()."_";
+						if(isset($parms['name']) && trim($parms['name']) != ""){
+							$dlres = $MadelineProto[$key]->download_to_file($media, $preName.basename($parms['name']));
+						}else{
+							$dlres = $MadelineProto[$key]->download_to_dir($media, $tmpdir);
+						}
+						
+						
+						
+						$res = json_encode($dlres);
+						file_put_contents('res',$res);
+						
+					}else{
+						echo '{"error":"need: bot (bot token), file (url or file_id)"}';
+						exit();
+					}
+				break;
+				
 				
 				default:
 					$res = $MadelineProto[$key]->method_call($method, $parms, ['datacenter' => $curdc]);

@@ -115,13 +115,13 @@
 	$sessionFile = $sessionsDir."/.session_".$wclearedPhone.""; // مسیر سشن
 	
 	// dont run multi process from same number
-	$UserBotF = 'Start.php';
+	$UserBotF = '/Examples/Start.php';
 	$UserBotD = rtrim(getcwd(),'/');
 	$ProcessCount=0;
 	foreach($psRes as $processLine){
 		if( (strpos($processLine, $UserBotF) !== false) && 
 			//(strpos($processLine, $UserBotD) !== false) &&
-			(strpos($processLine, "+".$wclearedPhone) !== false)
+			(strpos($processLine, $wclearedPhone) !== false)
 				){
 			$ProcessCount++;
 		}
