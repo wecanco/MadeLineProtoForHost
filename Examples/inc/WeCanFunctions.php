@@ -33,13 +33,15 @@
 		return $data;
 	}
 	
-	function curl_dl($url,$LocalFile,$timeout=120){
+	function curl_dl($url,$LocalFile,$timeout=120,$process=false){
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		//curl_setopt($ch, CURLOPT_POST, count($parms));
 		//curl_setopt($ch, CURLOPT_POSTFIELDS, $parms);
-		curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, 'dl_progress');
-		curl_setopt($ch, CURLOPT_NOPROGRESS, false); // needed to make progress function work	
+		if($process){
+			curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, 'dl_progress');
+			curl_setopt($ch, CURLOPT_NOPROGRESS, false); // needed to make progress function work	
+		}
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
@@ -120,13 +122,27 @@
 	
 	function dl_progress($resource,$download_size, $downloaded, $upload_size, $uploaded)
 	{
-		file_put_contents('dl',json_encode($resource));
-		echo $downloaded;
+		//file_put_contents('dl',$resource."\n".$download_size."\n".$downloaded."\n".$upload_size."\n".$uploaded,FILE_APPEND);
 		//if($download_size > 0)
 		//	 echo $downloaded / $download_size  * 100;
 		//ob_flush();
 		//flush();
 		//sleep(1);
+		global $MadelineProto;
+		global $phone;
+		global $peer;
+		global $mid;
+		global $lastEdit;
+		
+		if($download_size > 0 && $downloaded > 0 && $lastEdit + 5 < time()){
+			$lastEdit = time();
+			try{
+				$downloaded_darsad = ( $downloaded * 100) / $download_size;
+				$txt = "⌛️ <code>Downloading</code> [<b>$downloaded_darsad%</b>]...";
+				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+			}catch (Exception $e){}
+			
+		}
 	}
 	
 	function RemoveUpdates($sessionFile){

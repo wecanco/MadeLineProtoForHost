@@ -464,9 +464,10 @@ $trans
 		case "/link2file":
 			$ExistCase = true;
 			$req = $messageTXT;
-			$req = explode($Splitor,$req.$Splitor);
+			$req = explode($Splitor,$req.$Splitor.$Splitor);
 			$link = trim($req[0]);
 			$name = trim($req[1]);
+			$caption = trim($req[2]);
 			$file_size = retrieve_remote_file_size($link);
 			/*
 			if(isset($header['Content-Length'])){
@@ -475,13 +476,13 @@ $trans
 				$file_size = -1;
 			}
 			*/
-			$sizeLimit = ( 100 * 1024 * 1024);
+			$sizeLimit = ( 1.46 * 1024 * 1024 * 1024);
 			if($name==""){
 				$name=explode("/",$link);
 				$name = $name[sizeof($name)-1];
 			}
 			if($file_size > 0 && $file_size <= $sizeLimit ){
-				$txt = "⏳ <b>درحال دانلود...</b> \n".$name."";
+				$txt = "⏳ <b>Downloading...</b> \n".$name."";
 				$m = $MadelineProto[$phone['number']]->messages->sendMessage(['peer' => $peer, 'reply_to_msg_id' => $mid , 'message' => $txt, 'parse_mode' => 'HTML' ]);
 				if(isset($m['updates'][0]['id'])){
 					$mid = $m['updates'][0]['id'];
@@ -490,21 +491,40 @@ $trans
 				}
 				
 				$localFile = 'temp/'.$name;
-				curl_dl($link,$localFile,0);
-				$txt = "⏳ <b>درحال آپلود روی سرور تلگرام...</b> \n".$name."";
+				$lastEdit = time();
+				curl_dl($link,$localFile,0,true);
+				$txt = "⏳ <b>Uploading...</b> \n".$name."";
 				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
-				$caption = '📌 '.$name.' | @WeCanGP';
+				if($caption == ""){
+					$caption = '📌 '.$name.' | @WeCanGP';
+				}
 				
-				$inputFile = $MadelineProto[$phone['number']]->upload($localFile);
+				$lastEdit = 0;
+				$inputFile = $MadelineProto[$phone['number']]->upload($localFile,'',function ($percent) {
+					global $MadelineProto;
+					global $phone;
+					global $peer;
+					global $mid;
+					global $lastEdit;
+					if($lastEdit + 5 < time()){
+						$txt = "⌛️ <code>Uploading</code> [<b>$percent%</b>]...";
+						try{
+							$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+						}catch (Exception $e){}
+						$lastEdit = time();
+					}
+				});
+				/*
 				$txt = "⏳ درحال ارسال...: \n<b>".$name."</b>";
 				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
+				*/
 				$inputMedia = ['_' => 'inputMediaUploadedDocument', 'file' => $inputFile, 'mime_type' => mime_content_type($localFile), 'caption' => $caption, 'attributes' => [['_' => 'documentAttributeFilename', 'file_name' => $name]]];
 				
 				$p = ['peer' => $peer, 'media' => $inputMedia, 'message' => $caption];
 				$res = $MadelineProto[$phone['number']]->messages->sendMedia($p);
 				unlink($localFile);
 				
-				$txt = "✅ <b>ارسال شد!</b> @WeCanCo 😎";
+				$txt = "✅ <b>Sent!</b> @WeCanCo 😎";
 				$ed = $MadelineProto[$phone['number']]->messages->editMessage(['peer' => $peer, 'id' => $mid, 'message' => $txt, 'parse_mode' => 'html' ]);
 				
 				
