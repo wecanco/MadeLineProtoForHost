@@ -726,6 +726,7 @@ $trans
 		break;
 		
 		case "/reset":
+			$ExistCase = true;
 			if(in_array($from_id,$Admins)){
 				$text = "⏳ درحال اجرای مجدد ربات...";
 				file_put_contents(".reset",$peer);
@@ -743,10 +744,20 @@ php Start.php ".$phone['number']."
 		break;
 		
 		case "/delupdates":
+			$ExistCase = true;
 			if(in_array($from_id,$Admins)){
 				RemoveUpdates($sessionFile);
 				$text = "Session File Cleared!";
 			}
+		break;
+		
+		case "/checkphone":
+			$ExistCase = true;
+			$ph = $messageTXT;
+			$ph = explode($Splitor,$ph.$Splitor);
+			$ph = $ph[0];
+			$rch = $MadelineProto[$phone['number']]->auth->checkPhone(['phone_number' => $ph]);
+			$text = json_encode($rch,JSON_PRETTY_PRINT);
 		break;
 		
 		

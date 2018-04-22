@@ -148,7 +148,7 @@
 				echo 'reading session file... ['.$sessionFile.']'. PHP_EOL .$BreakLine;
 			}
 			//$MadelineProto[$phones[0]['number']] = \danog\MadelineProto\Serialization::deserialize($sessionFile,true);
-			//RemoveUpdates($sessionFile);
+			RemoveUpdates($sessionFile);
 			$MadelineProto[$phones[0]['number']] = new \danog\MadelineProto\API($sessionFile, $settings);
 			if( (isset($ShowLog) && $ShowLog) || !isset($ShowLog)){
 				echo 'session file readed.'. PHP_EOL .$BreakLine;
