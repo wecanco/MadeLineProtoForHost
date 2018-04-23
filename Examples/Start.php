@@ -135,7 +135,7 @@
 			
 			
 			$Reminds = json_decode(file_get_contents($RemindsF),true);
-			if(count($Reminds) > 0){
+			if(sizeof($Reminds) > 0){
 				foreach($Reminds as $key => $remind){
 					if(isset($remind['time']) && $remind['status']=='active'){
 						if(time() >= $remind['time']){
@@ -153,7 +153,7 @@
 			
 			
 			$CheckOnlineSites = json_decode(file_get_contents($CheckOnlineSitesFile),true);
-			if(count($CheckOnlineSites) > 0){
+			if(sizeof($CheckOnlineSites) > 0){
 				foreach($CheckOnlineSites as $key => $site){
 					
 					if(checkOnline($site['url'])){ 
