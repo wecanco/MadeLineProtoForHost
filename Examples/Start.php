@@ -23,22 +23,22 @@
 	
 	
 	if(!file_exists($ACsListF)){
-		file_put_contents($ACsListF,"{}");
+		file_put_contents($ACsListF,"[]");
 	}
 	
 	
 	if(!file_exists($FaqF)){
-		file_put_contents($FaqF,"{}");
+		file_put_contents($FaqF,"[]");
 	}
 	
 	if(!file_exists($GPListF)){
 		file_put_contents($GPListF,"");
 	}
 	if(!file_exists($RemindsF)){
-		file_put_contents($RemindsF,"{}");
+		file_put_contents($RemindsF,"[]");
 	}
 	if(!file_exists($CheckOnlineSitesFile)){
-		file_put_contents($CheckOnlineSitesFile,"{}");
+		file_put_contents($CheckOnlineSitesFile,"[]");
 	}
 	
 	if(sizeof($phones) > 0){
