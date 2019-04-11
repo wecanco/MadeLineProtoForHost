@@ -36,20 +36,14 @@ abstract class Hex implements EncoderInterface
      *
      * @param string $bin_string (raw binary)
      * @return string
-     * @throws \TypeError
      */
     public static function encode($bin_string)
     {
-        /** @var string $hex */
         $hex = '';
-        /** @var int $len */
         $len = Binary::safeStrlen($bin_string);
         for ($i = 0; $i < $len; ++$i) {
-            /** @var array<int, int> $chunk */
-            $chunk = \unpack('C', Binary::safeSubstr($bin_string, $i, 1));
-            /** @var int $c */
+            $chunk = \unpack('C', Binary::safeSubstr($bin_string, $i, 2));
             $c = $chunk[1] & 0xf;
-            /** @var int $b */
             $b = $chunk[1] >> 4;
             $hex .= pack(
                 'CC',
@@ -66,20 +60,14 @@ abstract class Hex implements EncoderInterface
      *
      * @param string $bin_string (raw binary)
      * @return string
-     * @throws \TypeError
      */
     public static function encodeUpper($bin_string)
     {
-        /** @var string $hex */
         $hex = '';
-        /** @var int $len */
         $len = Binary::safeStrlen($bin_string);
         for ($i = 0; $i < $len; ++$i) {
-            /** @var array<int, int> $chunk */
-            $chunk = \unpack('C', Binary::safeSubstr($bin_string, $i, 1));
-            /** @var int $c */
+            $chunk = \unpack('C', Binary::safeSubstr($bin_string, $i, 2));
             $c = $chunk[1] & 0xf;
-            /** @var int $b */
             $b = $chunk[1] >> 4;
             $hex .= pack(
                 'CC',
@@ -100,15 +88,10 @@ abstract class Hex implements EncoderInterface
      */
     public static function decode($hex_string)
     {
-        /** @var int $hex_pos */
         $hex_pos = 0;
-        /** @var string $bin */
         $bin = '';
-        /** @var int $c_acc */
         $c_acc = 0;
-        /** @var int $hex_len */
         $hex_len = Binary::safeStrlen($hex_string);
-        /** @var int $state */
         $state = 0;
         if (($hex_len & 1) !== 0) {
             throw new \RangeException(
@@ -116,29 +99,21 @@ abstract class Hex implements EncoderInterface
             );
         }
 
-        /** @var array<int, int> $chunk */
         $chunk = \unpack('C*', $hex_string);
         while ($hex_pos < $hex_len) {
             ++$hex_pos;
-            /** @var int $c */
-            $c = (int) $chunk[$hex_pos];
-            /** @var int $c_num */
+            $c = $chunk[$hex_pos];
             $c_num = $c ^ 48;
-            /** @var int $c_num0 */
             $c_num0 = ($c_num - 10) >> 8;
-            /** @var int $c_alpha */
             $c_alpha = ($c & ~32) - 55;
-            /** @var int $c_alpha0 */
             $c_alpha0 = (($c_alpha - 10) ^ ($c_alpha - 16)) >> 8;
             if (($c_num0 | $c_alpha0) === 0) {
                 throw new \RangeException(
                     'hexEncode() only expects hexadecimal characters'
                 );
             }
-            /** @var int $c_val */
             $c_val = ($c_num0 & $c_num) | ($c_alpha & $c_alpha0);
             if ($state === 0) {
-                /** @var int $c_acc */
                 $c_acc = $c_val * 16;
             } else {
                 $bin .= \pack('C', $c_acc | $c_val);

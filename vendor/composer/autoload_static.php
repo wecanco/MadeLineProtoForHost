@@ -8,6 +8,7 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
 {
     public static $files = array (
         '5255c38a0faeba867671b61dfda6d864' => __DIR__ . '/..' . '/paragonie/random_compat/lib/random.php',
+        '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         'efa3b80c61fb35e374f529ec349af098' => __DIR__ . '/../..' . '/src/BigIntegor.php',
         '7c6952916da927c1fa7fc73e564a99dc' => __DIR__ . '/../..' . '/src/Socket.php',
@@ -30,6 +31,10 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
         array (
             'Webmozart\\Assert\\' => 17,
         ),
+        'S' => 
+        array (
+            'Symfony\\Polyfill\\Ctype\\' => 23,
+        ),
         'R' => 
         array (
             'Rollbar\\' => 8,
@@ -38,10 +43,6 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
         array (
             'Psr\\Log\\' => 8,
             'ParagonIE\\ConstantTime\\' => 23,
-        ),
-        'M' => 
-        array (
-            'Monolog\\' => 8,
         ),
         'D' => 
         array (
@@ -57,12 +58,16 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
         'phpDocumentor\\Reflection\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
-            1 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
-            2 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
+            1 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
+            2 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
         ),
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
+        ),
+        'Symfony\\Polyfill\\Ctype\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
         ),
         'Rollbar\\' => 
         array (
@@ -75,10 +80,6 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
         'ParagonIE\\ConstantTime\\' => 
         array (
             0 => __DIR__ . '/..' . '/paragonie/constant_time_encoding/src',
-        ),
-        'Monolog\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
         'Dotenv\\' => 
         array (
@@ -95,8 +96,8 @@ class ComposerStaticInitccf423bc1d5f809027c8eec394b5ca30
             ),
             'danog\\' => 
             array (
-                0 => __DIR__ . '/..' . '/danog/primemodule/lib',
-                1 => __DIR__ . '/..' . '/danog/magicalserializer/src',
+                0 => __DIR__ . '/..' . '/danog/magicalserializer/src',
+                1 => __DIR__ . '/..' . '/danog/primemodule/lib',
             ),
         ),
         'P' => 

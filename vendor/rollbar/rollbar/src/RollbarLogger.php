@@ -14,22 +14,14 @@ class RollbarLogger extends AbstractLogger
     private $levelFactory;
     private $truncation;
     private $queue;
-    private $debugLogger;
-    private $debugLogFile;
+    private $reportCount = 0;
 
     public function __construct(array $config)
     {
         $this->config = new Config($config);
         $this->levelFactory = new LevelFactory();
-        $this->truncation = new Truncation();
+        $this->truncation = new Truncation($this->config);
         $this->queue = array();
-        
-        $this->debugLogFile = sys_get_temp_dir() . '/rollbar.debug.log';
-        $this->debugLogger = new MonologLogger("RollbarDebugLogger");
-        $this->debugLogger->pushHandler(new StreamHandler(
-            $this->debugLogFile,
-            $this->config->getVerbosity()
-        ));
     }
     
     public function enable()
@@ -84,6 +76,10 @@ class RollbarLogger extends AbstractLogger
 
     public function log($level, $toLog, array $context = array(), $isUncaught = false)
     {
+        if ($this->disabled()) {
+            return new Response(0, "Disabled");
+        }
+        
         if (!$this->levelFactory->isValidLevel($level)) {
             throw new \Psr\Log\InvalidArgumentException("Invalid log level '$level'.");
         }
@@ -96,20 +92,12 @@ class RollbarLogger extends AbstractLogger
         if ($this->config->checkIgnored($payload, $accessToken, $toLog, $isUncaught)) {
             $response = new Response(0, "Ignored");
         } else {
-            $scrubbed = $this->scrub($payload);
+            $serialized = $payload->serialize($this->config->getMaxNestingDepth());
+            $scrubbed = $this->scrub($serialized);
             $encoded = $this->encode($scrubbed);
             $truncated = $this->truncate($encoded);
             
-            $this->debugLogger->info(
-                "Payload scrubbed and ready to send to ".
-                $this->config->getSender()->toString()
-            );
-            $this->debugLogger->debug($truncated);
-            
             $response = $this->send($truncated, $accessToken);
-            
-            $this->debugLogger->info("Received response from Rollbar API.");
-            $this->debugLogger->debug(print_r($response, true));
         }
         
         $this->handleResponse($payload, $response);
@@ -145,6 +133,17 @@ class RollbarLogger extends AbstractLogger
 
     protected function send(\Rollbar\Payload\EncodedPayload $payload, $accessToken)
     {
+        if ($this->reportCount >= $this->config->getMaxItems()) {
+            return new Response(
+                0,
+                "Maximum number of items per request has been reached. If you " .
+                "want to report more items, please use `max_items` " .
+                "configuration option."
+            );
+        } else {
+            $this->reportCount++;
+        }
+        
         if ($this->config->getBatched()) {
             $response = new Response(0, "Pending");
             if ($this->getQueueSize() >= $this->config->getBatchSize()) {
@@ -153,6 +152,7 @@ class RollbarLogger extends AbstractLogger
             $this->queue[] = $payload;
             return $response;
         }
+        
         return $this->config->send($payload, $accessToken);
     }
 
@@ -172,11 +172,6 @@ class RollbarLogger extends AbstractLogger
     {
         return $this->config->getDataBuilder();
     }
-    
-    public function getDebugLogFile()
-    {
-        return $this->debugLogFile;
-    }
 
     protected function handleResponse($payload, $response)
     {
@@ -184,14 +179,13 @@ class RollbarLogger extends AbstractLogger
     }
     
     /**
-     * @param Payload $payload
+     * @param array $serializedPayload
      * @return array
      */
-    protected function scrub(Payload $payload)
+    protected function scrub(array &$serializedPayload)
     {
-        $serialized = $payload->jsonSerialize();
-        $serialized['data'] = $this->config->getScrubber()->scrub($serialized['data']);
-        return $serialized;
+        $serializedPayload['data'] = $this->config->getScrubber()->scrub($serializedPayload['data']);
+        return $serializedPayload;
     }
     
     /**

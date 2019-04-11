@@ -1,6 +1,6 @@
 <?php namespace Rollbar\Payload;
 
-class Frame implements \JsonSerializable
+class Frame implements \Serializable
 {
     private $filename;
     private $lineno;
@@ -94,7 +94,7 @@ class Frame implements \JsonSerializable
         return $this;
     }
 
-    public function jsonSerialize()
+    public function serialize()
     {
         $result = array(
             "filename" => $this->filename,
@@ -105,6 +105,14 @@ class Frame implements \JsonSerializable
             "context" => $this->context,
             "args" => $this->args
         );
-        return $this->utilities->serializeForRollbar($result);
+        
+        $objectHashes = \Rollbar\Utilities::getObjectHashes();
+        
+        return $this->utilities->serializeForRollbar($result, null, $objectHashes);
+    }
+    
+    public function unserialize($serialized)
+    {
+        throw new \Exception('Not implemented yet.');
     }
 }

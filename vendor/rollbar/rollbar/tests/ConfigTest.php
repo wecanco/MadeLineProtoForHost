@@ -8,6 +8,7 @@ use Rollbar\Payload\Level;
 use Rollbar\Payload\Message;
 use Rollbar\Payload\Payload;
 use Rollbar\RollbarLogger;
+use Rollbar\Defaults;
 
 use Rollbar\TestHelpers\Exceptions\SilentExceptionSampleRate;
 use Rollbar\TestHelpers\Exceptions\FiftyFiftyExceptionSampleRate;
@@ -151,43 +152,45 @@ class ConfigTest extends BaseRollbarTest
 
     public function testMinimumLevel()
     {
-        $c = new Config(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => $this->env,
-            "minimumLevel" => "warning"
+        $config = new Config(array(
+            'access_token' => $this->getTestAccessToken(),
+            'environment' => $this->env
         ));
-        $this->runConfigTest($c);
-
-        $c->configure(array("minimumLevel" => Level::WARNING));
-        $this->runConfigTest($c);
         
-        $c->configure(array("minimumLevel" => Level::WARNING()->toInt()));
-        $this->runConfigTest($c);
+        $this->assertPayloadNotIgnored($config, $this->prepareMockPayload(Level::DEBUG()));
+        
+        $config->configure(array('minimum_level' => Level::WARNING()));
+        
+        $this->assertPayloadIgnored($config, $this->prepareMockPayload(Level::DEBUG()));
+        $this->assertPayloadNotIgnored($config, $this->prepareMockPayload(Level::WARNING()));
+        
+        $config = new Config(array(
+            'access_token' => $this->getTestAccessToken(),
+            'environment' => $this->env,
+            'minimumLevel' => Level::ERROR()
+        ));
+        
+        $this->assertPayloadIgnored($config, $this->prepareMockPayload(Level::WARNING()));
+        $this->assertPayloadNotIgnored($config, $this->prepareMockPayload(Level::ERROR()));
     }
-
-    private function runConfigTest($config)
+    
+    public function assertPayloadIgnored($config, $payload)
     {
-        $accessToken = $config->getAccessToken();
-        $debugData = m::mock("Rollbar\Payload\Data")
+        $this->assertTrue($config->checkIgnored($payload, null, $this->error, false));
+    }
+    
+    public function assertPayloadNotIgnored($config, $payload)
+    {
+        $this->assertFalse($config->checkIgnored($payload, null, $this->error, false));
+    }
+    
+    private function prepareMockPayload($level)
+    {
+        $data = m::mock("Rollbar\Payload\Data")
             ->shouldReceive('getLevel')
-            ->andReturn(Level::DEBUG())
+            ->andReturn($level)
             ->mock();
-        $debug = new Payload($debugData, $accessToken);
-        $this->assertTrue($config->checkIgnored($debug, null, $this->error, false));
-
-        $criticalData = m::mock("Rollbar\Payload\Data")
-            ->shouldReceive('getLevel')
-            ->andReturn(Level::CRITICAL())
-            ->mock();
-        $critical = new Payload($criticalData, $accessToken);
-        $this->assertFalse($config->checkIgnored($critical, null, $this->error, false));
-
-        $warningData = m::mock("Rollbar\Payload\Data")
-            ->shouldReceive('getLevel')
-            ->andReturn(Level::warning())
-            ->mock();
-        $warning = new Payload($warningData, $accessToken);
-        $this->assertFalse($config->checkIgnored($warning, null, $this->error, false));
+        return new Payload($data, $this->getTestAccessToken());
     }
 
     public function testReportSuppressed()
@@ -248,19 +251,6 @@ class ConfigTest extends BaseRollbarTest
             $config->getSender()->getEndpoint()
         );
     }
-    
-    public function testVerbosity()
-    {
-        $expected = 3;
-        
-        $config = new Config(array(
-            "access_token" => $this->getTestAccessToken(),
-            "environment" => $this->env,
-            "verbosity" => $expected
-        ));
-        
-        $this->assertEquals($expected, $config->getVerbosity());
-    }
 
     public function testCustom()
     {
@@ -285,6 +275,48 @@ class ConfigTest extends BaseRollbarTest
         
         $this->assertEquals("bar", $custom["foo"]);
         $this->assertEquals("buzz", $custom["fuzz"]);
+    }
+    
+    public function testMaxItems()
+    {
+        $config = new Config(array(
+            "access_token" => $this->getTestAccessToken()
+        ));
+        
+        $this->assertEquals(Defaults::get()->maxItems(), $config->getMaxItems());
+        
+        $config = new Config(array(
+            "access_token" => $this->getTestAccessToken(),
+            "max_items" => Defaults::get()->maxItems()+1
+        ));
+        
+        $this->assertEquals(Defaults::get()->maxItems()+1, $config->getMaxItems());
+    }
+    
+    public function testCustomDataMethod()
+    {
+        $logger = new RollbarLogger(array(
+            "access_token" => $this->getTestAccessToken(),
+            "environment" => $this->env,
+            "custom_data_method" => function ($toLog, $customDataMethodContext) {
+                
+                return array(
+                    'data_from_my_custom_method' => $customDataMethodContext['foo']
+                );
+            }
+        ));
+        
+        $dataBuilder = $logger->getDataBuilder();
+        
+        $result = $dataBuilder->makeData(
+            Level::ERROR,
+            new \Exception(),
+            array(
+                'custom_data_method_context' => array('foo' => 'bar')
+            )
+        )->getCustom();
+        
+        $this->assertEquals('bar', $result['data_from_my_custom_method']);
     }
 
     public function testEndpointDefault()
@@ -351,7 +383,7 @@ class ConfigTest extends BaseRollbarTest
         $config = new Config(array(
             "access_token" => $this->getTestAccessToken(),
             "environment" => $this->env,
-            "checkIgnore" => function () use (&$called) {
+            "check_ignore" => function () use (&$called) {
                 $called = true;
             }
         ));
@@ -382,7 +414,7 @@ class ConfigTest extends BaseRollbarTest
         $config = new Config(array(
             "access_token" => $this->getTestAccessToken(),
             "environment" => $this->env,
-            "checkIgnore" => function (
+            "check_ignore" => function (
                 $isUncaught,
                 $exc
             ) use (
@@ -445,7 +477,7 @@ class ConfigTest extends BaseRollbarTest
         $config = new Config(array(
             "access_token" => $this->getTestAccessToken(),
             "environment" => $this->env,
-            "checkIgnore" => function () use (&$called) {
+            "check_ignore" => function () use (&$called) {
                 $called = true;
             },
             "use_error_reporting" => $use_error_reporting

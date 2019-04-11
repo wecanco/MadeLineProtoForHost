@@ -35,7 +35,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32Encode($str)
     {
@@ -47,7 +46,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32EncodeUpper($str)
     {
@@ -59,7 +57,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32Decode($str)
     {
@@ -71,7 +68,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32DecodeUpper($str)
     {
@@ -83,7 +79,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32HexEncode($str)
     {
@@ -96,7 +91,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32HexEncodeUpper($str)
     {
@@ -108,7 +102,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32HexDecode($str)
     {
@@ -120,7 +113,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base32HexDecodeUpper($str)
     {
@@ -132,7 +124,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base64Encode($str)
     {
@@ -144,7 +135,6 @@ abstract class Encoding
      *
      * @param string $str
      * @return string
-     * @throws \TypeError
      */
     public static function base64Decode($str)
     {
@@ -157,7 +147,6 @@ abstract class Encoding
      * Base64 character set "./[A-Z][a-z][0-9]"
      * @param string $src
      * @return string
-     * @throws \TypeError
      */
     public static function base64EncodeDotSlash($src)
     {
@@ -172,7 +161,6 @@ abstract class Encoding
      * @param string $src
      * @return string
      * @throws \RangeException
-     * @throws \TypeError
      */
     public static function base64DecodeDotSlash($src)
     {
@@ -185,7 +173,6 @@ abstract class Encoding
      * Base64 character set "[.-9][A-Z][a-z]" or "./[0-9][A-Z][a-z]"
      * @param string $src
      * @return string
-     * @throws \TypeError
      */
     public static function base64EncodeDotSlashOrdered($src)
     {
@@ -200,7 +187,6 @@ abstract class Encoding
      * @param string $src
      * @return string
      * @throws \RangeException
-     * @throws \TypeError
      */
     public static function base64DecodeDotSlashOrdered($src)
     {
@@ -213,7 +199,6 @@ abstract class Encoding
      *
      * @param string $bin_string (raw binary)
      * @return string
-     * @throws \TypeError
      */
     public static function hexEncode($bin_string)
     {
@@ -239,7 +224,6 @@ abstract class Encoding
      *
      * @param string $bin_string (raw binary)
      * @return string
-     * @throws \TypeError
      */
     public static function hexEncodeUpper($bin_string)
     {
