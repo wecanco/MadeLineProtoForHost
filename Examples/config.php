@@ -35,9 +35,9 @@
 	);
 	
 	// تنظیمات ای پی آی میدلان جهت اتصال به سرور تلگرام
-	//$settings = json_decode('{"logger":{"logger":0},"app_info":{"api_id":6,"api_hash":"eb06d4abfb49dc3eeb1aeb98ae0f581e"}}', true) ?: [];
+	$settings = json_decode('{"logger":{"logger":0},"app_info":{"api_id":6,"api_hash":"eb06d4abfb49dc3eeb1aeb98ae0f581e"}}', true) ?: [];
 	//$ipv6 = (bool) strlen(@file_get_contents('http://ipv6.test-ipv6.com/', false, stream_context_create(['http' => ['timeout' => 1]]))) > 0;
-	$settings = 
+	$settings2 = 
 	[
 		'logger' => [
 			'logger' => 0
