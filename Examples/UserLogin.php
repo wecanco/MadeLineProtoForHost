@@ -2,7 +2,7 @@
 	require_once 'config.php'; // فایل کانفیگ
 	$phpversion = explode('.', phpversion());
 	if(intval($phpversion[0]) >= 7){
-		require_once $libPath.'vendor/autoload.php'; // فراخوانی لودر کتابخانه میدلاین
+		require_once ($libPath.'vendor/autoload.php'); // فراخوانی لودر کتابخانه میدلاین
 	}else{
 		if (!file_exists($libPath.'madeline.php')) {
 			copy('https://phar.madelineproto.xyz/madeline.php', $libPath.'madeline.php');
@@ -12,8 +12,8 @@
 	
 	//require_once $libPath.'src/danog/MadelineProto/VoIP/php-libtgvoip.php';
 	
-	if(file_exists('inc/WeCanFunctions.php')){
-		require_once('inc/WeCanFunctions.php'); // توابع کاربردی
+	if(file_exists($currentDIR.'/inc/WeCanFunctions.php')){
+		require_once($currentDIR.'/inc/WeCanFunctions.php'); // توابع کاربردی
 	}
 	/*
 	if(file_exists('inc/SocksProxy.php')){
@@ -115,7 +115,7 @@
 	$sessionFile = $sessionsDir."/.session_".$wclearedPhone.""; // مسیر سشن
 	
 	// dont run multi process from same number
-	$UserBotF = '/Examples/Start.php';
+	$UserBotF = 'Start.php '.$phones[0]['number'];
 	$UserBotD = rtrim(getcwd(),'/');
 	$ProcessCount=0;
 	foreach($psRes as $processLine){
@@ -127,7 +127,7 @@
 		}
 	}
 	
-	if($ProcessCount > 1){
+	if($ProcessCount > 2){
 		if(file_exists('.ForceRun')){
 			unlink('.ForceRun');
 		}else{

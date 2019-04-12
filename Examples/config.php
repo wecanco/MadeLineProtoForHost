@@ -13,14 +13,19 @@
 	ini_set('display_errors', 1);
 	ini_set('display_startup_errors', 1);
 	error_reporting(E_ALL);
+	ini_set("error_log", "php-error.log");
 	
 	date_default_timezone_set('Asia/Tehran');
 	
 	ob_implicit_flush(1);
 	
+	$currentDIR = __DIR__;
+	$preDIR = explode('/',$currentDIR);
+	unset($preDIR[sizeof($preDIR)-1]);
+	$preDIR = implode('/',$preDIR);
 	
-	$libPath ='../'; // مسیر روت کتابخانه میدلاین
-	$sessionsDir = 'sessions'; // پوشه ذخیره سشن ها
+	$libPath =$preDIR."/"; // مسیر روت کتابخانه میدلاین
+	$sessionsDir = $currentDIR.'/sessions'; // پوشه ذخیره سشن ها
 	$RunInTerminal = false; // فایل فعالسازی اجرا در ترمینال
 	$MadelineURL ='http://tlapi.cf/MadeLineProtoForHost/Examples/'; // آدرس پوشه ای که فایل StartUserBot.php در آن است.
 	if(!file_exists('.admins')){

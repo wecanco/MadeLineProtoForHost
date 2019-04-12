@@ -1,7 +1,7 @@
 <?php
 	//?phone=+989357973301
 	require_once('UserLogin.php'); // خواندن سشن
-	require_once('inc/GTranslator.php'); // کلاس ترجمه گوگل
+	require_once($currentDIR.'/inc/GTranslator.php'); // کلاس ترجمه گوگل
 	
 	try{
 		//mkdir('temp');
